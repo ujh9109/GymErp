@@ -1,4 +1,4 @@
-package com.example.gymerp.dto.repository;
+package com.example.gymerp.repository;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ public class SalesServiceDaoImpl implements SalesServiceDao {
 
     // 단일 서비스 판매 내역 조회
     @Override
-    public SalesService selectSalesServiceById(Long serviceSalesId) {
+    public SalesService selectSalesServiceById(Long serviceSalesId) {	
         return session.selectOne("SalesServiceMapper.selectSalesServiceById", serviceSalesId);
     }
 
