@@ -5,7 +5,6 @@
 
 <mapper namespace="SalesItemMapper">
 
-    <!-- 전체 상품 판매 내역 조회 -->
     <select id="selectAllSalesItems" resultType="SalesItem">
         SELECT *
         FROM SALESITEM
@@ -13,14 +12,12 @@
         ORDER BY createdAt DESC
     </select>
 
-    <!-- 단일 상품 판매 내역 조회 -->
     <select id="selectSalesItemById" parameterType="long" resultType="SalesItem">
         SELECT *
         FROM SALESITEM
         WHERE itemSalesId = #{itemSalesId}
     </select>
 
-    <!-- 상품 판매 내역 등록 -->
     <insert id="insertSalesItem" parameterType="SalesItem">
         <selectKey keyProperty="itemSalesId" resultType="long" order="BEFORE">
             SELECT SALESITEM_SEQ.NEXTVAL FROM DUAL
@@ -28,23 +25,19 @@
 
         INSERT INTO SALESITEM (
             itemSalesId, productId, productName,
-            employeeId, quantity, unitPrice, totalAmount,
-            productType, status, createdAt, updatedAt
+            empNum, quantity, unitPrice, totalAmount,  productType, status, createdAt, updatedAt
         ) VALUES (
             #{itemSalesId}, #{productId}, #{productName},
-            #{employeeId}, #{quantity}, #{unitPrice}, #{totalAmount},
-            #{productType}, #{status}, #{createdAt}, #{updatedAt}
+            #{empNum}, #{quantity}, #{unitPrice}, #{totalAmount},  #{productType}, #{status}, #{createdAt}, #{updatedAt}
         )
     </insert>
 
-    <!-- 상품 판매 내역 수정 -->
     <update id="updateSalesItem" parameterType="SalesItem">
         UPDATE SALESITEM
         SET
             productId = #{productId},
             productName = #{productName},
-            employeeId = #{employeeId},
-            quantity = #{quantity},
+            empNum = #{empNum},  quantity = #{quantity},
             unitPrice = #{unitPrice},
             totalAmount = #{totalAmount},
             productType = #{productType},
@@ -53,7 +46,6 @@
         WHERE itemSalesId = #{itemSalesId}
     </update>
 
-    <!-- 상품 판매 내역 삭제 (status = 'DELETED') -->
     <update id="deleteSalesItem" parameterType="long">
         UPDATE SALESITEM
         SET status = 'DELETED'
