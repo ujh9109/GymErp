@@ -52,4 +52,9 @@ public class SalesServiceDaoImpl implements SalesServiceDao {
         return session.selectList("SalesServiceMapper.selectServiceSalesAnalytics", params);
     }
 
+    // 서비스 매출 그래프 조회
+    @Override
+    public List<Map<String, Object>> selectServiceSalesGraph(Map<String, Object> params) {
+        return session.selectList("SalesServiceMapper.selectServiceSalesGraph", params);
+    }
 }
