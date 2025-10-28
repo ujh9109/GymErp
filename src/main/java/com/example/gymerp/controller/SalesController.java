@@ -1,5 +1,6 @@
 package com.example.gymerp.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,8 +21,9 @@ public class SalesController {
 	private final com.example.gymerp.service.SalesItemService salesItemService;
 	private final SalesServiceService salesServiceService;
 	
+	
 	// 서비스 매출 통계 조회
-    @GetMapping("/sales/services/analytics")
+    @GetMapping("/sales/services")
     public List<Map<String, Object>> getServiceSalesAnalytics(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
@@ -30,5 +32,17 @@ public class SalesController {
             @RequestParam(required = false) Long empNum
     ) {
         return salesServiceService.getServiceSalesAnalytics(startDate, endDate, serviceIds, memNum, empNum);
+    }
+
+    // 서비스 매출 그래프 조회
+    @GetMapping("/graphs/services")
+    public List<Map<String, Object>> getServiceSalesGraph(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) List<Long> serviceIds,
+            @RequestParam(required = false) Long memNum,
+            @RequestParam(required = false) Long empNum
+    ) {
+        return salesServiceService.getServiceSalesGraph(startDate, endDate, serviceIds, memNum, empNum);
     }
 }

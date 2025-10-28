@@ -15,13 +15,16 @@ public interface SalesServiceDao {
 
     // 서비스 판매 내역 등록
     int insertSalesService(SalesService salesService);
-    
+
     // 서비스 판매 내역 수정
     int updateSalesService(SalesService salesService);
 
     // 서비스 판매 내역 삭제 (status = 'DELETED')
     int deleteSalesService(Long serviceSalesId);
-    
-    // 서비스 매출 통계 조회 (기간 + 품목 + 회원 + 직원 기준)
+
+    // 서비스 매출 통계 조회
     List<Map<String, Object>> selectServiceSalesAnalytics(Map<String, Object> params);
+
+    // 서비스 매출 그래프 조회
+    List<Map<String, Object>> selectServiceSalesGraph(Map<String, Object> params);
 }

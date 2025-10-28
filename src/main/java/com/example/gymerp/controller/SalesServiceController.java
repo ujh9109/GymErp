@@ -37,8 +37,7 @@ public class SalesServiceController {
 
     // 서비스 판매 수정
     @PutMapping("/sales/services/{id}/edit")
-    public int updateSalesService(@PathVariable("id") Long id,
-                                  @RequestBody SalesService salesService) {
+    public int updateSalesService(@PathVariable("id") Long id, @RequestBody SalesService salesService) {
         salesService.setServiceSalesId(id);
         return salesServiceService.updateSalesService(salesService);
     }
