@@ -2,11 +2,14 @@ package com.example.gymerp.dto;
 
 import java.time.LocalDateTime;
 
+import org.apache.ibatis.type.Alias;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Alias("SalesService")
 @Builder 
 @NoArgsConstructor 
 @AllArgsConstructor

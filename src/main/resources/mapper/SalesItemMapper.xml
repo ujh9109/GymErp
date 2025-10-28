@@ -1,3 +1,63 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="mapper.SalesItemMapper"></mapper>
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SalesItemMapper">
+
+    <!-- 전체 상품 판매 내역 조회 -->
+    <select id="selectAllSalesItems" resultType="SalesItem">
+        SELECT *
+        FROM SALESITEM
+        WHERE status != 'DELETED'
+        ORDER BY createdAt DESC
+    </select>
+
+    <!-- 단일 상품 판매 내역 조회 -->
+    <select id="selectSalesItemById" parameterType="long" resultType="SalesItem">
+        SELECT *
+        FROM SALESITEM
+        WHERE itemSalesId = #{itemSalesId}
+    </select>
+
+    <!-- 상품 판매 내역 등록 -->
+    <insert id="insertSalesItem" parameterType="SalesItem">
+        <selectKey keyProperty="itemSalesId" resultType="long" order="BEFORE">
+            SELECT SALESITEM_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO SALESITEM (
+            itemSalesId, productId, productName,
+            employeeId, quantity, unitPrice, totalAmount,
+            productType, status, createdAt, updatedAt
+        ) VALUES (
+            #{itemSalesId}, #{productId}, #{productName},
+            #{employeeId}, #{quantity}, #{unitPrice}, #{totalAmount},
+            #{productType}, #{status}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <!-- 상품 판매 내역 수정 -->
+    <update id="updateSalesItem" parameterType="SalesItem">
+        UPDATE SALESITEM
+        SET
+            productId = #{productId},
+            productName = #{productName},
+            employeeId = #{employeeId},
+            quantity = #{quantity},
+            unitPrice = #{unitPrice},
+            totalAmount = #{totalAmount},
+            productType = #{productType},
+            status = #{status},
+            updatedAt = #{updatedAt}
+        WHERE itemSalesId = #{itemSalesId}
+    </update>
+
+    <!-- 상품 판매 내역 삭제 (status = 'DELETED') -->
+    <update id="deleteSalesItem" parameterType="long">
+        UPDATE SALESITEM
+        SET status = 'DELETED'
+        WHERE itemSalesId = #{itemSalesId}
+    </update>
+
+</mapper>

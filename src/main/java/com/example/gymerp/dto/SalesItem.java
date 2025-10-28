@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import org.apache.ibatis.type.Alias;
+
+@Alias("SalesItem")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
