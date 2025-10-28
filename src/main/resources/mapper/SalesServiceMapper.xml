@@ -1,3 +1,67 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="mapper.SalesServiceMapper"></mapper>
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SalesServiceMapper">
+
+    <!-- 전체 서비스 판매 내역 조회 -->
+    <select id="selectAllSalesServices" resultType="SalesService">
+        SELECT *
+        FROM SALESSERVICE
+        WHERE status != 'DELETED'
+        ORDER BY createdAt DESC
+    </select>
+
+    <!-- 단일 서비스 판매 내역 조회 -->
+    <select id="selectSalesServiceById" parameterType="long" resultType="SalesService">
+        SELECT *
+        FROM SALESSERVICE
+        WHERE serviceSalesId = #{serviceSalesId}
+    </select>
+
+    <!-- 서비스 판매 내역 등록 -->
+    <insert id="insertSalesService" parameterType="SalesService">
+        <selectKey keyProperty="serviceSalesId" resultType="long" order="BEFORE">
+            SELECT SALESSERVICE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO SALESSERVICE (
+            serviceSalesId, productId, productName, employeeId, memberId,
+            baseCount, actualCount, discount, baseAmount, actualAmount, avgPrice,
+            productType, status, createdAt, updatedAt
+        ) VALUES (
+            #{serviceSalesId}, #{productId}, #{productName}, #{employeeId}, #{memberId},
+            #{baseCount}, #{actualCount}, #{discount}, #{baseAmount}, #{actualAmount}, #{avgPrice},
+            #{productType}, #{status}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <!-- 서비스 판매 내역 수정 -->
+    <update id="updateSalesService" parameterType="SalesService">
+        UPDATE SALESSERVICE
+        SET
+            productId = #{productId},
+            productName = #{productName},
+            employeeId = #{employeeId},
+            memberId = #{memberId},
+            baseCount = #{baseCount},
+            actualCount = #{actualCount},
+            discount = #{discount},
+            baseAmount = #{baseAmount},
+            actualAmount = #{actualAmount},
+            avgPrice = #{avgPrice},
+            productType = #{productType},
+            status = #{status},
+            updatedAt = #{updatedAt}
+        WHERE serviceSalesId = #{serviceSalesId}
+    </update>
+
+    <!-- 서비스 판매 내역 삭제 (status = 'DELETED') -->
+    <update id="deleteSalesService" parameterType="long">
+        UPDATE SALESSERVICE
+        SET status = 'DELETED'
+        WHERE serviceSalesId = #{serviceSalesId}
+    </update>
+
+</mapper>
