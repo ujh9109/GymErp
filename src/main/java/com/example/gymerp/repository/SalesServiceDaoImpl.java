@@ -1,6 +1,7 @@
-package com.example.gymerp.dto.repository;
+package com.example.gymerp.repository;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
@@ -44,4 +45,11 @@ public class SalesServiceDaoImpl implements SalesServiceDao {
     public int deleteSalesService(Long serviceSalesId) {
         return session.update("SalesServiceMapper.deleteSalesService", serviceSalesId);
     }
+
+    // 서비스 매출 통계 조회
+    @Override
+    public List<Map<String, Object>> selectServiceSalesAnalytics(Map<String, Object> params) {
+        return session.selectList("SalesServiceMapper.selectServiceSalesAnalytics", params);
+    }
+
 }
