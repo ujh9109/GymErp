@@ -7,8 +7,9 @@ import com.example.gymerp.dto.SalesItem;
 
 public interface SalesItemService {
 
-    // 전체 상품 판매 내역 조회
-    List<SalesItem> getAllSalesItems();
+    // 전체 상품 판매 내역 조회 (페이징/필터링 적용)
+    // 반환 타입: Map<String, Object> (목록과 전체 개수를 포함)
+    Map<String, Object> getAllSalesItems(String startDate, String endDate, List<Long> itemIds, Long empNum, int page, int size); 
 
     // 단일 상품 판매 내역 조회
     SalesItem getSalesItemById(Long itemSalesId);

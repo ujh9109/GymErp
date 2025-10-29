@@ -5,105 +5,172 @@
 
 <mapper namespace="SalesItemMapper">
 
-    <select id="selectAllSalesItems" resultType="SalesItem">
-        SELECT *
-        FROM SALESITEM
-        WHERE status != 'DELETED'
-        ORDER BY createdAt DESC
+    <!-- 공통 where 절 (필요시 재사용) -->
+    <sql id="baseWhere">
+        <where>
+            <if test="startDate != null and startDate != ''">
+                AND si.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND si.createdAt &lt;= TO_DATE(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+            </if>
+
+            <if test="itemIds != null and itemIds.size() > 0">
+                AND si.productId IN
+                <foreach collection="itemIds" item="itemId" open="(" separator="," close=")">
+                    #{itemId}
+                </foreach>
+            </if>
+
+            <if test="empNum != null">
+                AND si.empNum = #{empNum}
+            </if>
+
+            AND si.status = 'ACTIVE'
+        </where>
+    </sql>
+
+    <!-- 총 개수 -->
+    <select id="selectSalesItemCount" resultType="int" parameterType="map">
+        SELECT COUNT(1)
+        FROM SALESITEM si
+        <include refid="baseWhere"/>
     </select>
 
-    <select id="selectSalesItemById" parameterType="long" resultType="SalesItem">
+    <!-- 목록: ROW_NUMBER() 페이징 (정렬 보장) -->
+    <select id="selectAllSalesItems"
+            resultType="com.example.gymerp.dto.SalesItem"
+            parameterType="map">
         SELECT *
-        FROM SALESITEM
-        WHERE itemSalesId = #{itemSalesId}
+        FROM (
+            SELECT
+                si.itemSalesId,
+                si.productId,
+                si.productName,
+                si.empNum,
+                si.quantity,
+                si.unitPrice,
+                si.totalAmount,
+                si.productType,
+                si.status,
+                si.createdAt,
+                si.updatedAt,
+                ROW_NUMBER() OVER(ORDER BY si.itemSalesId DESC) AS rn
+            FROM SALESITEM si
+            <include refid="baseWhere"/>
+        )
+        WHERE rn BETWEEN #{startRow} AND #{endRow}
     </select>
 
-    <insert id="insertSalesItem" parameterType="SalesItem">
+    <!-- 단건 조회: 단일 파라미터일 때 #{value} 사용 (또는 Service에서 @Param 사용) -->
+    <select id="selectSalesItemById"
+            parameterType="long"
+            resultType="com.example.gymerp.dto.SalesItem">
+        SELECT
+            si.itemSalesId,
+            si.productId,
+            si.productName,
+            si.empNum,
+            si.quantity,
+            si.unitPrice,
+            si.totalAmount,
+            si.productType,
+            si.status,
+            si.createdAt,
+            si.updatedAt
+        FROM SALESITEM si
+        WHERE si.itemSalesId = #{value}
+    </select>
+
+    <!-- 등록 -->
+    <insert id="insertSalesItem" parameterType="com.example.gymerp.dto.SalesItem">
         <selectKey keyProperty="itemSalesId" resultType="long" order="BEFORE">
             SELECT SALESITEM_SEQ.NEXTVAL FROM DUAL
         </selectKey>
 
         INSERT INTO SALESITEM (
             itemSalesId, productId, productName,
-            empNum, quantity, unitPrice, totalAmount,  productType, status, createdAt, updatedAt
+            empNum, quantity, unitPrice, totalAmount,
+            productType, status, createdAt, updatedAt
         ) VALUES (
             #{itemSalesId}, #{productId}, #{productName},
-            #{empNum}, #{quantity}, #{unitPrice}, #{totalAmount},  #{productType}, #{status}, #{createdAt}, #{updatedAt}
+            #{empNum}, #{quantity}, #{unitPrice}, #{totalAmount},
+            #{productType}, #{status}, #{createdAt}, #{updatedAt}
         )
     </insert>
 
-    <update id="updateSalesItem" parameterType="SalesItem">
+    <!-- 수정 -->
+    <update id="updateSalesItem" parameterType="com.example.gymerp.dto.SalesItem">
         UPDATE SALESITEM
         SET
-            productId = #{productId},
+            productId   = #{productId},
             productName = #{productName},
-            empNum = #{empNum},  quantity = #{quantity},
-            unitPrice = #{unitPrice},
+            empNum      = #{empNum},
+            quantity    = #{quantity},
+            unitPrice   = #{unitPrice},
             totalAmount = #{totalAmount},
             productType = #{productType},
-            status = #{status},
+            status      = #{status},
+            updatedAt   = #{updatedAt}
+        WHERE itemSalesId = #{itemSalesId}
+    </update>
+
+    <!-- 삭제(Soft Delete): map으로 itemSalesId + updatedAt 둘 다 받기 -->
+    <update id="deleteSalesItem" parameterType="map">
+        UPDATE SALESITEM
+        SET status = 'DELETED',
             updatedAt = #{updatedAt}
         WHERE itemSalesId = #{itemSalesId}
     </update>
 
-    <update id="deleteSalesItem" parameterType="long">
-        UPDATE SALESITEM
-        SET status = 'DELETED'
-        WHERE itemSalesId = #{itemSalesId}
-    </update>
-    
+    <!-- 집계: 상품별 합계 -->
     <select id="selectItemSalesAnalytics" resultType="map" parameterType="map">
-	    SELECT
-	        si.productId,
-	        si.productName,
-	        si.productType,
-	        SUM(si.quantity) AS totalQuantity,           SUM(si.totalAmount) AS totalSalesAmount      FROM
-	        sales_item si
-	    WHERE
-	        si.status = 'ACTIVE'                         <if test="startDate != null and endDate != null">
-	        AND si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
-	    </if>
-	    
-	    <if test="itemIds != null and itemIds.size() > 0">
-	        AND si.productId IN
-	        <foreach collection="itemIds" item="itemId" open="(" close=")" separator=",">
-	            #{itemId}
-	        </foreach>
-	    </if>
-	    
-	    <if test="empNum != null">
-	        AND si.empNum = #{empNum}
-	    </if>
-	    
-	    GROUP BY
-	        si.productId, si.productName, si.productType
-	    ORDER BY
-	        totalSalesAmount DESC
-	</select>
-	
-	<select id="selectItemSalesGraphData" resultType="map" parameterType="map">
-	    SELECT
-	        CASE WHEN #{groupByUnit} = 'MONTH' 
-	             THEN TO_CHAR(si.createdAt, 'YYYY-MM')
-	             ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD') 
-	        END AS groupDate,
-	        
-	        SUM(si.totalAmount) AS dailyOrMonthlySales  FROM
-	        sales_item si
-	    WHERE
-	        si.status = 'ACTIVE'
-	        
-	        <if test="startDate != null and endDate != null">
-	            AND si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
-	        </if>
-	        
-	    GROUP BY
-	        CASE WHEN #{groupByUnit} = 'MONTH' 
-	             THEN TO_CHAR(si.createdAt, 'YYYY-MM')
-	             THEN TO_CHAR(si.createdAt, 'YYYY-MM-DD') 
-	        END
-	    ORDER BY
-	        groupDate ASC
-	</select>
+        SELECT
+            si.productId,
+            si.productName,
+            si.productType,
+            SUM(si.quantity)     AS totalQuantity,
+            SUM(si.totalAmount)  AS totalSalesAmount
+        FROM SALESITEM si
+        WHERE si.status = 'ACTIVE'
+        <if test="startDate != null and endDate != null">
+            AND si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                                 AND TO_DATE(#{endDate},   'YYYY-MM-DD') + 0.99999
+        </if>
+        <if test="itemIds != null and itemIds.size() > 0">
+            AND si.productId IN
+            <foreach collection="itemIds" item="itemId" open="(" close=")" separator=",">
+                #{itemId}
+            </foreach>
+        </if>
+        <if test="empNum != null">
+            AND si.empNum = #{empNum}
+        </if>
+        GROUP BY
+            si.productId, si.productName, si.productType
+        ORDER BY totalSalesAmount DESC
+    </select>
+
+    <!-- 그래프 데이터: 일/월 단위 집계 -->
+    <select id="selectItemSalesGraphData" resultType="map" parameterType="map">
+        SELECT
+            CASE WHEN #{groupByUnit} = 'MONTH'
+                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
+                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
+            END AS groupDate,
+            SUM(si.totalAmount) AS dailyOrMonthlySales
+        FROM SALESITEM si
+        WHERE si.status = 'ACTIVE'
+        <if test="startDate != null and endDate != null">
+            AND si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                                 AND TO_DATE(#{endDate},   'YYYY-MM-DD') + 0.99999
+        </if>
+        GROUP BY
+            CASE WHEN #{groupByUnit} = 'MONTH'
+                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
+                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
+            END
+        ORDER BY groupDate ASC
+    </select>
 
 </mapper>
