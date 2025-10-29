@@ -1,6 +1,7 @@
 package com.example.gymerp.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.example.gymerp.dto.SalesItem;
 
@@ -20,4 +21,9 @@ public interface SalesItemService {
 
     // 상품 판매 내역 삭제 (status = 'DELETED')
     int deleteSalesItem(Long itemSalesId);
+
+	List<Map<String, Object>> getItemSalesAnalytics(String startDate, String endDate, List<Long> itemIds, Long memNum,
+			Long empNum);
+
+	Map<String, List<Map<String, Object>>> getItemSalesGraphData(String startDate, String endDate, String groupByUnit);
 }

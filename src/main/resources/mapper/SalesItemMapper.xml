@@ -51,5 +51,59 @@
         SET status = 'DELETED'
         WHERE itemSalesId = #{itemSalesId}
     </update>
+    
+    <select id="selectItemSalesAnalytics" resultType="map" parameterType="map">
+	    SELECT
+	        si.productId,
+	        si.productName,
+	        si.productType,
+	        SUM(si.quantity) AS totalQuantity,           SUM(si.totalAmount) AS totalSalesAmount      FROM
+	        sales_item si
+	    WHERE
+	        si.status = 'ACTIVE'                         <if test="startDate != null and endDate != null">
+	        AND si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+	    </if>
+	    
+	    <if test="itemIds != null and itemIds.size() > 0">
+	        AND si.productId IN
+	        <foreach collection="itemIds" item="itemId" open="(" close=")" separator=",">
+	            #{itemId}
+	        </foreach>
+	    </if>
+	    
+	    <if test="empNum != null">
+	        AND si.empNum = #{empNum}
+	    </if>
+	    
+	    GROUP BY
+	        si.productId, si.productName, si.productType
+	    ORDER BY
+	        totalSalesAmount DESC
+	</select>
+	
+	<select id="selectItemSalesGraphData" resultType="map" parameterType="map">
+	    SELECT
+	        CASE WHEN #{groupByUnit} = 'MONTH' 
+	             THEN TO_CHAR(si.createdAt, 'YYYY-MM')
+	             ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD') 
+	        END AS groupDate,
+	        
+	        SUM(si.totalAmount) AS dailyOrMonthlySales  FROM
+	        sales_item si
+	    WHERE
+	        si.status = 'ACTIVE'
+	        
+	        <if test="startDate != null and endDate != null">
+	            AND si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+	        </if>
+	        
+	    GROUP BY
+	        CASE WHEN #{groupByUnit} = 'MONTH' 
+	             THEN TO_CHAR(si.createdAt, 'YYYY-MM')
+	             THEN TO_CHAR(si.createdAt, 'YYYY-MM-DD') 
+	        END
+	    ORDER BY
+	        groupDate ASC
+	</select>
 
 </mapper>
