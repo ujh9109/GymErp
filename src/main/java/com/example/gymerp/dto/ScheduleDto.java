@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
-@Alias("Schedule")
+@Alias("ScheduleDto")
 @Builder 
 @NoArgsConstructor
 @AllArgsConstructor

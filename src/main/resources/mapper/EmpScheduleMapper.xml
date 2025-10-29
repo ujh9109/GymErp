@@ -58,7 +58,7 @@
         LEFT JOIN Etc t
              ON e.refType = 'etc' AND e.refId = t.etcNum
         WHERE e.empNum = #{empNum}
-          AND e.date BETWEEN #{startDate} AND #{endDate}
+          AND e."DATE" BETWEEN #{startDate} AND #{endDate}
         ORDER BY e.date, e.startTime
     </select>
 

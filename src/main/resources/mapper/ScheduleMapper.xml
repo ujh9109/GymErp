@@ -4,14 +4,14 @@
 
 
 	<!-- 전체 스케줄 조회 -->
-    <select id="selectAllSchedules" resultType="Schedule">
+    <select id="selectAllSchedules" resultType="ScheduleDto">
         SELECT shNum, empNum, startTime, endTime, memo, color
         FROM SCHEDULE
         ORDER BY startTime
     </select>
 
     <!-- 특정 날짜 스케줄 조회 -->
-    <select id="findByDate" parameterType="String" resultType="Schedule">
+    <select id="findByDate" parameterType="String" resultType="ScheduleDto">
         SELECT shNum, empNum, startTime, endTime, memo, color
         FROM SCHEDULE
         WHERE TRUNC(startTime) = TO_DATE(#{date}, 'YYYY-MM-DD')
@@ -19,7 +19,7 @@
     </select>
 
     <!-- 단건 조회 -->
-    <select id="findByShNum" parameterType="int" resultType="Schedule">
+    <select id="findByShNum" parameterType="int" resultType="ScheduleDto">
         SELECT shNum, empNum, startTime, endTime, memo, color
         FROM SCHEDULE
         WHERE shNum = #{shNum}

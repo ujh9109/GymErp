@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Alias("EmpSchedule")
+
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,6 +26,10 @@ public class EmpScheduleDto {
 	private LocalDateTime startTime; 	// 시작시간
 	private LocalDateTime endTime; 		// 종료시간
 	private String memo; 				// 메모
+	
+	private PTreservationDto registration; // registration 상세
+    private EmpVacationDto vacation;         // vacation 상세
+    private EtcDto etc;                   // etc 상세
 	
 
 }
