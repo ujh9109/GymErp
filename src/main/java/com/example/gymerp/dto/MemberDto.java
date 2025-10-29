@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class MemberDto {
-	 private int memNum;              // 회원 고유번호 (PK)
+	 private int memNum;              // 회원 고유번호 (PK)asasadad
 	 private String memName;          // 회원 이름
 	 private String memGender;        // 성별
 	 private Date memBirthday;        // 생일
