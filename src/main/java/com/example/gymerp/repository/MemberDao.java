@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.example.gymerp.dto.MemberDto;
 
+//주석
 public interface MemberDao {
 	
 	public List<MemberDto> selectAll(); // 전체 회원 조회 

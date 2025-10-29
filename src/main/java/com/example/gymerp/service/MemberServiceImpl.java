@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Service
 public class MemberServiceImpl implements MemberService {
-	
+	// 주석
 	private final MemberDao memberDao;
 	
 	@Override

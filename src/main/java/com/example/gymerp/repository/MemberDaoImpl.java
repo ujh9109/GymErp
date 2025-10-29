@@ -10,6 +10,7 @@ import com.example.gymerp.dto.MemberDto;
 import lombok.RequiredArgsConstructor;
 
 
+//주석
 @Repository
 @RequiredArgsConstructor
 public class MemberDaoImpl implements MemberDao {
