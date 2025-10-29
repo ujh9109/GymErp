@@ -1,3 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="EmpAttendanceMapper"></mapper>
+<mapper namespace="EmpAttendanceMapper">
+
+  <!-- 전체 목록 -->
+  <select id="selectAllEmpAttendances" resultType="com.example.gymerp.dto.EmpAttendanceDto">
+    SELECT
+      attNum, empNum, attDate, checkIn, checkOut, workHours, attState
+    FROM emp_attendance
+    ORDER BY attNum DESC
+  </select>
+
+  <!-- 단건 조회 -->
+  <select id="selectEmpAttendanceById" parameterType="long" resultType="com.example.gymerp.dto.EmpAttendanceDto">
+    SELECT
+      attNum, empNum, attDate, checkIn, checkOut, workHours, attState
+    FROM emp_attendance
+    WHERE attNum = #{attNum}
+  </select>
+
+  <!-- 직원별 목록 -->
+  <select id="selectEmpAttendancesByEmpNum" parameterType="long" resultType="com.example.gymerp.dto.EmpAttendanceDto">
+    SELECT
+      attNum, empNum, attDate, checkIn, checkOut, workHours, attState
+    FROM emp_attendance
+    WHERE empNum = #{empNum}
+    ORDER BY attDate DESC, attNum DESC
+  </select>
+
+  <!-- 출근(등록) -->
+  <insert id="insertEmpAttendance" parameterType="com.example.gymerp.dto.EmpAttendanceDto">
+    INSERT INTO emp_attendance
+      (attNum, empNum, attDate, checkIn, checkOut, workHours, attState)
+    VALUES
+      (#{attNum}, #{empNum}, #{attDate,jdbcType=DATE},
+       #{checkIn,jdbcType=TIMESTAMP}, #{checkOut,jdbcType=TIMESTAMP},
+       #{workHours}, #{attState})
+  </insert>
+
+  <!-- 퇴근시간만 업데이트 -->
+  <update id="updateEmpAttendanceCheckOut" parameterType="map">
+    UPDATE emp_attendance
+       SET checkOut = #{checkOut,jdbcType=TIMESTAMP}
+     WHERE attNum   = #{attNum}
+  </update>
+
+  <!-- 전체 수정 -->
+  <update id="updateEmpAttendance" parameterType="com.example.gymerp.dto.EmpAttendanceDto">
+    UPDATE emp_attendance
+       SET empNum    = #{empNum},
+           attDate   = #{attDate,jdbcType=DATE},
+           checkIn   = #{checkIn,jdbcType=TIMESTAMP},
+           checkOut  = #{checkOut,jdbcType=TIMESTAMP},
+           workHours = #{workHours},
+           attState  = #{attState}
+     WHERE attNum    = #{attNum}
+  </update>
+
+  <!-- 삭제 -->
+  <delete id="deleteEmpAttendance" parameterType="long">
+    DELETE FROM emp_attendance
+    WHERE attNum = #{attNum}
+  </delete>
+
+</mapper>
