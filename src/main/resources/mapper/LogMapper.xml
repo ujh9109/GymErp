@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="LogMapper">
+
+    <!-- ===============================
+         [회원권 관련]
+    =============================== -->
+
+    <!-- 회원권 유효성 확인 -->
+    <select id="checkVoucherValid" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM voucher_log
+        WHERE memNum = #{memNum}
+          AND endDate >= SYSDATE
+    </select>
+
+    <!-- 회원권 단건 조회 -->
+    <select id="selectVoucherByMember" parameterType="long" resultType="VoucherLogDto">
+        SELECT voucherId, memNum, memberName, startDate, endDate
+        FROM voucher_log
+        WHERE memNum = #{memNum}
+    </select>
+
+    <!-- 회원권 등록 -->
+    <insert id="insertVoucherLog" parameterType="VoucherLogDto">
+        <selectKey keyProperty="voucherId" resultType="long" order="BEFORE">
+            SELECT voucher_log_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO voucher_log (
+            voucherId, memNum, memberName, startDate, endDate
+        ) VALUES (
+            #{voucherId}, #{memNum}, #{memberName}, SYSDATE, SYSDATE + #{period}
+        )
+    </insert>
+
+    <!-- 회원권 기간 연장 -->
+    <update id="updateVoucherLog" parameterType="VoucherLogDto">
+        UPDATE voucher_log
+        SET 
+            startDate = CASE WHEN endDate &lt; SYSDATE THEN SYSDATE ELSE startDate END,
+            endDate   = CASE WHEN endDate &lt; SYSDATE THEN SYSDATE + #{period} ELSE endDate + #{period} END
+        WHERE memNum = #{memNum}
+    </update>
+    
+    <!-- 회원권 로그 직접 수정 -->
+    <update id="updateVoucherLogManual" parameterType="VoucherLogDto">
+        UPDATE voucher_log
+        SET 
+            memberName = #{memberName},
+            startDate  = #{startDate},
+            endDate    = #{endDate}
+        WHERE voucherId = #{voucherId}
+    </update>
+
+
+    <!-- ===============================
+         [PT 로그 관련]
+    =============================== -->
+
+    <!-- PT 충전 로그 insert -->
+    <insert id="insertPtChargeLog" parameterType="PtLogDto">
+        <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
+            SELECT pt_log_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO pt_log (
+            usageId, memNum, empNum, trainerName, memberName,
+            status, countChange, totalAmount, consumeAmount, createdAt
+        ) VALUES (
+            #{usageId}, #{memNum}, #{empNum}, #{trainerName}, #{memberName},
+            '충전', #{countChange}, #{totalAmount}, 0, SYSDATE
+        )
+    </insert>
+
+    <!-- PT 소비 로그 insert -->
+    <insert id="insertPtConsumeLog" parameterType="PtLogDto">
+        <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
+            SELECT pt_log_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO pt_log (
+            usageId, memNum, empNum, trainerName, memberName,
+            status, countChange, totalAmount, consumeAmount, createdAt
+        ) VALUES (
+            #{usageId}, #{memNum}, #{empNum}, #{trainerName}, #{memberName},
+            '소비', -1, 0, #{consumeAmount}, SYSDATE
+        )
+    </insert>
+
+    <!-- PT 변경 로그 insert -->
+    <insert id="insertPtChangeLog" parameterType="PtLogDto">
+        <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
+            SELECT pt_log_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO pt_log (
+            usageId, memNum, empNum, trainerName, memberName,
+            status, countChange, totalAmount, consumeAmount, createdAt
+        ) VALUES (
+            #{usageId}, #{memNum}, #{empNum}, #{trainerName}, #{memberName},
+            '변경', #{countChange}, #{totalAmount}, 0, SYSDATE
+        )
+    </insert>
+    
+     <!-- PT 로그 직접 수정 -->
+    <update id="updatePtLogManual" parameterType="PtLogDto">
+        UPDATE pt_log
+        SET 
+            empNum        = #{empNum},
+            trainerName   = #{trainerName},
+            memberName    = #{memberName},
+            status        = #{status},
+            countChange   = #{countChange},
+            totalAmount   = #{totalAmount},
+            consumeAmount = #{consumeAmount},
+            createdAt     = #{createdAt}
+        WHERE usageId = #{usageId}
+    </update>
+
+    <!-- 남은 PT 횟수 조회 -->
+    <select id="selectRemainingPtCount" parameterType="long" resultType="int">
+        SELECT NVL(SUM(countChange), 0)
+        FROM pt_log
+        WHERE memNum = #{memNum}
+    </select>
+
+    <!-- 기존 트레이너 번호 조회 -->
+    <select id="selectOldTrainerEmpNum" parameterType="long" resultType="long">
+        SELECT empNum
+        FROM pt_log
+        WHERE memNum = #{memNum}
+          AND usageId = (SELECT MAX(usageId) FROM pt_log WHERE memNum = #{memNum})
+    </select>
+
+    <!-- 기존 트레이너 이름 조회 -->
+    <select id="selectOldTrainerName" parameterType="long" resultType="string">
+        SELECT trainerName
+        FROM pt_log
+        WHERE memNum = #{memNum}
+          AND usageId = (SELECT MAX(usageId) FROM pt_log WHERE memNum = #{memNum})
+    </select>
+
+    <!-- 총 판매 횟수 -->
+    <select id="selectTotalPtCount" parameterType="long" resultType="int">
+        SELECT NVL(baseCount, 0)
+        FROM sales_service
+        WHERE memNum = #{memNum}
+          AND serviceType = 'PT'
+          AND status != 'DELETED'
+    </select>
+
+    <!-- 총 판매 금액 -->
+    <select id="selectTotalPtAmount" parameterType="long" resultType="int">
+        SELECT NVL(actualAmount, 0)
+        FROM sales_service
+        WHERE memNum = #{memNum}
+          AND serviceType = 'PT'
+          AND status != 'DELETED'
+    </select>
+
+</mapper>
