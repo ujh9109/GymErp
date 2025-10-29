@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmpScheduleMapper">
+
+	<!-- 전체 조회 (refDetail 포함) -->
+	<select id="selectAll" resultType="EmpScheduleDto">
+		SELECT e.*,
+		CASE e.refType
+		WHEN 'PT' THEN p.detail
+		WHEN 'VACATION' THEN v.detail
+		ELSE e.memo
+		END AS refDetail
+		FROM EMP_SCHEDULE e
+		LEFT JOIN PT_SCHEDULE p
+		ON e.refType = 'PT' AND e.refId = p.pt_num
+		LEFT JOIN VACATION_SCHEDULE v
+		ON e.refType = 'VACATION' AND e.refId = v.vac_num
+		ORDER BY e.date, e.start_time
+	</select>
+
+	<!-- PK 조회 -->
+	<select id="selectByCalNum" resultType="EmpScheduleDto">
+		SELECT e.*,
+		CASE e.refType
+		WHEN 'PT' THEN p.detail
+		WHEN 'VACATION' THEN v.detail
+		ELSE e.memo
+		END AS refDetail
+		FROM EMP_SCHEDULE e
+		LEFT JOIN PT_SCHEDULE p
+		ON e.refType = 'PT' AND e.refId = p.pt_num
+		LEFT JOIN VACATION_SCHEDULE v
+		ON e.refType = 'VACATION' AND e.refId = v.vac_num
+		WHERE e.cal_num = #{calNum}
+	</select>
+
+	<!-- 직원 + 날짜 범위 조회 -->
+	<select id="selectByEmpAndDate" resultType="EmpScheduleDto">
+		SELECT e.*,
+		CASE e.refType
+		WHEN 'PT' THEN p.detail
+		WHEN 'VACATION' THEN v.detail
+		ELSE e.memo
+		END AS refDetail
+		FROM EMP_SCHEDULE e
+		LEFT JOIN PT_SCHEDULE p
+		ON e.refType = 'PT' AND e.refId = p.pt_num
+		LEFT JOIN VACATION_SCHEDULE v
+		ON e.refType = 'VACATION' AND e.refId = v.vac_num
+		WHERE e.emp_num = #{empNum}
+		AND e.date BETWEEN #{startDate} AND #{endDate}
+		ORDER BY e.date, e.start_time
+	</select>
+
+	<!-- 삽입 (Oracle 시퀀스 사용) -->
+	<insert id="insert" parameterType="EmpScheduleDto">
+		<selectKey keyProperty="calNum" resultType="int"
+			order="BEFORE">
+			SELECT EMP_SCHEDULE_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO EMP_SCHEDULE
+		(cal_num, sh_num, emp_num, color, cal_type, ref_type, ref_id, date, start_time,
+		end_time, memo)
+		VALUES
+		(#{calNum}, #{shNum}, #{empNum}, #{color}, #{calType}, #{refType}, #{refId},
+		#{date}, #{startTime}, #{endTime}, #{memo})
+	</insert>
+
+	<!-- 수정 -->
+	<update id="update" parameterType="EmpScheduleDto">
+		UPDATE EMPSCHEDULE
+		SET sh_num = #{shNum},
+		emp_num = #{empNum},
+		color = #{color},
+		cal_type = #{calType},
+		ref_type = #{refType},
+		ref_id = #{refId},
+		date = #{date},
+		start_time = #{startTime},
+		end_time = #{endTime},
+		memo = #{memo}
+		WHERE cal_num = #{calNum}
+	</update>
+
+	<!-- 삭제 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM EMP_SCHEDULE
+		WHERE cal_num = #{calNum}
+	</delete>
+
+
+
+</mapper>
+

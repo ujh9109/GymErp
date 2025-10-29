@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ScheduleMapper">
+
+
+	<select id="findAllSchedulesByEmpNum" parameterType="int"
+		resultType="ScheduleDto">
+		SELECT shNum, empNum, startTime, endTime, memo, color, refType, refId
+		FROM SCHEDULE
+		WHERE empNum = #{empNum}
+
+		UNION ALL
+
+		SELECT vacNum AS shNum,
+		empNum,
+		CAST(vacStartedAt AS TIMESTAMP) AS startTime,
+		CAST(vacEndedAt AS TIMESTAMP) AS endTime,
+		vacContent AS memo,
+		'#FFA500' AS color,
+		'VACATION' AS refType,
+		vacNum AS refId
+		FROM VACATION
+		WHERE empNum = #{empNum} AND vacState = 'APPROVED'
+
+		UNION ALL
+
+		SELECT attNum AS shNum,
+		empNum,
+		CAST(date AS TIMESTAMP) AS startTime,
+		CAST(date AS TIMESTAMP) AS endTime,
+		attState AS memo,
+		'#00FF00' AS color,
+		'ATTENDANCE' AS refType,
+		attNum AS refId
+		FROM ATTENDANCE
+		WHERE empNum = #{empNum}
+
+		ORDER BY startTime
+	</select>
+
+	<!-- 전체 스케줄 조회 -->
+	<select id="selectAllSchedules" resultType="Schedule">
+		SELECT *
+		FROM SCHEDULE
+		ORDER BY startTime
+	</select>
+
+	<!-- 특정 날짜 스케줄 조회 -->
+	<select id="findByDate" parameterType="String"
+		resultType="Schedule">
+		SELECT *
+		FROM SCHEDULE
+		WHERE TRUNC(startTime) =
+		TO_DATE(#{date}, 'YYYY-MM-DD')
+		ORDER BY startTime
+	</select>
+
+	<!-- 특정 직원 스케줄 조회 -->
+	<select id="findByEmpNum" parameterType="int"
+		resultType="Schedule">
+		SELECT *
+		FROM SCHEDULE
+		WHERE empNum = #{empNum}
+		ORDER BY
+		startTime
+	</select>
+
+	<!-- 단건 조회 -->
+	<select id="findByShNum" parameterType="int"
+		resultType="Schedule">
+		SELECT *
+		FROM SCHEDULE
+		WHERE shNum = #{shNum}
+	</select>
+
+	<!-- 스케줄 등록 -->
+	<insert id="insert" parameterType="ScheduleDto">
+		<selectKey keyProperty="shNum" resultType="int"
+			order="BEFORE">
+			SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+
+		INSERT INTO SCHEDULE (
+		shNum, empNum, startTime, endTime, memo, color,
+		refType, refId
+		)
+		VALUES (
+		#{shNum}, #{empNum}, #{startTime}, #{endTime},
+		#{memo}, #{color}, #{refType},
+		#{refId}
+		)
+	</insert>
+
+	<!-- 스케줄 수정 -->
+	<update id="update" parameterType="ScheduleDto">
+		UPDATE SCHEDULE
+		SET
+		empNum =
+		#{empNum},
+		startTime = #{startTime},
+		endTime = #{endTime},
+		memo =
+		#{memo},
+		color = #{color},
+		refType = #{refType},
+		refId = #{refId}
+		WHERE
+		shNum = #{shNum}
+	</update>
+
+	<!-- 스케줄 삭제 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM SCHEDULE
+		WHERE
+		shNum = #{shNum}
+	</delete>
+
+
+
+</mapper>
+
