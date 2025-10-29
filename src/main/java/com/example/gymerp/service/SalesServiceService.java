@@ -21,11 +21,10 @@ public interface SalesServiceService {
 
     // 서비스 판매 삭제
     int deleteSalesService(Long serviceSalesId);
-
-    // 서비스 매출 통계 조회
-    List<Map<String, Object>> getServiceSalesAnalytics(String startDate, String endDate, List<Long> serviceIds, Long memNum, Long empNum);
+    
+    // 서비스 매출 내역 조회(페이지 내 스크롤 + 페이지네이션)
+    Map<String, Object> getPagedServiceSales(String keyword, int page, int scrollStep, Long empNum, Long memNum, List<Long> serviceIds, String startDate, String endDate);
 
     // 서비스 매출 그래프 조회
-    List<Map<String, Object>> getServiceSalesGraph(String startDate, String endDate, List<Long> serviceIds, Long memNum, Long empNum);
-    
+    List<Map<String, Object>> getServiceSalesGraph(String startDate, String endDate, List<Long> serviceIds, Long memNum, Long empNum);   
 }

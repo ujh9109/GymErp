@@ -2,7 +2,6 @@ package com.example.gymerp.controller;
 
 import java.util.List;
 
-
 import org.springframework.web.bind.annotation.*;
 
 import com.example.gymerp.dto.SalesService;
@@ -36,17 +35,15 @@ public class SalesServiceController {
     }
 
     // 서비스 판매 수정
-    @PutMapping("/sales/services/{id}/edit")
+    @PutMapping("/sales/services/{id}")
     public int updateSalesService(@PathVariable("id") Long id, @RequestBody SalesService salesService) {
         salesService.setServiceSalesId(id);
         return salesServiceService.updateSalesService(salesService);
     }
 
     // 서비스 판매 삭제 (status = 'DELETED')
-    @PutMapping("/sales/services/{id}/delete")
+    @DeleteMapping("/sales/services/{id}")
     public int deleteSalesService(@PathVariable("id") Long id) {
         return salesServiceService.deleteSalesService(id);
     }
-
-    
 }
