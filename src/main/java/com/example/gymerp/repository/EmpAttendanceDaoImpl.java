@@ -1,6 +1,7 @@
 // src/main/java/com/example/gymerp/repository/EmpAttendanceDaoImpl.java
 package com.example.gymerp.repository;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
@@ -27,14 +28,24 @@ public class EmpAttendanceDaoImpl implements EmpAttendanceDao {
 
     // 근태 단건 조회
     @Override
-    public EmpAttendanceDto selectEmpAttendanceById(Long attNum) {
+    public EmpAttendanceDto selectEmpAttendanceById(int attNum) {
         return session.selectOne("EmpAttendanceMapper.selectEmpAttendanceById", attNum);
     }
 
     // 직원별 근태 목록
     @Override
-    public List<EmpAttendanceDto> selectEmpAttendancesByEmpNum(Long empNum) {
+    public List<EmpAttendanceDto> selectEmpAttendancesByEmpNum(int empNum) {
         return session.selectList("EmpAttendanceMapper.selectEmpAttendancesByEmpNum", empNum);
+    }
+
+    // ✅ 기간(달력 범위) 조회: [from, to]
+    @Override
+    public List<EmpAttendanceDto> selectEmpAttendancesByRange(int empNum, Date from, Date to) {
+        Map<String, Object> p = new HashMap<>();
+        p.put("empNum", empNum);
+        p.put("from", from);
+        p.put("to", to);
+        return session.selectList("EmpAttendanceMapper.selectEmpAttendancesByRange", p);
     }
 
     // 출근(등록)
@@ -45,14 +56,14 @@ public class EmpAttendanceDaoImpl implements EmpAttendanceDao {
 
     // 퇴근시간만 업데이트
     @Override
-    public int updateEmpAttendanceCheckOut(Long attNum, Timestamp checkOut) {
+    public int updateEmpAttendanceCheckOut(int attNum, Timestamp checkOut) {
         Map<String, Object> p = new HashMap<>();
         p.put("attNum", attNum);
         p.put("checkOut", checkOut);
         return session.update("EmpAttendanceMapper.updateEmpAttendanceCheckOut", p);
     }
 
-    // 전체 수정이 필요할 때
+    // 전체 수정
     @Override
     public int updateEmpAttendance(EmpAttendanceDto dto) {
         return session.update("EmpAttendanceMapper.updateEmpAttendance", dto);
@@ -60,7 +71,7 @@ public class EmpAttendanceDaoImpl implements EmpAttendanceDao {
 
     // 삭제
     @Override
-    public int deleteEmpAttendance(Long attNum) {
+    public int deleteEmpAttendance(int attNum) {
         return session.delete("EmpAttendanceMapper.deleteEmpAttendance", attNum);
     }
 }

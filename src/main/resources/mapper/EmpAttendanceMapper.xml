@@ -62,4 +62,12 @@
     WHERE attNum = #{attNum}
   </delete>
 
+<select id="selectEmpAttendancesByRange" resultType="com.example.gymerp.dto.EmpAttendanceDto">
+  SELECT attNum, empNum, attDate, checkIn, checkOut, workHours, attState
+  FROM emp_attendance
+  WHERE empNum = #{empNum}
+    AND attDate BETWEEN #{from} AND #{to}
+  ORDER BY attDate DESC, attNum DESC
+</select>
+
 </mapper>

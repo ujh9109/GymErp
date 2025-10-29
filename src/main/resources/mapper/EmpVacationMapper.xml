@@ -67,4 +67,14 @@
     WHERE vacNum = #{vacNum}
   </delete>
 
+<select id="selectEmpVacationsByRange" resultType="com.example.gymerp.dto.EmpVacationDto">
+  SELECT vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
+         earnedDays, remainingDays, usedDays
+  FROM vacation
+  WHERE empNum = #{empNum}
+    AND vacStartedAt <= #{to}
+    AND vacEndedAt   >= #{from}
+  ORDER BY vacStartedAt DESC
+</select>
+
 </mapper>
