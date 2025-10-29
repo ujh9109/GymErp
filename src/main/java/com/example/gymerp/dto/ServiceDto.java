@@ -13,24 +13,23 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDto {
-
+public class ServiceDto {
+	
 	private int num;
+	private int empNum;
 	private String codeA;
 	private String codeB;
 	private String name;
 	private BigDecimal price;
 	private Boolean isActive;
 	private String note;
-	private int quantity; // 입고 내역 테이블에 수량으로 저장할 필드
+	private int serviceValue;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	
 	//페이징 처리를 위한 필드
 	private int startRowNum;
 	private int endRowNum;
-	//프로필 이미지 출력을 위한 필드
-	private String ProfileImage;
 	//이전글, 다음글 처리를 위한 필드
 	private int prevNum;
 	private int nextNum;
