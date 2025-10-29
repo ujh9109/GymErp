@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.example.gymerp.dto.MemberDto;
 
+//주석
 public interface MemberService {
     // 회원 추가
     public void createMember(MemberDto dto);

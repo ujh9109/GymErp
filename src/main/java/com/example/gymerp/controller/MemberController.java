@@ -17,6 +17,7 @@ import com.example.gymerp.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
 
+//주석
 @RequestMapping("/v1")
 @RequiredArgsConstructor
 @RestController
