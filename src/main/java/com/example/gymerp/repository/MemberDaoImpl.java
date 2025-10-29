@@ -14,35 +14,31 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MemberDaoImpl implements MemberDao {
 	
-	final private SqlSession session;
-
-	// 회원 추가
-	@Override
-	public int createMember(MemberDto dto) {
-		return session.insert("MemberMapper.insertMember", dto);
-	}
-
-	// 회원 전체 조회
-	@Override
-	public List<MemberDto> getMemberList() {
-		return session.selectList("MemberMapper.selectAllMembers");
-	}
+	private final SqlSession session;
 
 	// 회원 상세 조회
 	@Override
-	public MemberDto getMemberById(int memNum) {
+	public MemberDto getByNum(int memNum) {
 		return session.selectOne("MemberMapper.selectMemberById", memNum);
 	}
 
-	// 회원 삭제
 	@Override
-	public int deleteMember(int memNum) {
+	public List<MemberDto> selectAll() {
+		return session.selectList("MemberMapper.selectAllMembers");
+	}
+
+	@Override
+	public void insert(MemberDto dto) {
+		session.insert("MemberMapper.insertMember", dto);
+	}
+
+	@Override
+	public int delete(int memNum) {
 		return session.delete("MemberMapper.deleteMember", memNum);
 	}
 
-	// 회원 수정
 	@Override
-	public int updateMember(MemberDto dto) {
+	public int update(MemberDto dto) {
 		return session.update("MemberMapper.updateMember", dto);
 	}
 	
