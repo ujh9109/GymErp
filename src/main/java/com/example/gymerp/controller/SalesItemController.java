@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 public class SalesItemController {
 
     private final com.example.gymerp.service.SalesItemService salesItemService;
+    
 
     // 상품 판매 내역 전체 조회
     @GetMapping("/sales/products")
