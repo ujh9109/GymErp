@@ -6,7 +6,7 @@
 <mapper namespace="MemberMapper">
 
     <!-- 전체 회원 조회 -->
-    <select id="selectAllMembers" resultType="MemberDto">
+    <select id="selectAllMembers" parameterType="MemberDto" resultType="MemberDto">
         SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
                memAddr, memCreated, memUpdated, memProfile, memNote
         FROM MEMBER
