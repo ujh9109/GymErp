@@ -1,4 +1,4 @@
-package com.example.gymerp.dto.repository;
+package com.example.gymerp.repository;
 
 import java.util.List;
 
