@@ -1,8 +1,11 @@
 package com.example.gymerp.repository;
 
+import org.apache.ibatis.annotations.Mapper;
+
 import com.example.gymerp.dto.PtLogDto;
 import com.example.gymerp.dto.VoucherLogDto;
 
+@Mapper
 public interface LogDao {
 
     /* 회원권 유효 여부 확인 */

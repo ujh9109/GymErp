@@ -2,8 +2,12 @@ package com.example.gymerp.repository;
 
 import java.util.List;
 import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
 import com.example.gymerp.dto.SalesService;
 
+@Mapper
 public interface SalesServiceDao {
 
     // 전체 서비스 판매 내역 조회

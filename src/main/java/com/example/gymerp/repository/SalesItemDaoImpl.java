@@ -3,12 +3,14 @@ package com.example.gymerp.repository;
 import java.util.List;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.SalesItem;
 
 import lombok.RequiredArgsConstructor;
 
+@Primary
 @Repository
 @RequiredArgsConstructor
 public class SalesItemDaoImpl implements SalesItemDao {

@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.ServiceDto;
 
 import lombok.RequiredArgsConstructor;
 
-// 모달 데이터 조회 DAO 구현체 (MyBatis 연동)
+@Primary
 @Repository
 @RequiredArgsConstructor
 public class ModalDaoImpl implements ModalDao {

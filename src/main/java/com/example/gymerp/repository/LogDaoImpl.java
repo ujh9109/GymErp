@@ -1,11 +1,13 @@
 package com.example.gymerp.repository;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 import com.example.gymerp.dto.PtLogDto;
 import com.example.gymerp.dto.VoucherLogDto;
 import lombok.RequiredArgsConstructor;
 
+@Primary
 @Repository
 @RequiredArgsConstructor
 public class LogDaoImpl implements LogDao {

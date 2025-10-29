@@ -3,9 +3,11 @@ package com.example.gymerp.repository;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Mapper;
+
 import com.example.gymerp.dto.ServiceDto;
 
-// 모달 데이터 조회를 위한 DAO 인터페이스
+@Mapper
 public interface ModalDao {
 	
 	/* ================================
