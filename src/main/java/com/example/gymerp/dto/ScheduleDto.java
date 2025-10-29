@@ -22,6 +22,6 @@ public class ScheduleDto {
 	private LocalDateTime endTime; 			// 끝나는 시간
 	private String memo; 					// 메모
 	private String color; 					// 캘린더 표시 색상
-	private String refType; 				// 참조 구분
-	private int refId; 						// 참조 번호
+
+	
 }
