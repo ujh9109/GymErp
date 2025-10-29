@@ -27,13 +27,16 @@
         </selectKey>
 
         INSERT INTO SALESSERVICE (
-            serviceSalesId, productId, productName, employeeId, memberId,
+            serviceSalesId, serviceId, serviceName,
+            empNum, memNum,
             baseCount, actualCount, discount, baseAmount, actualAmount, avgPrice,
-            productType, status, createdAt, updatedAt
-        ) VALUES (
-            #{serviceSalesId}, #{productId}, #{productName}, #{employeeId}, #{memberId},
+            serviceType, status, createdAt, updatedAt
+        )
+        VALUES (
+            #{serviceSalesId}, #{serviceId}, #{serviceName},
+            #{empNum}, #{memNum},
             #{baseCount}, #{actualCount}, #{discount}, #{baseAmount}, #{actualAmount}, #{avgPrice},
-            #{productType}, #{status}, #{createdAt}, #{updatedAt}
+            #{serviceType}, #{status}, #{createdAt}, #{updatedAt}
         )
     </insert>
 
@@ -41,19 +44,19 @@
     <update id="updateSalesService" parameterType="SalesService">
         UPDATE SALESSERVICE
         SET
-            productId = #{productId},
-            productName = #{productName},
-            employeeId = #{employeeId},
-            memberId = #{memberId},
-            baseCount = #{baseCount},
-            actualCount = #{actualCount},
-            discount = #{discount},
-            baseAmount = #{baseAmount},
+            serviceId    = #{serviceId},
+            serviceName  = #{serviceName},
+            empNum       = #{empNum},
+            memNum       = #{memNum},
+            baseCount    = #{baseCount},
+            actualCount  = #{actualCount},
+            discount     = #{discount},
+            baseAmount   = #{baseAmount},
             actualAmount = #{actualAmount},
-            avgPrice = #{avgPrice},
-            productType = #{productType},
-            status = #{status},
-            updatedAt = #{updatedAt}
+            avgPrice     = #{avgPrice},
+            serviceType  = #{serviceType},
+            status       = #{status},
+            updatedAt    = #{updatedAt}
         WHERE serviceSalesId = #{serviceSalesId}
     </update>
 
@@ -63,5 +66,122 @@
         SET status = 'DELETED'
         WHERE serviceSalesId = #{serviceSalesId}
     </update>
+
+    <!-- 서비스 매출 통계 조회 -->
+    <select id="selectServiceSalesAnalytics" parameterType="map" resultType="map">
+        SELECT 
+            <choose>
+                <when test="periodType == 'YEAR'">
+                    TO_CHAR(s.createdAt, 'YYYY') AS periodLabel,
+                </when>
+                <when test="periodType == 'MONTH'">
+                    TO_CHAR(s.createdAt, 'YYYY-MM') AS periodLabel,
+                </when>
+                <when test="periodType == 'WEEK'">
+                    TO_CHAR(s.createdAt, 'IYYY-IW') AS periodLabel,
+                </when>
+                <otherwise>
+                    TO_CHAR(s.createdAt, 'YYYY-MM-DD') AS periodLabel,
+                </otherwise>
+            </choose>
+
+            e.empName AS employeeName,
+            m.memberName AS memberName,
+            s.serviceName AS serviceName,
+            COUNT(s.serviceSalesId) AS salesCount,
+            SUM(s.actualAmount) AS totalSalesAmount,
+            ROUND(AVG(s.avgPrice), 2) AS avgPrice
+
+        FROM SALESSERVICE s
+        JOIN EMPLOYEE e ON s.empNum = e.empNum
+        JOIN MEMBER m   ON s.memNum = m.memNum
+        WHERE s.status != 'DELETED'
+
+        <if test="startDate != null and endDate != null">
+            AND s.createdAt BETWEEN #{startDate} AND #{endDate}
+        </if>
+
+        <if test="serviceIds != null and serviceIds.size() > 0">
+            AND s.serviceId IN
+            <foreach collection="serviceIds" item="sid" open="(" separator="," close=")">
+                #{sid}
+            </foreach>
+        </if>
+
+        <if test="memNum != null">
+            AND s.memNum = #{memNum}
+        </if>
+
+        <if test="empNum != null">
+            AND s.empNum = #{empNum}
+        </if>
+
+        <choose>
+            <when test="periodType == 'YEAR'">
+                GROUP BY TO_CHAR(s.createdAt, 'YYYY'), e.empName, m.memberName, s.serviceName
+            </when>
+            <when test="periodType == 'MONTH'">
+                GROUP BY TO_CHAR(s.createdAt, 'YYYY-MM'), e.empName, m.memberName, s.serviceName
+            </when>
+            <when test="periodType == 'WEEK'">
+                GROUP BY TO_CHAR(s.createdAt, 'IYYY-IW'), e.empName, m.memberName, s.serviceName
+            </when>
+            <otherwise>
+                GROUP BY TO_CHAR(s.createdAt, 'YYYY-MM-DD'), e.empName, m.memberName, s.serviceName
+            </otherwise>
+        </choose>
+
+        ORDER BY periodLabel ASC, totalSalesAmount DESC
+    </select>
+
+    <!-- 서비스 매출 그래프 조회 -->
+    <select id="selectServiceSalesGraph" parameterType="map" resultType="map">
+        SELECT
+            <choose>
+                <when test="serviceIds != null and serviceIds.size() > 0">
+                    s.serviceName AS label,
+                </when>
+                <otherwise>
+                    s.serviceType AS label,
+                </otherwise>
+            </choose>,
+            SUM(s.actualAmount) AS totalSalesAmount
+        FROM SALESSERVICE s
+        WHERE s.status != 'DELETED'
+
+        <!-- 기간 조건 -->
+        <if test="startDate != null and endDate != null">
+            AND s.createdAt BETWEEN #{startDate} AND #{endDate}
+        </if>
+
+        <!-- 직원 조건 -->
+        <if test="empNum != null">
+            AND s.empNum = #{empNum}
+        </if>
+
+        <!-- 품목 조건 -->
+        <if test="serviceIds != null and serviceIds.size() > 0">
+            AND s.serviceId IN
+            <foreach collection="serviceIds" item="sid" open="(" separator="," close=")">
+                #{sid}
+            </foreach>
+        </if>
+
+        <!-- 회원 조건 -->
+        <if test="memNum != null">
+            AND s.memNum = #{memNum}
+        </if>
+
+        <choose>
+            <when test="serviceIds != null and serviceIds.size() > 0">
+                GROUP BY s.serviceName
+            </when>
+            <otherwise>
+                GROUP BY s.serviceType
+            </otherwise>
+        </choose>
+
+        ORDER BY totalSalesAmount DESC
+    </select>
 
 </mapper>
