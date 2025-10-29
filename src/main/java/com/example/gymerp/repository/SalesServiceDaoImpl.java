@@ -24,7 +24,7 @@ public class SalesServiceDaoImpl implements SalesServiceDao {
 
     // 단일 판매 내역 조회
     @Override
-    public SalesService selectSalesServiceById(Long serviceSalesId) {
+    public SalesService selectSalesServiceById(Long serviceSalesId) {	
         return session.selectOne("SalesServiceMapper.selectSalesServiceById", serviceSalesId);
     }
 
