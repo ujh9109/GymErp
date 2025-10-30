@@ -22,25 +22,25 @@ public class EmpAttendanceController {
     private final EmpAttendanceService service;
 
     // 전체 목록
-    @GetMapping("/attendances")
+    @GetMapping("/attendance")
     public List<EmpAttendanceDto> getAll() {
         return service.getAllEmpAttendances();
     }
 
     // 직원별 목록 (?empNum=123)
-    @GetMapping(value = "/attendances", params = "empNum")
+    @GetMapping(value = "/attendance", params = "empNum")
     public List<EmpAttendanceDto> getByEmp(@RequestParam int empNum) {
         return service.getEmpAttendancesByEmpNum(empNum);
     }
 
     // 단건 조회
-    @GetMapping("/attendances/{attNum}")
+    @GetMapping("/attendance/{attNum}")
     public EmpAttendanceDto getOne(@PathVariable int attNum) {
         return service.getEmpAttendanceById(attNum);
     }
 
     // 출근(등록)
-    @PostMapping("/attendances")
+    @PostMapping("/attendance")
     public ResponseEntity<Void> checkIn(@RequestBody EmpAttendanceDto dto) {
         int rows = service.addEmpAttendance(dto);
         return rows > 0
@@ -49,7 +49,7 @@ public class EmpAttendanceController {
     }
 
     // 퇴근시간 업데이트 (예: checkOut=2025-10-29T18:30:00)
-    @PatchMapping("/attendances/{attNum}/checkout")
+    @PatchMapping("/attendance/{attNum}/checkout")
     public ResponseEntity<Void> checkOut(
             @PathVariable int attNum,
             @RequestParam String checkOut
@@ -60,7 +60,7 @@ public class EmpAttendanceController {
     }
 
     // 전체 수정
-    @PutMapping("/attendances/{attNum}")
+    @PutMapping("/attendance/{attNum}")
     public ResponseEntity<Void> update(@PathVariable int attNum, @RequestBody EmpAttendanceDto dto) {
         dto.setAttNum(attNum);
         service.updateEmpAttendance(dto);
@@ -68,7 +68,7 @@ public class EmpAttendanceController {
     }
 
     // 삭제
-    @DeleteMapping("/attendances/{attNum}")
+    @DeleteMapping("/attendance/{attNum}")
     public ResponseEntity<Void> delete(@PathVariable int attNum) {
         service.deleteEmpAttendance(attNum);
         return ResponseEntity.noContent().build();

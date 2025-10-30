@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ServiceDto {
 	
-	private int num;
+	private int serviceId;
 	private int empNum;
 	private String codeA;
 	private String codeB;
