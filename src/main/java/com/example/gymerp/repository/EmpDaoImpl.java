@@ -63,4 +63,20 @@ public class EmpDaoImpl implements EmpDao {
         return session.selectList("EmployeeMapper.searchEmp", paramMap);
 	}
 	
+	
+	
+	
+	/** 이용내역 DB 관련 내용입니다.*/
+	
+	// 직원 이름 단건 조회 (로그용)
+	@Override
+	public String selectEmployeeNameById(int empNum) {
+		return session.selectOne("EmployeeMapper.selectEmployeeNameById", empNum);
+	}
+
+	// 직원 존재 여부 확인 (판매 등록 시 유효성 검증용)
+	@Override
+	public int checkEmployeeExists(int empNum) {
+		return session.selectOne("EmployeeMapper.checkEmployeeExists", empNum);
+	}
 }

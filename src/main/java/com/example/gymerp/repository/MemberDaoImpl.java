@@ -47,6 +47,14 @@ public class MemberDaoImpl implements MemberDao {
 		return session.update("MemberMapper.updateMember", dto);
 	}
 
+	
+	
+	
+	
+	
+
+
+
 	// ▼ 추가: 프로필 이미지 수정
 	@Override
 	public int updateProfile(int memNum, String memProfile) {
@@ -55,5 +63,49 @@ public class MemberDaoImpl implements MemberDao {
 	    dto.setMemProfile(memProfile);
 	    return session.update("MemberMapper.updateMemberProfile", dto);
 	}
+	
+	
+	/** 이용내역 DB 관련 내용입니다.*/
 
+    // 회원 이름 단건 조회 (로그용)
+    @Override
+    public String selectMemberNameById(int memNum) {
+        return session.selectOne("MemberMapper.selectMemberNameById", memNum);
+    }
+
+    // 회원 존재 여부 확인 (유효성 검증용)
+    @Override
+    public int checkMemberExists(int memNum) {
+        return session.selectOne("MemberMapper.checkMemberExists", memNum);
+    }
+
+	@Override
+	public int createMember(MemberDto dto) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public List<MemberDto> getMemberList() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public MemberDto getMemberById(int memNum) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int deleteMember(int memNum) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int updateMember(MemberDto dto) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }
