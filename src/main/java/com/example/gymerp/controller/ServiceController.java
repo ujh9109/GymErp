@@ -68,5 +68,5 @@ public class ServiceController {
 		serviceService.updateServiceStatus(serviceId, dto.getIsActive());
 		
 		return ResponseEntity.ok().build();
-	}
+  }
 }

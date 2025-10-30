@@ -23,26 +23,37 @@ public class MemberDaoImpl implements MemberDao {
 		return session.selectOne("MemberMapper.selectMemberById", memNum);
 	}
 
+	// 전체 회원 조회
 	@Override
 	public List<MemberDto> selectAll() {
 		return session.selectList("MemberMapper.selectAllMembers");
 	}
 
+	// 회원 등록
 	@Override
 	public void insert(MemberDto dto) {
 		session.insert("MemberMapper.insertMember", dto);
 	}
 
+	// 회원 삭제 (소프트 삭제로 동작 가능)
 	@Override
 	public int delete(int memNum) {
-		return session.delete("MemberMapper.deleteMember", memNum);
+		return session.update("MemberMapper.deleteMember", memNum);
 	}
 
+	// 회원 전체 수정
 	@Override
 	public int update(MemberDto dto) {
 		return session.update("MemberMapper.updateMember", dto);
 	}
-	
-	
+
+	// ▼ 추가: 프로필 이미지 수정
+	@Override
+	public int updateProfile(int memNum, String memProfile) {
+	    MemberDto dto = new MemberDto();
+	    dto.setMemNum(memNum);
+	    dto.setMemProfile(memProfile);
+	    return session.update("MemberMapper.updateMemberProfile", dto);
+	}
 
 }
