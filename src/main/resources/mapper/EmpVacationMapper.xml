@@ -72,8 +72,8 @@
          earnedDays, remainingDays, usedDays
   FROM vacation
   WHERE empNum = #{empNum}
-    AND vacStartedAt <= #{to}
-    AND vacEndedAt   >= #{from}
+    AND vacStartedAt &lt;= #{to}
+    AND vacEndedAt   &gt;= #{from}
   ORDER BY vacStartedAt DESC
 </select>
 
