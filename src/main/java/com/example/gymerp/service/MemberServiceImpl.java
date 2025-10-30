@@ -2,44 +2,47 @@ package com.example.gymerp.service;
 
 import java.util.List;
 
-import com.example.gymerp.dto.MemberDto;
+import org.springframework.stereotype.Service;
 
+import com.example.gymerp.dto.MemberDto;
+import com.example.gymerp.repository.MemberDao;
+
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+@Service
 public class MemberServiceImpl implements MemberService {
+	// 주석
+	private final MemberDao memberDao;
 	
 	@Override
-	public int addMember(MemberDto dto) {
+	public void createMember(MemberDto dto) {
 		
-		return 0;
+		memberDao.insert(dto);
 	}
 
 	@Override
-	public int updateMember(MemberDto dto) {
+	public void updateMember(MemberDto dto) {
 		
-		return 0;
+		int rowCount = memberDao.update(dto);
 	}
 
 	@Override
-	public int deleteMember(int memNum) {
+	public void deleteMember(int memNum) {
 		
-		return 0;
+		int rowCount = memberDao.delete(memNum);
 	}
 
 	@Override
 	public MemberDto getMember(int memNum) {
 		
-		return null;
+		return memberDao.getByNum(memNum);
 	}
 
 	@Override
-	public List<MemberDto> getAllMembers(String keyword) {
+	public List<MemberDto> getAllMembers() {
 		
-		return null;
-	}
-
-	@Override
-	public int getMemberCount(String keyword) {
-		
-		return 0;
+		return memberDao.selectAll();
 	}
 
 }
