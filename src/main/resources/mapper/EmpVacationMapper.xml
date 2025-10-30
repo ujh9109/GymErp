@@ -12,7 +12,7 @@
   </select>
 
   <!-- 단건 조회 -->
-  <select id="selectEmpVacationById" parameterType="long" resultType="com.example.gymerp.dto.EmpVacationDto">
+  <select id="selectEmpVacationById" parameterType="int" resultType="com.example.gymerp.dto.EmpVacationDto">
     SELECT
       vacNum, empNum, vacStartedAt, vacEndedAt,
       vacContent, vacState, earnedDays, remainingDays, usedDays
@@ -21,7 +21,7 @@
   </select>
 
   <!-- 직원별 목록 -->
-  <select id="selectEmpVacationsByEmpNum" parameterType="long" resultType="com.example.gymerp.dto.EmpVacationDto">
+  <select id="selectEmpVacationsByEmpNum" parameterType="int" resultType="com.example.gymerp.dto.EmpVacationDto">
     SELECT
       vacNum, empNum, vacStartedAt, vacEndedAt,
       vacContent, vacState, earnedDays, remainingDays, usedDays
@@ -62,10 +62,21 @@
   </update>
 
   <!-- 삭제 -->
-  <delete id="deleteEmpVacation" parameterType="long">
+  <delete id="deleteEmpVacation" parameterType="int">
     DELETE FROM vacation
     WHERE vacNum = #{vacNum}
   </delete>
+
+<!-- 달력 범위 용 sql -->
+<select id="selectEmpVacationsByRange" resultType="com.example.gymerp.dto.EmpVacationDto">
+  SELECT vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
+         earnedDays, remainingDays, usedDays
+  FROM vacation
+  WHERE empNum = #{empNum}
+    AND vacStartedAt &lt;= #{to}
+    AND vacEndedAt   &gt;= #{from}
+  ORDER BY vacStartedAt DESC
+</select>
 
 
 </mapper>
