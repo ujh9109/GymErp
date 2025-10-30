@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MemberMapper">
+
+    <!-- 전체 회원 조회 -->
+    <select id="selectAllMembers" parameterType="MemberDto" resultType="MemberDto">
+        SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
+               memAddr, memCreated, memUpdated, memProfile, memNote
+        FROM MEMBER
+        ORDER BY memCreated DESC
+    </select>
+
+    <!-- 단일 회원 조회 -->
+    <select id="selectMemberById" parameterType="int" resultType="MemberDto">
+        SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
+               memAddr, memCreated, memUpdated, memProfile, memNote
+        FROM MEMBER
+        WHERE memNum = #{memNum}
+    </select>
+
+    <!-- 회원 등록 -->
+    <insert id="insertMember" parameterType="MemberDto">
+        <selectKey keyProperty="memNum" resultType="int" order="BEFORE">
+            SELECT MEMBER_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO MEMBER (
+            memNum, memName, memGender, memBirthday, memPhone,
+            memEmail, memAddr, memCreated, memUpdated, memProfile, memNote
+        ) VALUES (
+            #{memNum}, #{memName}, #{memGender}, #{memBirthday}, #{memPhone},
+            #{memEmail}, #{memAddr}, SYSDATE, SYSDATE, #{memProfile}, #{memNote}
+        )
+    </insert>
+
+    <!-- 회원 수정 -->
+    <update id="updateMember" parameterType="MemberDto">
+        UPDATE MEMBER
+        SET
+            memName = #{memName},
+            memGender = #{memGender},
+            memBirthday = #{memBirthday},
+            memPhone = #{memPhone},
+            memEmail = #{memEmail},
+            memAddr = #{memAddr},
+            memProfile = #{memProfile},
+            memNote = #{memNote},
+            memUpdated = SYSDATE
+        WHERE memNum = #{memNum}
+    </update>
+
+    <!-- 회원 삭제 (물리 삭제) -->
+    <delete id="deleteMember" parameterType="int">
+        DELETE FROM MEMBER
+        WHERE memNum = #{memNum}
+    </delete>
+
+</mapper>
