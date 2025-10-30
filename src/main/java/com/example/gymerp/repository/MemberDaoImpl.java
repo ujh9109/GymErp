@@ -47,5 +47,20 @@ public class MemberDaoImpl implements MemberDao {
 	}
 	
 	
+	
+	
+	
+	/** 이용내역 DB 관련 내용입니다.*/
 
+    // 회원 이름 단건 조회 (로그용)
+    @Override
+    public String selectMemberNameById(int memNum) {
+        return session.selectOne("MemberMapper.selectMemberNameById", memNum);
+    }
+
+    // 회원 존재 여부 확인 (유효성 검증용)
+    @Override
+    public int checkMemberExists(int memNum) {
+        return session.selectOne("MemberMapper.checkMemberExists", memNum);
+    }
 }

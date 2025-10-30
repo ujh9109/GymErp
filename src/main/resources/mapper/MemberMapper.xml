@@ -57,5 +57,29 @@
         DELETE FROM MEMBER
         WHERE memNum = #{memNum}
     </delete>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <!-- 이용내역 DB 관련 내용입니다.  -->
+    
+     <!-- 회원 이름 단건 조회 (로그용) -->
+    <select id="selectMemberNameById" parameterType="int" resultType="string">
+        SELECT memName
+        FROM MEMBER
+        WHERE memNum = #{memNum}
+    </select>
+
+    <!-- 회원 존재 여부 확인 (유효성 검증용) -->
+    <select id="checkMemberExists" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM MEMBER
+        WHERE memNum = #{memNum}
+    </select>
 
 </mapper>
