@@ -58,4 +58,12 @@
         WHERE memNum = #{memNum}
     </delete>
 
+	<!-- 프로필 이미지 수정 -->
+	<update id="updateMemberProfile" parameterType="MemberDto">
+    	UPDATE MEMBER
+    	SET memProfile = #{memProfile},
+        	memUpdated = SYSTIMESTAMP
+    	WHERE memNum = #{memNum}
+	</update>
+
 </mapper>
