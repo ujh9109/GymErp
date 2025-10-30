@@ -3,23 +3,21 @@ package com.example.gymerp.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.example.gymerp.dto.ProductDto;
-import com.example.gymerp.dto.ProductListResponse;
-import com.example.gymerp.repository.ProductDao;
-
+import com.example.gymerp.dto.ServiceDto;
+import com.example.gymerp.dto.ServiceListResponse;
+import com.example.gymerp.repository.ServiceDao;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ProductServiceImpl implements ProductService{
-	
-	private final ProductDao productDao;
+public class ServiceServiceImpl implements ServiceService{
+
+	private final ServiceDao serviceDao;
 
 	@Override
-	public ProductListResponse getProducts(int pageNum, ProductDto dto) {
+	public ServiceListResponse getServices(int pageNum, ServiceDto dto) {
 		
 		//한 페이지에 몇개씩 표시할 것인지
 		final int PAGE_ROW_COUNT=10;
@@ -38,7 +36,7 @@ public class ProductServiceImpl implements ProductService{
 		int endPageNum=startPageNum+PAGE_DISPLAY_COUNT-1;
 		
 		//전체글의 갯수
-		int totalRow = productDao.getCount(dto);
+		int totalRow = serviceDao.getCount(dto);
 		
 		//전체 페이지의 갯수 구하기
 		int totalPageCount=(int)Math.ceil(totalRow/(double)PAGE_ROW_COUNT);
@@ -51,9 +49,9 @@ public class ProductServiceImpl implements ProductService{
 		dto.setEndRowNum(endRowNum);
 		
 		//글 목록 얻어오기 (검색 키워드가 있다면 조건에 맞는 목록만 얻어낸다)
-		List<ProductDto> list = productDao.selectPage(dto);
+		List<ServiceDto> list = serviceDao.selectPage(dto);
 
-		return ProductListResponse.builder()
+		return ServiceListResponse.builder()
 				.list(list)
 				.pageNum(pageNum)
 				.startPageNum(startPageNum)
@@ -62,16 +60,15 @@ public class ProductServiceImpl implements ProductService{
 				.totalRow(totalRow)
 				.build();
 	}
-
+	
 	@Override
-	public void save(ProductDto dto) {
-		productDao.insert(dto);
-		
+	public void save(ServiceDto dto) {
+		serviceDao.insert(dto);
 	}
 
 	@Override
-	public void modifyProduct(ProductDto dto) {
-		int rowCount = productDao.update(dto);
+	public void modifyService(ServiceDto dto) {
+		int rowCount = serviceDao.update(dto);
 		if(rowCount == 0) {
 			throw new RuntimeException("상품 수정 실패!");
 		}
@@ -79,27 +76,26 @@ public class ProductServiceImpl implements ProductService{
 	}
 
 	@Override
-	public ProductDto getDetail(int productId) {
+	public ServiceDto getDetail(int serviceId) {
 		
-		return productDao.getByNum(productId);
+		return serviceDao.getByNum(serviceId);
 	}
 
 	@Override
-	@Transactional
-	public void updateProductStatus(int productId, boolean isActive) {
+	public void updateServiceStatus(int serviceId, boolean isActive) {
 		// DTO 객체 생성 (MyBatis 파라미터 타입에 맞춤)
-        ProductDto dto = new ProductDto();
-        dto.setProductId(productId); // productId 필드가 DTO에 있다고 가정
+        ServiceDto dto = new ServiceDto();
+        dto.setServiceId(serviceId); // serviceId 필드가 DTO에 있다고 가정
         dto.setIsActive(isActive);
         
         // DAO를 통해 업데이트 실행
-        int updatedRows = productDao.updateProductStatus(dto);
+        int updatedRows = serviceDao.updateServiceStatus(dto);
         
         // 업데이트 성공 여부 확인
         if (updatedRows == 0) {
-            throw new RuntimeException("상품 상태 업데이트 실패: productId " + productId + " 를 찾을 수 없습니다.");
+            throw new RuntimeException("상품 상태 업데이트 실패: serviceId " + serviceId + " 를 찾을 수 없습니다.");
         }
+		
 	}
-	
 	
 }

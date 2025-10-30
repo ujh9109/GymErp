@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductDto {
 
-	private int num;
+	private int productId;
 	private String codeA;
 	private String codeB;
 	private String name;

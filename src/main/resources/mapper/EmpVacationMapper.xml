@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmpVacationMapper">
+
+  <!-- 전체 목록 -->
+  <select id="selectAllEmpVacations" resultType="com.example.gymerp.dto.EmpVacationDto">
+    SELECT
+      vacNum, empNum, vacStartedAt, vacEndedAt,
+      vacContent, vacState, earnedDays, remainingDays, usedDays
+    FROM vacation
+    ORDER BY vacNum DESC
+  </select>
+
+  <!-- 단건 조회 -->
+  <select id="selectEmpVacationById" parameterType="long" resultType="com.example.gymerp.dto.EmpVacationDto">
+    SELECT
+      vacNum, empNum, vacStartedAt, vacEndedAt,
+      vacContent, vacState, earnedDays, remainingDays, usedDays
+    FROM vacation
+    WHERE vacNum = #{vacNum}
+  </select>
+
+  <!-- 직원별 목록 -->
+  <select id="selectEmpVacationsByEmpNum" parameterType="long" resultType="com.example.gymerp.dto.EmpVacationDto">
+    SELECT
+      vacNum, empNum, vacStartedAt, vacEndedAt,
+      vacContent, vacState, earnedDays, remainingDays, usedDays
+    FROM vacation
+    WHERE empNum = #{empNum}
+    ORDER BY vacStartedAt DESC
+  </select>
+
+  <!-- 등록 -->
+  <insert id="insertEmpVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
+    INSERT INTO vacation
+      (vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
+       earnedDays, remainingDays, usedDays)
+    VALUES
+      (#{vacNum}, #{empNum}, #{vacStartedAt,jdbcType=DATE}, #{vacEndedAt,jdbcType=DATE},
+       #{vacContent}, #{vacState}, #{earnedDays}, #{remainingDays}, #{usedDays})
+  </insert>
+
+  <!-- 전체 수정 -->
+  <update id="updateEmpVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
+    UPDATE vacation
+       SET empNum        = #{empNum},
+           vacStartedAt  = #{vacStartedAt,jdbcType=DATE},
+           vacEndedAt    = #{vacEndedAt,jdbcType=DATE},
+           vacContent    = #{vacContent},
+           vacState      = #{vacState},
+           earnedDays    = #{earnedDays},
+           remainingDays = #{remainingDays},
+           usedDays      = #{usedDays}
+     WHERE vacNum = #{vacNum}
+  </update>
+
+  <!-- 상태만 변경 -->
+  <update id="updateEmpVacationState" parameterType="map">
+    UPDATE vacation
+       SET vacState = #{vacState}
+     WHERE vacNum  = #{vacNum}
+  </update>
+
+  <!-- 삭제 -->
+  <delete id="deleteEmpVacation" parameterType="long">
+    DELETE FROM vacation
+    WHERE vacNum = #{vacNum}
+  </delete>
+
+
+</mapper>
