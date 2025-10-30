@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
-import com.example.gymerp.dto.CodeDto;
 import com.example.gymerp.dto.ProductDto;
 
 import lombok.RequiredArgsConstructor;
@@ -30,14 +29,26 @@ public class ProductDaoImpl implements ProductDao{
 	}
 
 	@Override
-	public List<CodeDto> getCodeList(CodeDto dto) {
-		
-		return session.selectList("product.getCodeList", dto);
-	}
-
-	@Override
 	public void insert(ProductDto dto) {
 		session.insert("product.insert", dto);
 		
+	}
+
+	@Override
+	public int update(ProductDto dto) {
+		
+		return session.update("product.update", dto);
+	}
+
+	@Override
+	public ProductDto getByNum(int productId) {
+		
+		return session.selectOne("product.getByNum", productId);
+	}
+
+	@Override
+	public int updateProductStatus(ProductDto dto) {
+		
+		return session.update("product.updateStatus", dto);
 	}	
 }
