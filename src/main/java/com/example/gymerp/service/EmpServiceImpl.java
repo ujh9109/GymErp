@@ -3,6 +3,7 @@ package com.example.gymerp.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.gymerp.dto.EmpDto;
 import com.example.gymerp.repository.EmpDao;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional 
 public class EmpServiceImpl implements EmpService {
 	private final EmpDao empDao;
 	
@@ -28,7 +30,7 @@ public class EmpServiceImpl implements EmpService {
 	}
 	
 	// 직원 등록
-	@Override
+	@Override 
 	public int insertEmp(EmpDto dto) {
 		return empDao.insertEmp(dto);
 	}
@@ -40,7 +42,7 @@ public class EmpServiceImpl implements EmpService {
 	}
 	
 	// 직원 삭제
-	@Override
+	@Override 
 	public int deleteEmp(EmpDto dto) {
 		return empDao.deleteEmp(dto);
 	}

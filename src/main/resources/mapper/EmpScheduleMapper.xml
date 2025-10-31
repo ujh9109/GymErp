@@ -1,85 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="EmpScheduleMapper">
 
+	<!-- ============================= ETC 일정 전용 ResultMap ============================= -->
+	<resultMap id="EtcResultMap" type="EtcDto">
+		<id property="etcNum" column="etcNum" />
+		<result property="empNum" column="empNum" />
+		<result property="etcCreated" column="etcCreated" />
+		<result property="startTime" column="startTime" />
+		<result property="endTime" column="endTime" />
+		<result property="etcUpdatedAt" column="etcUpdatedAt" />
+		<result property="etcMemo" column="etcMemo" />
+		<result property="etcType" column="etcType" />
+	</resultMap>
 
- <!-- 전체 조회 (Registration / Vacation / Etc 상세 포함) -->
-    <select id="selectAll" resultType="EmpScheduleDto">
-        SELECT e.*,
-            CASE e.refType
-                WHEN 'registration' THEN r.detail
-                WHEN 'vacation' THEN v.detail
-                WHEN 'etc' THEN t.detail
-                ELSE e.memo
-            END AS refDetail
-        FROM EmpSchedule e
-        LEFT JOIN Registration r
-            ON e.refType = 'registration' AND e.refId = r.regNum
-        LEFT JOIN Vacation v
-            ON e.refType = 'vacation' AND e.refId = v.vacNum
-        LEFT JOIN Etc t
-            ON e.refType = 'etc' AND e.refId = t.etcNum
-        ORDER BY e.date, e.startTime
-    </select>
+	<!-- 공통 일정 등록 (PT, VACATION 등) -->
+	<insert id="insert" parameterType="EmpScheduleDto">
+		INSERT INTO EmpSchedule (
+		calNum,
+		shNum,
+		empNum,
+		refType,
+		refId,
+		startTime,
+		endTime,
+		memo,
+		color
+		) VALUES
+		(
+		SCHEDULE_SEQ.NEXTVAL,
+		#{shNum, jdbcType=INTEGER},
+		#{empNum,
+		jdbcType=INTEGER},
+		#{refType, jdbcType=VARCHAR},
+		#{refId,
+		jdbcType=INTEGER},
+		#{startTime, jdbcType=TIMESTAMP},
+		#{endTime,
+		jdbcType=TIMESTAMP},
+		#{memo, jdbcType=VARCHAR},
+		#{color,
+		jdbcType=VARCHAR}
+		)
+	</insert>
 
-    <!-- PK 단건 조회 -->
-    <select id="selectByCalNum" resultType="EmpScheduleDto">
-        SELECT e.*,
-            CASE e.ref_type
-                WHEN 'registration' THEN r.detail
-                WHEN 'vacation' THEN v.detail
-                WHEN 'etc' THEN t.detail
-                ELSE e.memo
-            END AS refDetail
-        FROM EmpSchedule e
-        LEFT JOIN Registration r
-            ON e.refType = 'registration' AND e.refId = r.regNum
-        LEFT JOIN Vacation v
-            ON e.refType = 'vacation' AND e.refId = v.vacNum
-        LEFT JOIN Etc t
-            ON e.refType = 'etc' AND e.refId = t.etcNum
-        WHERE e.calNum = #{calNum}
-    </select>
+	<!-- ETC 일정 전용 등록 -->
+	<insert id="insertEtc" parameterType="EmpScheduleDto">
+		INSERT INTO EmpSchedule (
+		calNum,
+		empNum,
+		refType,
+		refId,
+		startTime,
+		endTime,
+		memo,
+		color
+		) VALUES (
+		SCHEDULE_SEQ.NEXTVAL,
+		#{empNum, jdbcType=INTEGER},
+		#{refType,
+		jdbcType=VARCHAR},
+		#{refId, jdbcType=INTEGER},
+		#{startTime,
+		jdbcType=TIMESTAMP},
+		#{endTime, jdbcType=TIMESTAMP},
+		#{memo,
+		jdbcType=VARCHAR},
+		#{color, jdbcType=VARCHAR}
+		)
+	</insert>
 
-    <!-- 직원 + 날짜 범위 조회 -->
-    <select id="selectByEmpAndDate" resultType="EmpScheduleDto">
-        SELECT e.*,
-            CASE e.ref_type
-                WHEN 'registration' THEN r.detail
-                WHEN 'vacation' THEN v.detail
-                WHEN 'etc' THEN t.detail
-                ELSE e.memo
-            END AS refDetail
-        FROM EmpSchedule e
-        LEFT JOIN Registration r
-            ON e.refType = 'registration' AND e.refId = r.regNum
-        LEFT JOIN Vacation v
-           ON e.refType = 'vacation' AND e.refId = v.vacNum
-        LEFT JOIN Etc t
-             ON e.refType = 'etc' AND e.refId = t.etcNum
-        WHERE e.empNum = #{empNum}
-          AND e."DATE" BETWEEN #{startDate} AND #{endDate}
-        ORDER BY e.date, e.startTime
-    </select>
 
-    <!-- 수정 -->
-    <update id="update" parameterType="EmpScheduleDto">
-        UPDATE EmpSchedule
-        SET color = #{color},
-            ref_type = #{refType},
-            ref_id = #{refId},
-            date = #{date},
-            start_time = #{startTime},
-            end_time = #{endTime},
-            memo = #{memo}
-        WHERE cal_num = #{calNum}
-    </update>
+	<!-- ============================= 전체 일정 조회 (통합) ============================= -->
+	<select id="selectAll" resultType="EmpScheduleDto">
+		SELECT
+		e.*,
+		emp.empEmail,emp.empName,
+		CASE e.refType
+		WHEN 'registration' THEN
+		r.regNote
+		WHEN 'vacation' THEN v.vacContent
+		WHEN 'etc' THEN t.etcMemo
+		ELSE e.memo
+		END AS refDetail,
+		CASE e.refType
+		WHEN 'registration' THEN
+		r.regTime
+		WHEN 'vacation' THEN v.vacStartedAt
+		WHEN 'etc' THEN
+		t.startTime
+		END AS refStartTime,
+		CASE e.refType
+		WHEN 'registration' THEN
+		r.lastTime
+		WHEN 'vacation' THEN v.vacEndedAt
+		WHEN 'etc' THEN t.endTime
+		END AS refEndTime
+		FROM EmpSchedule e
+		JOIN Employee emp ON e.empNum =
+		emp.empNum
+		LEFT JOIN Registration r
+		ON e.refType = 'registration' AND
+		e.refId = r.regNum
+		LEFT JOIN Vacation v
+		ON e.refType = 'vacation' AND
+		e.refId = v.vacNum
+		LEFT JOIN Etc t
+		ON e.refType = 'etc' AND e.refId =
+		t.etcNum
+		ORDER BY e.startTime, e.endTime
+	</select>
 
-    <!-- 삭제 -->
-    <delete id="delete" parameterType="int">
-        DELETE FROM EmpSchedule
-        WHERE cal_num = #{calNum}
-    </delete>
+	<!-- ============================= PK 단건 조회 ============================= -->
+	<select id="selectByCalNum" resultType="EmpScheduleDto">
+		SELECT
+		e.*,
+		emp.empEmail,emp.empName,
+		CASE e.refType
+		WHEN 'registration' THEN
+		r.regNote
+		WHEN 'vacation' THEN
+		v.vacContent
+		WHEN 'etc' THEN t.etcMemo
+		ELSE e.memo
+		END AS refDetail,
+		CASE
+		e.refType
+		WHEN 'registration' THEN
+		r.regTime
+		WHEN 'vacation' THEN
+		v.vacStartedAt
+		WHEN 'etc' THEN t.startTime
+		END AS refStartTime,
+		CASE
+		e.refType
+		WHEN 'registration' THEN r.lastTime
+		WHEN 'vacation' THEN
+		v.vacEndedAt
+		WHEN 'etc' THEN t.endTime
+		END AS
+		refEndTime
+		FROM EmpSchedule
+		e
+		JOIN Employee emp ON e.empNum = emp.empNum
+		LEFT JOIN Registration r
+		ON
+		e.refType = 'registration' AND e.refId =
+		r.regNum
+		LEFT JOIN Vacation v
+		ON e.refType = 'vacation' AND e.refId =
+		v.vacNum
+		LEFT JOIN Etc t
+		ON
+		e.refType = 'etc' AND e.refId = t.etcNum
+		WHERE e.calNum = #{calNum}
+	</select>
+
+	<!-- ============================= 직원 + 날짜 범위 조회 ============================= -->
+	<select id="selectByEmpAndDate" resultType="EmpScheduleDto">
+		SELECT
+		e.*,
+		emp.empEmail,emp.empName,
+		CASE e.refType
+		WHEN 'registration' THEN
+		r.regNote
+		WHEN
+		'vacation' THEN v.vacContent
+		WHEN 'etc' THEN t.etcMemo
+		ELSE e.memo
+		END AS
+		refDetail,
+		CASE e.refType
+		WHEN 'registration' THEN
+		r.regTime
+		WHEN
+		'vacation' THEN v.vacStartedAt
+		WHEN 'etc' THEN t.startTime
+		END AS
+		refStartTime,
+		CASE e.refType
+		WHEN 'registration' THEN r.lastTime
+		WHEN
+		'vacation' THEN v.vacEndedAt
+		WHEN 'etc' THEN t.endTime
+		END AS
+		refEndTime
+		FROM EmpSchedule e
+		JOIN Employee emp ON e.empNum = emp.empNum
+		LEFT JOIN
+		Registration r
+		ON e.refType = 'registration' AND e.refId =
+		r.regNum
+		LEFT JOIN Vacation v
+		ON e.refType = 'vacation' AND e.refId =
+		v.vacNum
+		LEFT JOIN Etc t
+		ON e.refType = 'etc' AND e.refId = t.etcNum
+		WHERE
+		e.empNum = #{empNum}
+		AND e.startTime BETWEEN #{startDate} AND
+		#{endDate}
+		ORDER BY e.startTime, e.endTime
+	</select>
+
+	<!-- ============================= 일정 수정 ============================= -->
+	<update id="update" parameterType="EmpScheduleDto">
+		UPDATE EmpSchedule
+		SET
+			color = #{color, jdbcType=VARCHAR},
+			refType = #{refType, jdbcType=VARCHAR},
+			refId = #{refId, jdbcType=NUMERIC},
+			startTime = #{startTime, jdbcType=TIMESTAMP},
+			endTime = #{endTime, jdbcType=TIMESTAMP},
+			memo = #{memo, jdbcType=VARCHAR}
+		WHERE calNum = #{calNum, jdbcType=NUMERIC}
+	</update>
+
+	<!-- ============================= 일정 삭제 ============================= -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM EmpSchedule
+		WHERE
+		calNum = #{calNum}
+	</delete>
 
 </mapper>
-

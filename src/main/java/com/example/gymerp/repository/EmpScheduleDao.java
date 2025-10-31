@@ -1,6 +1,7 @@
 package com.example.gymerp.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
@@ -18,8 +19,8 @@ public interface EmpScheduleDao {
     // 3. 직원 + 날짜 범위 조회
     List<EmpScheduleDto> selectByEmpAndDate(
         @Param("empNum") int empNum,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
     );
 
     // 4. 수정 (필요한 컬럼만)
@@ -28,6 +29,10 @@ public interface EmpScheduleDao {
     // 5. 삭제
     int delete(@Param("calNum") int calNum);
     
+    // 6. 일정 등록
     int insert(EmpScheduleDto dto);
+    
+    // ETC 일정
+    int insertEtc(EmpScheduleDto dto); 
 
 }
