@@ -3,6 +3,16 @@
 
 <mapper namespace="StockMapper">
 
+	<!-- 1-1. 가용 재고 조회 -->
+	<select id="getAvailableQty" parameterType="int" resultType="int">
+	  SELECT
+	    COALESCE( (SELECT SUM(quantity) FROM Purchase        WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM StockAdjustment WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM SalesItem       WHERE productId = #{productId}), 0 )
+	  AS availableQty
+	  FROM DUAL
+	</select>
+
 	<!-- 2-1. 입고 내역 조회 -->
 	<select id="getPurchaseList" parameterType="int" resultType="PurchaseDto">
 		SELECT
@@ -81,7 +91,7 @@
         #{codeBId},
         SYSDATE,
         #{quantity},
-        #{notes}
+        #{notes, jdbcType=VARCHAR}
     )
 	</insert>
 	
