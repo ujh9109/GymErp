@@ -21,7 +21,7 @@
         SELECT COUNT(*)
         FROM voucher_log
         WHERE memNum = #{memNum}
-          AND endDate < SYSDATE
+          AND endDate &lt; SYSDATE
     </select>
 
     <!-- 회원권 단건 조회 -->
@@ -47,8 +47,8 @@
     <update id="updateVoucherLog" parameterType="VoucherLogDto">
         UPDATE voucher_log
         SET 
-            startDate = CASE WHEN endDate < SYSDATE THEN SYSDATE ELSE startDate END,
-            endDate   = CASE WHEN endDate < SYSDATE THEN SYSDATE + #{period} ELSE endDate + #{period} END
+            startDate = CASE WHEN endDate &lt; SYSDATE THEN SYSDATE ELSE startDate END,
+            endDate   = CASE WHEN endDate &lt; SYSDATE THEN SYSDATE + #{period} ELSE endDate + #{period} END
         WHERE memNum = #{memNum}
     </update>
 
@@ -81,7 +81,7 @@
             SELECT MAX(endDate)
             FROM voucher_log
             WHERE memNum = #{memNum}
-              AND endDate < (
+              AND endDate &lt; (
                   SELECT MAX(endDate)
                   FROM voucher_log
                   WHERE memNum = #{memNum}
