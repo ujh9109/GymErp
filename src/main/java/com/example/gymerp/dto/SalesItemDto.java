@@ -9,12 +9,12 @@ import org.apache.ibatis.type.Alias;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Alias("SalesItem")
+@Alias("SalesItemDto")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class SalesItem {
+public class SalesItemDto {
 
     /** SALES_ITEM */
     private Long itemSalesId;        // 상품 판매 ID (PK)         

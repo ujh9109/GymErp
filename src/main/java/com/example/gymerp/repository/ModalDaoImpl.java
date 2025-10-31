@@ -4,35 +4,51 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
-import com.example.gymerp.dto.SalesService;
+import com.example.gymerp.dto.ProductDto;
+import com.example.gymerp.dto.ServiceDto;
 
 import lombok.RequiredArgsConstructor;
 
+@Primary
 @Repository
 @RequiredArgsConstructor
 public class ModalDaoImpl implements ModalDao {
 
-    private final SqlSession session;
+    private final SqlSession sqlSession;
+    
 
     /* ================================
        서비스 상품 선택 모달
     ================================= */
 
-    // 서비스 목록 조회
+    // 서비스 상품 목록 조회
     @Override
-    public List<SalesService> selectServiceList(Map<String, Object> params) {
-        return session.selectList("ModalMapper.selectServiceList", params);
+    public List<ServiceDto> getServiceModalList(Map<String, Object> param) {
+        return sqlSession.selectList("ModalMapper.getServiceModalList", param);
     }
 
-    // 서비스 선택 총 개수 조회
+    // 서비스 상품 전체 개수 조회
     @Override
-    public int countServiceList(Map<String, Object> params) {
-        return session.selectOne("ModalMapper.countServiceList", params);
+    public int getServiceModalCount(Map<String, Object> param) {
+        return sqlSession.selectOne("ModalMapper.getServiceModalCount", param);
     }
-
+    
     /* ================================
-       서비스 상품 선택 모달 끝
-    ================================= */
+    실물 상품 선택 모달
+ 	================================= */
+
+    // 아이템 상품 목록 조회
+    @Override
+    public List<ProductDto> getProductModalList(Map<String, Object> param) {
+        return sqlSession.selectList("ModalMapper.getProductModalList", param);
+    }
+
+    @Override
+    public int getProductModalCount(Map<String, Object> param) {
+        return sqlSession.selectOne("ModalMapper.getProductModalCount", param);
+    }
+    
 }
