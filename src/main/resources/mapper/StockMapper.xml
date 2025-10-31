@@ -3,6 +3,16 @@
 
 <mapper namespace="StockMapper">
 
+	<!-- 가용 재고 조회 -->
+	<select id="getAvailableQty" parameterType="int" resultType="int">
+	  SELECT
+	    COALESCE( (SELECT SUM(quantity) FROM Purchase        WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM StockAdjustment WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM SalesItem       WHERE productId = #{productId}), 0 )
+	  AS availableQty
+	  FROM DUAL
+	</select>
+
 	<!-- 2-1. 입고 내역 조회 -->
 	<select id="getPurchaseList" parameterType="int" resultType="PurchaseDto">
 		SELECT
@@ -48,22 +58,33 @@
 	</select>
 
 	<!-- 2-3. 현재 재고 현황 조회 -->
+	<!-- 테이블별로 미리 SUM 해서 join -->
 	<select id="getCurrentStockList" resultType="CurrentStockDto">
 		SELECT
-			pr.productId AS productId,
-			pr.name AS productName,
-			NVL(SUM(pi.quantity), 0) AS totalInbound,
-			NVL(SUM(sa.quantity), 0) AS totalOutbound,
-			NVL(SUM(si.quantity), 0) AS totalSales,
-			NVL(SUM(pi.quantity), 0)
-				- NVL(SUM(sa.quantity), 0)
-				- NVL(SUM(si.quantity), 0) AS currentStock
-		FROM PRODUCT pr
-		LEFT JOIN Purchase pi ON pr.productId = pi.productId
-		LEFT JOIN StockAdjustment sa ON pr.productId = sa.productId
-		LEFT JOIN SalesItem si ON pr.productId = si.productId
-		GROUP BY pr.productId, pr.name
-		ORDER BY pr.name ASC
+		      p.productId            AS productId, 
+		      p.name                 AS productName,
+		      NVL(pi.total_in,    0) AS totalInbound, 
+		      NVL(sa.total_out,   0) AS totalOutbound, 
+		      NVL(si.total_sales, 0) AS totalSales, 
+		      NVL(pi.total_in,0) - NVL(sa.total_out,0) - NVL(si.total_sales,0) AS currentStock
+		  FROM PRODUCT p
+		  
+		  LEFT JOIN (
+		      SELECT productId, SUM(quantity) AS total_in
+		      FROM PURCHASE
+		      GROUP BY productId
+		  ) pi ON pi.productId = p.productId
+		  LEFT JOIN (
+		      SELECT productId, SUM(quantity) AS total_out
+		      FROM STOCKADJUSTMENT
+		      GROUP BY productId
+		  ) sa ON sa.productId = p.productId
+		  LEFT JOIN (
+		      SELECT productId, SUM(quantity) AS total_sales
+		      FROM SALESITEM
+		      GROUP BY productId
+		  ) si ON si.productId = p.productId
+		  ORDER BY p.name ASC
 	</select>
 	
 	<!-- 3-1. 입고시 Purchase Table에 row 추가 -->

@@ -22,14 +22,9 @@ public class StockServiceImpl implements StockService {
 	private final StockDao stockDao;
 	private final ProductDao productDao;
 
-	// 2-1. 입고내역 리스트 (현재 재고 현황)
-    @Override
-    @Transactional(readOnly = true)
-    public List<CurrentStockDto> getProductStockList() {
-        return stockDao.getCurrentStockList();
-    }
+	
 
-    // 2-2. 상품 하나의 입고(인바운드) 내역 조회
+    // 2-1. 상품 하나의 입고(인바운드) 내역 조회
     @Override
     @Transactional(readOnly = true)
     public List<PurchaseDto> getProductInboundDetail(int productId) {
@@ -39,7 +34,7 @@ public class StockServiceImpl implements StockService {
         return stockDao.getPurchaseList(productId);
     }
 
-    // 2-3. 상품 하나의 출고 + 판매 내역 조회
+    // 2-2. 상품 하나의 출고 + 판매 내역 조회
     @Override
     @Transactional(readOnly = true)
     public List<StockAdjustmentDto> getProductOutboundDetail(int productId) {
@@ -48,8 +43,15 @@ public class StockServiceImpl implements StockService {
         }
         return stockDao.getAdjustStockAndSalesList(productId);
     }
+    
+    // 2-3. 현재 재고내역 리스트 (현재 재고 현황)
+    @Override
+    @Transactional(readOnly = true)
+    public List<CurrentStockDto> getProductStockList() {
+        return stockDao.getCurrentStockList();
+    }
 
-	// adjustProduct
+	// 3. adjustProduct
 	@Override
 	@Transactional
 	public void adjustProduct(int productId, StockAdjustRequestDto request) {
@@ -74,7 +76,7 @@ public class StockServiceImpl implements StockService {
 	        		.quantity(request.getQuantity())
 	        		.notes(request.getNotes())
 	        		.build();
-	        stockDao.insertPurchase(purchase);
+	        stockDao.insertPurchase(purchase); // call DaoImpl 3-1
 	    } else if ("SUBTRACT".equalsIgnoreCase(request.getAction())) {
 	        StockAdjustmentDto adjust = StockAdjustmentDto.builder()
 	        		.productId(productId)
@@ -82,7 +84,7 @@ public class StockServiceImpl implements StockService {
 	        		.quantity(request.getQuantity())
 	        		.notes(request.getNotes())
 	        		.build();
-	        stockDao.insertStockAdjustment(adjust);
+	        stockDao.insertStockAdjustment(adjust); // call DaoImpl 3-2
 	    } else {
 	    	System.out.println("⚠️ invalid action → 예외 발생 예정");
 	        throw new IllegalArgumentException("올바르지 않은 action 값입니다.");
