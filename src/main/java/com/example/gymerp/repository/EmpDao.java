@@ -26,4 +26,21 @@ public interface EmpDao {
 	List<EmpDto> searchEmp(
 			@Param("keyword") String keyword, 
 			@Param("filter") String filter);
+	
+	// 직원 검색 + 페이징
+	List<EmpDto> getEmpListPaged(
+	    @Param("type") String type,
+	    @Param("keyword") String keyword,
+	    @Param("start") int start,
+	    @Param("end") int end
+	);
+
+	// 직원 총 개수
+	int getTotalCount(
+	    @Param("type") String type,
+	    @Param("keyword") String keyword
+	);
+	
+	// 프로필이미지 업로드
+	void updateProfileImage(int empNum, String fileName);
 }
