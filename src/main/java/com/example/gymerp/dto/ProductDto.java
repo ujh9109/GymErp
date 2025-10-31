@@ -19,7 +19,7 @@ public class ProductDto {
 	private String codeAId;
 	private String codeBId;
 	private String name;
-	private BigDecimal price;
+	private int price;
 	private Boolean isActive;
 	private String note;
 	private int quantity; // 입고 내역 테이블에 수량으로 저장할 필드

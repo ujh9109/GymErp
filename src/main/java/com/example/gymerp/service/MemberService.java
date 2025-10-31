@@ -20,7 +20,10 @@ public interface MemberService {
 
     // 회원 목록 조회
     public List<MemberDto> getAllMembers();
+    
+    // ▼ 추가: 프로필 이미지 수정 (파일명/경로만 업데이트)
+    public int updateMemberProfile(int memNum, String memProfile);
 
-    // 회원 수 조회
+  
 	
 }

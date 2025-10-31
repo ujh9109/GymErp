@@ -18,32 +18,32 @@ public class EmpVacationController {
     private final EmpVacationService service;
 
     // 전체 목록
-    @GetMapping("/vacations")
+    @GetMapping("/vacation")
     public List<EmpVacationDto> getAllVacations() {
         return service.getAllEmpVacations();
     }
 
     // 직원별 목록
-    @GetMapping(value = "/vacations", params = "empNum")
+    @GetMapping(value = "/vacation", params = "empNum")
     public List<EmpVacationDto> getVacationsByEmp(@RequestParam int empNum) {
         return service.getEmpVacationsByEmpNum(empNum);
     }
 
     // 단건 조회
-    @GetMapping("/vacations/{vacNum}")
+    @GetMapping("/vacation/{vacNum}")
     public EmpVacationDto getVacationById(@PathVariable int vacNum) {
         return service.getEmpVacationById(vacNum);
     }
 
     // 등록
-    @PostMapping("/vacations")
+    @PostMapping("/vacation")
     public ResponseEntity<Integer> addVacation(@RequestBody EmpVacationDto dto) {
         int rows = service.addEmpVacation(dto);
         return ResponseEntity.ok(rows);
     }
 
     // 전체 수정
-    @PutMapping("/vacations/{vacNum}")
+    @PutMapping("/vacation/{vacNum}")
     public ResponseEntity<Void> updateVacation(@PathVariable int vacNum, @RequestBody EmpVacationDto dto) {
         dto.setVacNum(vacNum);
         service.updateEmpVacation(dto);
@@ -52,14 +52,14 @@ public class EmpVacationController {
 
     //aaa
     // 상태만 변경
-    @PatchMapping("/vacations/{vacNum}/state")
+    @PatchMapping("/vacation/{vacNum}/state")
     public ResponseEntity<Void> updateVacationState(@PathVariable int vacNum, @RequestParam String state) {
         service.updateEmpVacationState(vacNum, state);
         return ResponseEntity.noContent().build();
     }
 
     // 삭제
-    @DeleteMapping("/vacations/{vacNum}")
+    @DeleteMapping("/vacation/{vacNum}")
     public ResponseEntity<Void> deleteVacation(@PathVariable int vacNum) {
         service.deleteEmpVacation(vacNum);
         return ResponseEntity.noContent().build();

@@ -21,7 +21,9 @@ public class MemberDto {
 	 private String memAddr;          // 주소
 	 private Timestamp memCreated;    // 등록일
 	 private Timestamp memUpdated;    // 수정일
-	 private String memProfile;       // 프로필 이미지
+	 private String memProfile;       // 프로필 이미지 파일명 또는 URL
 	 private String memNote;          // 메모
+
+	
 
 }
