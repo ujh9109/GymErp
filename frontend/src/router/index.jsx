@@ -4,6 +4,7 @@ import App from "../App.jsx";
 import EmpList from "../pages/EmpList.jsx";
 import EmpDetail from "../pages/EmpDetail.jsx";
 import EmpEdit from "../pages/EmpEdit.jsx";
+import Home from "../pages/Home.jsx";
 
 const router = createBrowserRouter([
   {
@@ -11,9 +12,11 @@ const router = createBrowserRouter([
     element: <App />, // 공통 레이아웃
     children: [
       { index: true, element: <Navigate to="emp" replace /> },
-      { path: "emp", element: <EmpList /> }, 
-      { path: "emp/:empNum", element:<EmpDetail />},
-      { path: "emp/edit/:empNum", element:<EmpEdit/>},
+      { path: "/", element:<Home/>},
+      { path: "/emp", element: <EmpList /> }, 
+      { path: "/emp/:empNum", element:<EmpDetail />},
+      { path: "/emp/edit/:empNum", element:<EmpEdit/>},
+      
     ],
   },
 ]);

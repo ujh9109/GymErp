@@ -7,6 +7,7 @@ function BsNavBar() {
         <Navbar fixed="top" expand="md" className="bg-secondary" variant="dark">
             <Container>
                 <Navbar.Brand as={NavLink} to="/">Gym</Navbar.Brand>
+                <Navbar.Toggle aria-controls="collapse"/>
             </Container>
         </Navbar>
     </>
