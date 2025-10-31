@@ -14,9 +14,9 @@ function App() {
   const currentOutlet = useOutlet();
 
   return <>
-    <BsNavBar/>
-    <BsSideBar/>
-    <div className="container" style={{marginTop:"60px"}}>
+    <BsNavBar />
+    <BsSideBar />
+    <div className="container" style={{ marginTop: "60px" }}>
       {currentOutlet}
     </div>
   </>
