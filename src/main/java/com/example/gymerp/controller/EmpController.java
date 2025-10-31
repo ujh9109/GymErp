@@ -1,6 +1,15 @@
 package com.example.gymerp.controller;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,21 +18,26 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.gymerp.dto.EmpDto;
+import com.example.gymerp.security.CustomUserDetails;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.gymerp.service.EmpService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-
-import com.example.gymerp.dto.EmpDto;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/v1") 
+@RequestMapping("/v1/emp") 
 public class EmpController {
 
     private final EmpService empService;
+    public final AuthenticationManager authManager;
 
     // 전체 직원 목록 조회 api
     @GetMapping("/list")
@@ -61,4 +75,94 @@ public class EmpController {
         return "success";
     }
     
+    // 로그인
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody EmpDto dto, HttpServletRequest request){
+    	// AuthenticationManager 로 인증 시도 (Security 내부에서 UserDetailService 호출)
+		Authentication auth = authManager.authenticate(
+    			new UsernamePasswordAuthenticationToken(dto.getEmpEmail(), dto.getPassword()));
+    	
+		// 인증 결과를 SecurityContext 에 저장 (세션에도 연동)
+    	SecurityContextHolder.getContext().setAuthentication(auth);
+    	HttpSession session = request.getSession(true); // true -> 없으면 새로 생성
+    	
+    	// 로그인 성공 시 사용자 정보 반환
+    	CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
+    	Map<String, Object> res = new HashMap<>();
+    	res.put("empNum", user.getEmpNum());
+        res.put("empName", user.getEmpName());
+        res.put("email", user.getUsername());
+        res.put("role", user.getRole());
+        res.put("sessionId", session.getId());
+        
+        return ResponseEntity.ok(res);
+    	
+    }
+    
+    // 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+    	HttpSession session = request.getSession(false);
+    	if(session != null) session.invalidate();
+    	SecurityContextHolder.clearContext();
+    	
+    	return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
+    }
+    
+    // 직원 검색 + 페이징
+    @GetMapping("/list/paging")
+    public Map<String, Object> getEmpListPaged(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "all") String type,
+            @RequestParam(required = false) String keyword
+    ) {
+        Map<String, Object> result = new HashMap<>();
+
+        int totalCount = empService.getTotalCount(type, keyword);
+        int start = (page - 1) * size + 1;
+        int end = page * size;
+
+        List<EmpDto> list = empService.getEmpListPaged(type, keyword, start, end);
+        int totalPage = (int) Math.ceil((double) totalCount / size);
+
+        result.put("list", list);
+        result.put("page", page);
+        result.put("size", size);
+        result.put("totalCount", totalCount);
+        result.put("totalPage", totalPage);
+
+        return result;
+    }
+    
+    // 프로필이미지 업로드
+    @PostMapping("/upload/{empNum}")
+    public ResponseEntity<String> uploadProfile(
+            @PathVariable int empNum,
+            @RequestParam("file") MultipartFile file) {
+
+        try {
+            // 업로드 폴더 경로 지정 (운영 시 절대경로로 수정)
+            String uploadDir = "C:/playground/final_project/GymErp/profile/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
+
+            // 저장 파일명 (중복 방지)
+            String fileName = empNum + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            // 파일 저장
+            File dest = new File(uploadDir + fileName);
+            file.transferTo(dest);
+
+            // DB에 파일명 저장
+            empService.updateProfileImage(empNum, fileName);
+
+            // 프론트로 반환 (React에서 미리보기용)
+            return ResponseEntity.ok(fileName);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("업로드 실패: " + e.getMessage());
+        }
+    }
+
 }
