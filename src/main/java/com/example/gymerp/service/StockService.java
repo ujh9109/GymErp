@@ -8,8 +8,8 @@ import com.example.gymerp.dto.StockAdjustRequestDto;
 import com.example.gymerp.dto.StockAdjustmentDto;
 
 public interface StockService {
-	int getProductStock(int productId);
-	Boolean isStockSufficient(int productId);
+	int getStockOne(int productId);
+	Boolean isStockSufficient(int productId, int quantity);
 	List<CurrentStockDto> getProductStockList();
     List<PurchaseDto> getProductInboundDetail(int productId);
     List<StockAdjustmentDto> getProductOutboundDetail(int productId);

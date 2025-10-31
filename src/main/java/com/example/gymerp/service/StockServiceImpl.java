@@ -24,16 +24,22 @@ public class StockServiceImpl implements StockService {
 
 	// 1-1. 가용 재고 조회
 	@Override
-	public int getProductStock(int productId) {
+	public int getStockOne(int productId) {
 		
 		return stockDao.getAvailableQty(productId);
 	}
 	
 	// 1-2. 판매 가능 여부 리턴
 	@Override
-	public Boolean isStockSufficient(int productId) {
-		// TODO Auto-generated method stub
-		return null;
+	public Boolean isStockSufficient(int productId, int quantity) {
+		Boolean result = false;
+		if(stockDao.getAvailableQty(productId)>=quantity) {
+			result = true;
+		}else {
+			result = false;
+		}
+			
+		return result;
 	}	
 	
 	// 2-1. 입고내역 리스트 (현재 재고 현황)

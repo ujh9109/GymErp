@@ -8,7 +8,7 @@
 	  SELECT
 	    COALESCE( (SELECT SUM(quantity) FROM Purchase        WHERE productId = #{productId}), 0 )
 	  - COALESCE( (SELECT SUM(quantity) FROM StockAdjustment WHERE productId = #{productId}), 0 )
-	  - COALESCE( (SELECT SUM(quantity) FROM SalesItem       WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM Sales_Item       WHERE productId = #{productId}), 0 )
 	  AS availableQty
 	  FROM DUAL
 	</select>
