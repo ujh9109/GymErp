@@ -51,4 +51,21 @@ public class EmpServiceImpl implements EmpService {
 		return empDao.searchEmp(keyword, filter);
 	}
 	
+	// 직원 검색 + 페이징
+	@Override
+	public List<EmpDto> getEmpListPaged(String type, String keyword, int start, int end) {
+	    return empDao.getEmpListPaged(type, keyword, start, end);
+	}
+
+	// 직원 총 개수
+	@Override
+	public int getTotalCount(String type, String keyword) {
+	    return empDao.getTotalCount(type, keyword);
+	}
+
+	@Override
+	public void updateProfileImage(int empNum, String fileName) {
+		empDao.updateProfileImage(empNum, fileName);
+		
+	}
 }

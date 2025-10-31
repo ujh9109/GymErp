@@ -19,7 +19,7 @@ public class EmpDto {
     private String empName;       // 이름
     private String gender;        // 성별
     private String empAddress;    // 주소
-    private Date empBirth;        // 생년월일
+    private Date empBirth;      // 생년월일
     private String empPhone;      // 연락처
     private String empEmail;      // 이메일
     private Date hireDate;        // 입사일
