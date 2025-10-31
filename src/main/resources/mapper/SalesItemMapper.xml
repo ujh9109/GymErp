@@ -1,133 +1,132 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="SalesItemMapper">
+<mapper namespace="com.example.gymerp.repository.SalesItemDao">
 
-        <sql id="baseWhereProduct">
-        <where>
-                        <if test="startDate != null and startDate != ''">
-                AND si.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
-            </if>
-            <if test="endDate != null and endDate != ''">
-                AND si.createdAt &lt;= TO_DATE(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
-            </if>
+    <sql id="baseWhereProduct">
+        <where>
+            <if test="startDate != null and startDate != ''">
+                AND si.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND si.createdAt &lt;= TO_DATE(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+            </if>
 
-                        <if test="productIds != null and productIds.size() > 0">
-                AND si.productId IN
-                <foreach collection="productIds" item="pid" open="(" separator="," close=")">
-                    #{pid}
-                </foreach>
-            </if>
+            <if test="productIds != null and productIds.size() > 0">
+                AND si.productId IN
+                <foreach collection="productIds" item="pid" open="(" separator="," close=")">
+                    #{pid}
+                </foreach>
+            </if>
+            
+            <if test="categoryIds != null and categoryIds.size() > 0">
+                AND p.codeBId IN
+                <foreach collection="categoryIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="categoryName != null and categoryName != ''">
+                AND cb.name = #{categoryName}
+            </if>
 
-                        <if test="categoryIds != null and categoryIds.size() > 0">
-                AND p.codeBId IN
-                <foreach collection="categoryIds" item="cid" open="(" separator="," close=")">
-                    #{cid}
-                </foreach>
-            </if>
-            <if test="categoryName != null and categoryName != ''">
-                AND cb.name = #{categoryName}
-            </if>
+            <if test="empNum != null">
+                AND si.empNum = #{empNum}
+            </if>
+            <if test="empEmail != null and empEmail != ''">
+                AND e.empEmail LIKE '%' || #{empEmail} || '%'
+            </if>
 
-                        <if test="empNum != null">
-                AND si.empNum = #{empNum}
-            </if>
-            <if test="empEmail != null and empEmail != ''">
-                AND e.empEmail LIKE '%' || #{empEmail} || '%'
-            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ( p.name LIKE '%' || #{keyword} || '%'
+                      OR cb.name LIKE '%' || #{keyword} || '%' )
+            </if>
 
-                        <if test="keyword != null and keyword != ''">
-                AND ( p.name LIKE '%' || #{keyword} || '%'
-                      OR cb.name LIKE '%' || #{keyword} || '%' )
-            </if>
+            AND si.status = 'ACTIVE'
+        </where>
+    </sql>
 
-                        AND si.status = 'ACTIVE'
-        </where>
-    </sql>
+    <select id="selectSalesItemCount" parameterType="map" resultType="int">
+        SELECT COUNT(1)
+        FROM sales_item si
+        JOIN product  p ON si.productId = p.productId
+        JOIN codeB    cb ON p.codeBId    = cb.codeBId
+        JOIN employee e ON si.empNum     = e.empNum
+        <include refid="baseWhereProduct"/>
+    </select>
 
-        <select id="selectSalesItemCount" parameterType="map" resultType="int">
-        SELECT COUNT(1)
-        FROM sales_item si
-        JOIN product  p ON si.productId = p.productId
-        JOIN codeB    cb ON p.codeBId   = cb.codeBId
-        JOIN employee e ON si.empNum    = e.empNum
-        <include refid="baseWhereProduct"/>
-    </select>
+    <select id="selectAllSalesItems" parameterType="map"
+            resultType="com.example.gymerp.dto.SalesItemDto">
+        SELECT *
+        FROM (
+            SELECT
+                si.itemSalesId, si.productId, p.name AS productName,
+                cb.name AS categoryName, si.productType,
+                si.empNum, e.empEmail AS empEmail, si.quantity,
+                si.unitPrice, si.totalAmount, si.status,
+                si.createdAt, si.updatedAt,
+                ROW_NUMBER() OVER(ORDER BY si.itemSalesId DESC) AS rn
+            FROM sales_item si
+            JOIN product  p ON si.productId = p.productId
+            JOIN codeB    cb ON p.codeBId    = cb.codeBId
+            JOIN employee e ON si.empNum     = e.empNum
+            <include refid="baseWhereProduct"/>
+        )
+        WHERE rn BETWEEN #{startRow} AND #{endRow}
+    </select>
 
-        <select id="selectAllSalesItems" parameterType="map"
-            resultType="com.example.gymerp.dto.SalesItemDto">
-        SELECT *
-        FROM (
-            SELECT
-                si.itemSalesId, si.productId, p.name AS productName,
-                cb.name AS categoryName, si.productType,
-                si.empNum, e.empEmail AS empEmail, si.quantity,
-                si.unitPrice, si.totalAmount, si.status,
-                si.createdAt, si.updatedAt,
-                ROW_NUMBER() OVER(ORDER BY si.itemSalesId DESC) AS rn
-            FROM sales_item si
-            JOIN product  p ON si.productId = p.productId
-            JOIN codeB    cb ON p.codeBId   = cb.codeBId
-            JOIN employee e ON si.empNum    = e.empNum
-            <include refid="baseWhereProduct"/>
-        )
-        WHERE rn BETWEEN #{startRow} AND #{endRow}
-    </select>
-
-     <select id="selectSalesItemById" parameterType="long"
-            resultType="com.example.gymerp.dto.SalesItem">
-        SELECT
-            si.itemSalesId, si.productId, p.name AS productName,
-            cb.name AS categoryName, si.productType, si.empNum, e.empEmail AS empEmail,
-            si.quantity, si.unitPrice, si.totalAmount, si.status, si.createdAt, si.updatedAt
-        FROM sales_item si
-        JOIN product  p ON si.productId = p.productId
-        JOIN codeB    cb ON p.codeBId   = cb.codeBId
-        JOIN employee e ON si.empNum    = e.empNum
-        WHERE si.itemSalesId = #{value}
-    </select>
+    <select id="selectSalesItemById" parameterType="long"
+            resultType="com.example.gymerp.dto.SalesItemDto">
+        SELECT
+            si.itemSalesId, si.productId, p.name AS productName,
+            cb.name AS categoryName, si.productType, si.empNum, e.empEmail AS empEmail,
+            si.quantity, si.unitPrice, si.totalAmount, si.status, si.createdAt, si.updatedAt
+        FROM sales_item si
+        JOIN product  p ON si.productId = p.productId
+        JOIN codeB    cb ON p.codeBId    = cb.codeBId
+        JOIN employee e ON si.empNum     = e.empNum
+        WHERE si.itemSalesId = #{value}
+    </select>
 
     <select id="selectSalesItemForAdjustment" parameterType="long" resultType="map">
         SELECT
             si.productId,
             si.quantity AS oldQuantity,
-            p.codeBId  AS codeBId, 
+            p.codeBId AS codeBId, 
             si.status
         FROM sales_item si
         JOIN product p ON si.productId = p.productId
         WHERE si.itemSalesId = #{value}
     </select>
 
-     <insert id="insertSalesItem" parameterType="com.example.gymerp.dto.SalesItem">
-        <selectKey keyProperty="itemSalesId" resultType="long" order="BEFORE">
-            SELECT SALES_ITEM_SEQ.NEXTVAL FROM DUAL
-        </selectKey>
-        INSERT INTO sales_item (
-            itemSalesId, productId, productName,
-            empNum, quantity, unitPrice, totalAmount,
-            productType, status, createdAt, updatedAt
-        ) VALUES (
-            #{itemSalesId}, #{productId}, #{productName},
-            #{empNum}, #{quantity}, #{unitPrice}, #{totalAmount},
-            #{productType}, #{status}, SYSDATE, SYSDATE
-        )
-    </insert>
+    <insert id="insertSalesItem" parameterType="com.example.gymerp.dto.SalesItemDto">
+        <selectKey keyProperty="itemSalesId" resultType="long" order="BEFORE">
+            SELECT SALES_ITEM_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO sales_item (
+            itemSalesId, productId, productName,
+            empNum, quantity, unitPrice, totalAmount,
+            productType, status, createdAt, updatedAt
+        ) VALUES (
+            #{itemSalesId}, #{productId}, #{productName},
+            #{empNum}, #{quantity}, #{unitPrice}, #{totalAmount},
+            #{productType}, #{status}, SYSDATE, SYSDATE
+        )
+    </insert>
 
-        <update id="updateSalesItem" parameterType="com.example.gymerp.dto.SalesItem">
-        UPDATE sales_item
-        SET productId   = #{productId},
-            productName = #{productName},
-            empNum      = #{empNum},
-            quantity    = #{quantity},  -- 새로운 수량으로 업데이트
-            unitPrice   = #{unitPrice},
-            totalAmount = #{totalAmount},
-            productType = #{productType},
-            status      = #{status},
-            updatedAt   = SYSDATE
-        WHERE itemSalesId = #{itemSalesId}
-    </update>
+    <update id="updateSalesItem" parameterType="com.example.gymerp.dto.SalesItemDto">
+        UPDATE sales_item
+        SET productId   = #{productId},
+            productName = #{productName},
+            empNum      = #{empNum},
+            quantity    = #{quantity},  unitPrice   = #{unitPrice},
+            totalAmount = #{totalAmount},
+            productType = #{productType},
+            status      = #{status},
+            updatedAt   = SYSDATE
+        WHERE itemSalesId = #{itemSalesId}
+    </update>
 
     <insert id="insertPurchaseForRefund" parameterType="map">
         <selectKey keyProperty="purchaseId" resultType="long" order="BEFORE">
@@ -138,53 +137,50 @@
         ) VALUES (
             #{purchaseId},
             #{productId},
-            #{codeBId}, 
+            #{codeBId}, 
             SYSDATE,
-            #{quantity},   -- 환원될 양수 수량 (oldQuantity - newQuantity)
-            '판매 취소로 인한 재고 환원'        -- 사유를 고정된 값으로 설정
-        )
+            #{quantity},   '판매 취소로 인한 재고 환원'     )
     </insert>
 
-            <update id="deleteSalesItem" parameterType="map">
-        UPDATE sales_item
-        SET status = 'DELETED',  -- 상태를 DELETED로 변경
-            updatedAt = SYSDATE
-        WHERE itemSalesId = #{itemSalesId}
-    </update>
+    <update id="deleteSalesItem" parameterType="long">
+        UPDATE sales_item
+        SET status = 'DELETED',    updatedAt = SYSDATE
+        WHERE itemSalesId = #{value}
+    </update>
 
-        <select id="selectItemSalesAnalytics" parameterType="map" resultType="map">
-        SELECT
-            si.productId, p.name AS productName,
-            SUM(si.quantity) AS totalQuantity,
-            SUM(si.totalAmount) AS totalSalesAmount
-        FROM sales_item si
-        JOIN product p ON si.productId = p.productId
-        <include refid="baseWhereProduct"/>
-        GROUP BY si.productId, p.name
-        ORDER BY totalSalesAmount DESC
-    </select>
+    <select id="selectItemSalesAnalytics" parameterType="map" resultType="map">
+        SELECT
+            si.productId, p.name AS productName,
+            SUM(si.quantity) AS totalQuantity,
+            SUM(si.totalAmount) AS totalSalesAmount
+        FROM sales_item si
+        JOIN product p ON si.productId = p.productId
+        <include refid="baseWhereProduct"/>
+        GROUP BY si.productId, p.name
+        ORDER BY totalSalesAmount DESC
+    </select>
 
-        <select id="selectItemSalesGraphData" parameterType="map" resultType="map">
-        SELECT
-            CASE WHEN #{groupByUnit} = 'MONTH'
-                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
-                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
-            END AS groupDate,
-            SUM(si.totalAmount) AS totalSales
-        FROM sales_item si
-        <where>
-            <if test="startDate != null and endDate != null">
-                si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
-                                 AND TO_DATE(#{endDate},   'YYYY-MM-DD') + 0.99999
-            </if>
-            AND si.status = 'ACTIVE'
-        </where>
-        GROUP BY
-            CASE WHEN #{groupByUnit} = 'MONTH'
-                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
-                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
-            END
-        ORDER BY groupDate ASC
-    </select>
+    <select id="selectItemSalesGraphData" parameterType="map" resultType="map">
+        SELECT
+            CASE WHEN #{groupByUnit} = 'MONTH'
+                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
+                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
+            END AS groupDate,
+            SUM(si.totalAmount) AS totalSales
+        FROM sales_item si
+        <where>
+            <if test="startDate != null and endDate != null">
+                si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                                   AND TO_DATE(#{endDate},  'YYYY-MM-DD') + 0.99999
+            </if>
+            AND si.status = 'ACTIVE'
+        </where>
+        GROUP BY
+            CASE WHEN #{groupByUnit} = 'MONTH'
+                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
+                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
+            END
+        ORDER BY groupDate ASC
+    </select>
 
 </mapper>
