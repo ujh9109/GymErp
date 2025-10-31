@@ -28,4 +28,12 @@ public interface EmpService {
     
     // 비밀번호 변경 (선택)
     int updatePassword(int empNum, String newPassword);
+    // 직원 검색 + 페이징
+    List<EmpDto> getEmpListPaged(String type, String keyword, int start, int end);
+
+    // 직원 총 개수
+    int getTotalCount(String type, String keyword);
+    
+    // 프로필이미지
+    void updateProfileImage(int empNum, String fileName);
 }
