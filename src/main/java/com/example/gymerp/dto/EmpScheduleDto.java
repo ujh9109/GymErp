@@ -31,11 +31,17 @@ public class EmpScheduleDto {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endTime;    // 종료시간
     private String memo;              // 메모
+    
+    // 회원 정보 (PT 전용 JOIN용)
     private String empEmail;          // JOIN된 직원 이메일
     private String empName; 		// JOIN된 직원 이름
+    
+    // 회원 정보 (회원 전용 JOIN용)
+    private Integer memNum;            // 회원 고유번호 (등록 시 참조)
+    private String memName;  
 
     // 상세 연계 객체
-    private PTreservationDto registration; // PT / 수업 예약 상세
+    private PtRegistrationDto registration; // PT / 수업 예약 상세
     private EmpVacationDto vacation;       // 휴가 상세
     private EtcDto etc;                    // 기타 일정 상세  // etc 상세
 	

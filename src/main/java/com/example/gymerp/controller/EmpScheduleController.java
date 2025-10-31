@@ -49,6 +49,13 @@ public class EmpScheduleController {
         return empScheduleService.createEmpVacationSchedule(dto);
     }
     
+
+    // PT 등록
+    @PostMapping("/registration")
+    public int insertRegistration(@RequestBody EmpScheduleDto dto) {
+        return empScheduleService.createEmpRegistrationSchedule(dto);
+    }
+    
     /** 일정 수정 */
     @PutMapping("/update")
     public int updateSchedule(@RequestBody EmpScheduleDto dto) {
