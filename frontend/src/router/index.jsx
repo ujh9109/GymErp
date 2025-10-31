@@ -1,3 +1,4 @@
+
 /*
     src/router/index.jsx 파일
 
@@ -7,8 +8,12 @@
     -index 는 약속된 파일명이다.
 */
 
-import { createHashRouter } from "react-router-dom";
-import App from "../App";
+// src/router/index.jsx
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import App from "../App.jsx";
+import EmpList from "../pages/EmpList.jsx";
+import EmpDetail from "../pages/EmpDetail.jsx";
+import EmpEdit from "../pages/EmpEdit.jsx";
 import Home from "../pages/Home";
 import EmpVacationList from "../pages/EmpVacation/list";
 import EmpAttendanceList from "../pages/EmpAttendance/list";
@@ -16,26 +21,22 @@ import EmpAttendanceMy from "../pages/EmpAttendance/myAttendance";
 import EmpAttendanceView from "../pages/EmpAttendance/viewAttendance";
 
 
-const routes = [
-    { path: "/index.html", element: <Home /> },
-    { path: "/", element: <Home /> },
-    { path: "/EmpvacationList", element: <EmpVacationList/> },
-    {path:"/EmpattendanceList",element:<EmpAttendanceList/>},
-    {path:"/EmpAttendanceMy",element:<EmpAttendanceMy/>},
-    {path:"/EmpAttendanceView",element:<EmpAttendanceView/>}
-];
-
-const router = createHashRouter([{
+const router = createBrowserRouter([
+  {
     path: "/",
-    element: <App />,
-    children: routes.map((route) => {
-        return {
-            index: route.path === "/", //자식의 path 가 "/" 면 index 페이지 역할을 하게 하기 
-            path: route.path === "/" ? undefined : route.path, // path 에 "/" 두개가 표시되지 않게  
-            element: route.element //어떤 컴포넌트를 활성화 할것인지 
-        }
-    })
-}]);
-
+    element: <App />, // 공통 레이아웃
+    children: [
+      { index: true, element: <Navigate to="emp" replace /> },
+      { path: "emp", element: <EmpList /> },
+      { path: "emp/:empNum", element: <EmpDetail /> },
+      { path: "emp/edit/:empNum", element: <EmpEdit /> },
+      { path: "/EmpvacationList", element: <EmpVacationList /> },
+      { path: "/EmpattendanceList", element: <EmpAttendanceList /> },
+      { path: "/EmpAttendanceMy", element: <EmpAttendanceMy /> },
+      { path: "/EmpAttendanceView", element: <EmpAttendanceView /> }
+    ],
+  },
+]);
 
 export default router;
+

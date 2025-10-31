@@ -20,4 +20,10 @@ public class CategoryServiceImpl implements CategoryService{
 		
 		return categoryDao.getCodeList(dto);
 	}
+
+	@Override
+	public void save(CodeDto dto) {
+		categoryDao.insert(dto);
+		
+	}
 }

@@ -20,4 +20,10 @@ public class CategoryDaoImpl implements CategoryDao{
 		
 		return session.selectList("category.getCodeList", dto);
 	}
+
+	@Override
+	public void insert(CodeDto dto) {
+		session.insert("category.insert", dto);
+		
+	}
 }
