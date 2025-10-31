@@ -38,10 +38,16 @@ import { useSearchParams } from "react-router-dom";
 function EmpAttendanceView() {
   const [params, setParams] = useSearchParams();
 
-  const [empNum, setEmpNum] = useState(params.get("empNum") || "");
-  const [rows, setRows] = useState([]);
+  // 입력은 "이름 또는 사번" 하나로
+  const [keyword, setKeyword] = useState(params.get("q") || params.get("empNum") || "");
+
+  const [rows, setRows] = useState([]);      // 화면 표시용(필터 반영)
+  const [allRows, setAllRows] = useState([]); // 전체 데이터(이름검색용 필터 소스)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // empNum -> empName 캐시
+  const [nameMap, setNameMap] = useState({}); // { "3": "홍길동", ... }
 
   const fmtTime = (s) => (s ? s.replace("T", " ").slice(0, 19) : "");
   const fmtDur = (sec) => {
@@ -51,62 +57,123 @@ function EmpAttendanceView() {
     return `${h}h ${m}m`;
   };
 
-  // 전체 조회
+  // empNum들 이름 캐싱
+  const ensureNames = async (list) => {
+    const need = Array.from(
+      new Set(
+        (list || [])
+          .map((r) => r.empNum)
+          .filter((n) => n != null && nameMap[String(n)] == null)
+      )
+    );
+    if (need.length === 0) return;
+
+    const results = await Promise.allSettled(need.map((n) => axios.get(`/api/v1/emp/${n}`)));
+    const next = { ...nameMap };
+    results.forEach((res, i) => {
+      const n = String(need[i]);
+      if (res.status === "fulfilled") {
+        const dto = res.value.data;
+        next[n] = dto?.name ?? dto?.empName ?? `(emp ${n})`;
+      } else {
+        next[n] = `(emp ${n})`;
+      }
+    });
+    setNameMap(next);
+  };
+
+  // 전체 조회(이름검색시 소스가 됨)
   const fetchAll = async () => {
     setLoading(true);
     setError("");
-    fetch(`/api/v1/attendance`)
     try {
-      const { data } = await axios.get('/api/v1/attendance');
-      setRows(Array.isArray(data) ? data : []);
+      const { data } = await axios.get("/api/v1/attendance");
+      const list = Array.isArray(data) ? data : [];
+      setAllRows(list);
+      setRows(list);
+      await ensureNames(list);
     } catch (err) {
       setError(err.response?.data?.message || err.message || "전체목록 조회 실패");
-    } finally {
-      setLoading(false)
-    }
-
-
-  }
-  // 사번 검색
-  const fetchByEmp = async (empNum) => {
-    if (!empNum) return fetchAll();
-    setLoading(true);
-    setError("");
-    try {
-      const res = await axios.get('/api/v1/attendance', { params: { empNum } });
-      setRows(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || "직원별 목록 조회 실패");
+      setAllRows([]);
       setRows([]);
     } finally {
       setLoading(false);
     }
-  }
-
-  // ✅ 쿼리스트링과 상태 동기화 + 라우트 변경에만 반응해서 조회
-  useEffect(() => {
-    const p = params.get("empNum") || "";
-    setEmpNum(p); // 입력창과 동기화
-    if (p) fetchByEmp(p);
-    else fetchAll();
-  }, [params]); // ← URL 변경 시에만 재조회
-
-  // ✅ 검색: URL만 갱신(이펙트가 알아서 조회함)
-  const handleSearch = () => {
-    const next = new URLSearchParams(params);
-    if (empNum) next.set("empNum", empNum);
-    else next.delete("empNum");
-    setParams(next, { replace: true });
-    // fetchByEmp(empNum);  ← 호출 X (이중 호출 방지)
   };
 
-  // ✅ 초기화: 입력/URL 초기화(이펙트가 전체조회)
-  const handleReset = () => {
-    setEmpNum("");
+  // 사번 검색(API로)
+  const fetchByEmp = async (empNum) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get("/api/v1/attendance", { params: { empNum } });
+      const list = Array.isArray(res.data) ? res.data : [];
+      setAllRows(list); // 이름검색 전환 시에도 기반이 되도록
+      setRows(list);
+      await ensureNames(list);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "직원별 목록 조회 실패");
+      setAllRows([]);
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // URL 변화에 반응: q(키워드) 또는 empNum(숫자) 지원
+  useEffect(() => {
+    const q = params.get("q") || "";
+    const n = params.get("empNum") || "";
+    setKeyword(q || n || "");
+
+    // 숫자만 -> 사번 검색
+    if (n || (/^\d+$/.test(q) && q !== "")) {
+      const num = n || q;
+      fetchByEmp(num);
+    } else if (q) {
+      // 이름검색: 전체 불러오고 클라이언트 필터
+      (async () => {
+        await fetchAll();
+        // ensureNames가 끝나야 이름 필터 가능하므로 약간 지연 적용
+        setTimeout(() => {
+          setRows((prev) =>
+            prev.filter((r) => {
+              const name = nameMap[String(r.empNum)];
+              return (name || "").toLowerCase().includes(q.toLowerCase());
+            })
+          );
+        }, 0);
+      })();
+    } else {
+      fetchAll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
+
+  // 검색 버튼: 숫자면 empNum 파라미터, 아니면 q 파라미터 사용
+  const handleSearch = () => {
     const next = new URLSearchParams(params);
+    const trimmed = (keyword || "").trim();
+    if (!trimmed) {
+      next.delete("q");
+      next.delete("empNum");
+    } else if (/^\d+$/.test(trimmed)) {
+      next.set("empNum", trimmed);
+      next.delete("q");
+    } else {
+      next.set("q", trimmed);
+      next.delete("empNum");
+    }
+    setParams(next, { replace: true });
+  };
+
+  // 전체 버튼
+  const handleReset = () => {
+    setKeyword("");
+    const next = new URLSearchParams(params);
+    next.delete("q");
     next.delete("empNum");
     setParams(next, { replace: true });
-    // fetchAll(); ← 호출 X (이중 호출 방지)
   };
 
   const openCount = useMemo(
@@ -131,12 +198,12 @@ function EmpAttendanceView() {
         <span className="badge text-bg-warning ms-2">미퇴근 {openCount}명</span>
       </div>
 
-      {/* 검색 영역 */}
+      {/* 검색 영역: 이름 또는 사번 */}
       <InputGroup className="my-3" style={{ maxWidth: 420 }}>
         <Form.Control
-          placeholder="사번으로 검색"
-          value={empNum}
-          onChange={(e) => setEmpNum(e.target.value.replace(/\D/g, ""))}
+          placeholder="이름 또는 사번으로 검색"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
         />
         <Button variant="primary" onClick={handleSearch} disabled={loading}>
           검색
@@ -151,7 +218,7 @@ function EmpAttendanceView() {
         <thead>
           <tr>
             <th style={{ width: 90 }}>attNum</th>
-            <th style={{ width: 90 }}>empNum</th>
+            <th style={{ width: 160 }}>직원명</th>
             <th style={{ width: 120 }}>일자</th>
             <th>출근</th>
             <th>퇴근</th>
@@ -176,11 +243,13 @@ function EmpAttendanceView() {
 
             const focusThisEmp = () => {
               const v = String(r.empNum);
-              setEmpNum(v); // 입력창 동기화
               const next = new URLSearchParams(params);
               next.set("empNum", v);
-              setParams(next, { replace: true }); // ← useEffect가 알아서 조회
+              next.delete("q");
+              setParams(next, { replace: true }); // → useEffect가 조회
             };
+
+            const empName = nameMap[String(r.empNum)] ?? r.empNum;
 
             return (
               <tr key={attNum}>
@@ -191,8 +260,9 @@ function EmpAttendanceView() {
                     className="p-0"
                     onClick={focusThisEmp}
                     disabled={loading}
+                    title={`사번: ${r.empNum}`}
                   >
-                    {r.empNum}
+                    {empName}
                   </Button>
                 </td>
                 <td>{attDate}</td>
@@ -201,12 +271,13 @@ function EmpAttendanceView() {
                 <td>{duration != null ? fmtDur(duration) : ended ? "-" : ""}</td>
                 <td>
                   <span
-                    className={`badge ${status === "WORKING"
-                      ? "text-bg-success"
-                      : status === "DONE"
+                    className={`badge ${
+                      status === "WORKING"
+                        ? "text-bg-success"
+                        : status === "DONE"
                         ? "text-bg-secondary"
                         : "text-bg-info"
-                      }`}
+                    }`}
                   >
                     {status}
                   </span>
@@ -228,4 +299,5 @@ function EmpAttendanceView() {
       </Table>
     </>
   );
-} export default EmpAttendanceView;
+}
+export default EmpAttendanceView;
