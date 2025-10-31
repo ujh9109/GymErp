@@ -16,8 +16,8 @@ import lombok.NoArgsConstructor;
 public class ProductDto {
 
 	private int productId;
-	private String codeA;
-	private String codeB;
+	private String codeAId;
+	private String codeBId;
 	private String name;
 	private int price;
 	private Boolean isActive;
