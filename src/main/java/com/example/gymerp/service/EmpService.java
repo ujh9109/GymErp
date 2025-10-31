@@ -23,6 +23,11 @@ public interface EmpService {
     // 직원 검색
     List<EmpDto> searchEmp(String keyword, String filter);
     
+    // 로그인 (이메일 + 비밀번호)
+    EmpDto login(String email, String password);
+    
+    // 비밀번호 변경 (선택)
+    int updatePassword(int empNum, String newPassword);
     // 직원 검색 + 페이징
     List<EmpDto> getEmpListPaged(String type, String keyword, int start, int end);
 

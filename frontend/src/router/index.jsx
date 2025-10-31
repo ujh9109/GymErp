@@ -14,6 +14,7 @@ import App from "../App.jsx";
 import EmpList from "../pages/EmpList.jsx";
 import EmpDetail from "../pages/EmpDetail.jsx";
 import EmpEdit from "../pages/EmpEdit.jsx";
+
 import Home from "../pages/Home";
 import EmpVacationList from "../pages/EmpVacation/list";
 import EmpAttendanceList from "../pages/EmpAttendance/list";
@@ -30,10 +31,11 @@ const router = createBrowserRouter([
       { path: "emp", element: <EmpList /> },
       { path: "emp/:empNum", element: <EmpDetail /> },
       { path: "emp/edit/:empNum", element: <EmpEdit /> },
+      { path: "/Home", element: <Home /> },
       { path: "/EmpvacationList", element: <EmpVacationList /> },
       { path: "/EmpattendanceList", element: <EmpAttendanceList /> },
       { path: "/EmpAttendanceMy", element: <EmpAttendanceMy /> },
-      { path: "/EmpAttendanceView", element: <EmpAttendanceView /> }
+      { path: "/EmpAttendanceView", element: <EmpAttendanceView /> },
     ],
   },
 ]);
