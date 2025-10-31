@@ -11,8 +11,8 @@
 	            </foreach>
 			</if>
 	        
-	        <if test="searchName != null and searchName != ''">
-				AND name LIKE '%' || #{searchName} || '%'
+	        <if test="keyword != null and keyword != ''">
+				AND name LIKE '%' || #{keyword} || '%'
 	        </if>
 		</where>
 	</sql>
@@ -22,7 +22,7 @@
 		FROM
 			(SELECT result1.*, ROWNUM AS rnum
 			FROM
-				(SELECT num, name, price, isActive, codeBId
+				(SELECT productId, name, price, isActive, codeBId
 				FROM board
 				<include refid="search"/>
 				ORDER BY codeBId DESC
@@ -35,18 +35,37 @@
 		FROM product
 		<include refid="search"/>
 	</select>
-	
-	<select id="getCodeList" parameterType="productDto" resultType="productDto">
-		SELECT *
-		FROM codeB
-	</select>
-	
+		
 	<insert id="insert" parameterType="productDto">
 		<selectKey keyProperty="num" resultType="int" order="BEFORE">
 			SELECT product_seq.NEXTVAL FROM DUAL
 		</selectKey>
 		INSERT INTO product
-		(productId, codeBId, name, price, isActive, createdAt)
-		VALUES(#{num}, #{codeB}, #{name}, #{price}, #{isActive}, SYSDATE)
+		(productId, codeBId, name, price, isActive, createdAt, profileImage)
+		VALUES(#{productId}, #{codeB}, #{name}, #{price}, #{isActive}, SYSDATE, #{profileImage})
 	</insert>
+	
+	<update id="update" parameterType="productDto">
+		UPDATE product
+		SET codeBId=#{codeB}, name=#{name}, price=#{price}, isActive=#{isActive},
+			updatedAt=SYSDATE, note=#{note}, seviceValue=#{serviceValue}
+			
+			<if test="profileImage != null">, profileImage=#{profileImage}</if>
+			
+		WHERE productId=#{productId}
+	</update>
+	
+	<select id="getByNum" parameterType="int" resultType="productDto">
+		SELECT *
+		FROM product
+		WHERE productId=#{productId}
+	</select>
+	
+	<update id="updateStatus" parameterType="productDto">
+		UPDATE product
+		SET 
+        isActive = #{isActive}  
+        WHERE productId = #{productId}
+	</update>
+	
 </mapper>

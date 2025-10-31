@@ -88,7 +88,6 @@
         ORDER BY EMPNUM DESC
     </select>
     
-    
 	<!-- 직원 검색 + 페이징 -->
 	<select id="getEmpListPaged" resultType="EmpDto">
 	    SELECT *
@@ -143,4 +142,21 @@
 	    SET PROFILEIMAGE = #{fileName}
 	    WHERE EMPNUM = #{empNum}
 	</update>
+	
+	<!-- 이용내역 DB 관련 내용입니다.  -->
+    
+    <!-- 직원 이름 단건 조회 (로그용: empNum → empName 매핑) -->
+	<select id="selectEmployeeNameById" parameterType="int" resultType="string">
+		SELECT empName
+        FROM EMPLOYEE
+        WHERE empNum = #{empNum}
+	</select>
+	
+    <!-- 직원 존재 여부 확인 (판매 등록 시 유효성 검증용) -->
+    <select id="checkEmployeeExists" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM EMPLOYEE
+        WHERE empNum = #{empNum}
+    </select>
+    
 </mapper>

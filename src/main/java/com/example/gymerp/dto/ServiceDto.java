@@ -4,18 +4,22 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.apache.ibatis.type.Alias;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+@Alias("ServiceDto")
 @Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServiceDto {
 	
-	private int num;
+	private int serviceId;
 	private int empNum;
 	private String codeA;
 	private String codeB;

@@ -1,16 +1,18 @@
 package com.example.gymerp.service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.gymerp.dto.PtLogDto;
 import com.example.gymerp.dto.SalesService;
+import com.example.gymerp.dto.VoucherLogDto;
+import com.example.gymerp.repository.EmpDao;
+import com.example.gymerp.repository.MemberDao;
 import com.example.gymerp.repository.SalesServiceDao;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,9 @@ import lombok.RequiredArgsConstructor;
 public class SalesServiceServiceImpl implements SalesServiceService {
 
     private final SalesServiceDao salesServiceDao;
+    private final LogService logService;
+    private final MemberDao memberDao;
+    private final EmpDao empDao;
 
     // 전체 서비스 판매 내역 조회
     @Override
@@ -30,82 +35,170 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 
     // 단일 서비스 판매 내역 조회
     @Override
-    public SalesService getSalesServiceById(Long serviceSalesId) {
+    public SalesService getSalesServiceById(long serviceSalesId) {
         return salesServiceDao.selectSalesServiceById(serviceSalesId);
     }
 
-    // 서비스 판매 등록
     @Override
+    @Transactional
     public int createSalesService(SalesService salesService) {
+
+        String memberName = memberDao.selectMemberNameById(salesService.getMemNum().intValue());
+        String trainerName = empDao.selectEmployeeNameById(salesService.getEmpNum().intValue());
+
+        // ------------------------------
+        // [회원권(VOUCHER) 상품]
+        // ------------------------------
+        if ("VOUCHER".equalsIgnoreCase(salesService.getServiceType())) {
+
+            // 현재 회원권 유효 여부 확인
+            boolean hasValidVoucher = logService.isVoucherValid(salesService.getMemNum());
+            LocalDateTime now = LocalDateTime.now();
+
+            LocalDateTime startDate;
+            LocalDateTime endDate;
+
+            // 회원권이 없거나 만료된 경우 → 새로 시작
+            if (!hasValidVoucher) {
+                startDate = now;
+                endDate = now.plusDays(salesService.getBaseCount()); // baseCount = 이용일수
+            }
+            // 회원권이 유효한 경우 → 기간 연장
+            else {
+                VoucherLogDto existing = logService.getVoucherByMember(salesService.getMemNum());
+                startDate = existing.getStartDate() != null 
+                            ? LocalDateTime.parse(existing.getStartDate() + "T00:00:00") : now;
+                endDate = LocalDateTime.parse(existing.getEndDate() + "T00:00:00")
+                            .plusDays(salesService.getBaseCount());
+            }
+
+            VoucherLogDto voucher = VoucherLogDto.builder()
+                    .memNum(salesService.getMemNum())
+                    .memberName(memberName)
+                    .startDate(startDate.toLocalDate().toString())
+                    .endDate(endDate.toLocalDate().toString())
+                    .build();
+
+            logService.saveOrUpdateVoucher(voucher);
+        } 
+
+        // ------------------------------
+        // [PT 상품]
+        // ------------------------------
+        else if ("PT".equalsIgnoreCase(salesService.getServiceType())) {
+
+            // 회원권이 유효하지 않으면 예외 발생
+            if (!logService.isVoucherValid(salesService.getMemNum()))
+                throw new IllegalStateException("회원권이 만료되었거나 존재하지 않습니다.");
+
+            PtLogDto ptLog = PtLogDto.builder()
+                    .memNum(salesService.getMemNum())
+                    .empNum(salesService.getEmpNum())
+                    .trainerName(trainerName)
+                    .memberName(memberName)
+                    .status("충전")
+                    .countChange(salesService.getActualCount())
+                    .totalAmount(salesService.getActualAmount().intValue())
+                    .consumeAmount(0)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            logService.addPtChargeLog(ptLog);
+        }
+
+        // ------------------------------
+        // [판매 테이블 insert]
+        // ------------------------------
         return salesServiceDao.insertSalesService(salesService);
     }
 
-    // 서비스 판매 수정
+    // 판매 수정
     @Override
     public int updateSalesService(SalesService salesService) {
-        return salesServiceDao.updateSalesService(salesService);
+        SalesService existing = salesServiceDao.selectSalesServiceById(salesService.getServiceSalesId());
+        if (existing == null) throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
+
+        int updated = salesServiceDao.updateSalesService(salesService);
+
+        if ("PT".equalsIgnoreCase(existing.getServiceType())) {
+            String memberName = memberDao.selectMemberNameById(existing.getMemNum().intValue());
+            String trainerName = empDao.selectEmployeeNameById(existing.getEmpNum().intValue());
+
+            PtLogDto ptLog = PtLogDto.builder()
+                    .memNum(existing.getMemNum())
+                    .empNum(existing.getEmpNum())
+                    .trainerName(trainerName)
+                    .memberName(memberName)
+                    .totalAmount(existing.getActualAmount().intValue())
+                    .createdAt(existing.getCreatedAt())
+                    .countChange(salesService.getActualCount())
+                    .totalAmount(salesService.getActualAmount().intValue())
+                    .consumeAmount(salesService.getAvgPrice().intValue())
+                    .build();
+            logService.updatePtLogManual(ptLog);
+        }
+
+        return updated;
     }
 
-    // 서비스 판매 삭제
+    // 판매 삭제
     @Override
-    public int deleteSalesService(Long serviceSalesId) {
+    public int deleteSalesService(long serviceSalesId) {
+        SalesService sale = salesServiceDao.selectSalesServiceById(serviceSalesId);
+        if (sale == null) throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
+
+        if ("PT".equalsIgnoreCase(sale.getServiceType())) {
+            int remaining = logService.getRemainingPtCount(sale.getMemNum());
+            if (remaining < sale.getActualCount())
+                throw new IllegalStateException("이미 일부 이용 이력이 있어 삭제할 수 없습니다.");
+
+            ((LogServiceImpl) logService).deletePtLogBySaleInfo(
+                    sale.getMemNum(),
+                    sale.getActualAmount().intValue(),
+                    sale.getCreatedAt()
+            );
+        } 
+        else if ("VOUCHER".equalsIgnoreCase(sale.getServiceType())) {
+            logService.rollbackOrDeleteVoucher(sale.getMemNum());
+        }
+
         return salesServiceDao.deleteSalesService(serviceSalesId);
     }
 
-    // 서비스 매출 통계 조회
+    // 판매 내역 조회 (검색 + 페이지네이션)
     @Override
-    public List<Map<String, Object>> getServiceSalesAnalytics(String startDate, String endDate, List<Long> serviceIds, Long memNum, Long empNum) {
-        Map<String, Object> params = buildParams(startDate, endDate, serviceIds, memNum, empNum);
-        return salesServiceDao.selectServiceSalesAnalytics(params);
+    public Map<String, Object> getPagedServiceSales(String keyword, int page, int scrollStep,
+                                                    Long empNum, Long memNum, List<Long> serviceIds,
+                                                    String startDate, String endDate) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("keyword", keyword);
+        param.put("page", page);
+        param.put("scrollStep", scrollStep);
+        param.put("empNum", empNum);
+        param.put("memNum", memNum);
+        param.put("serviceIds", serviceIds);
+        param.put("startDate", startDate);
+        param.put("endDate", endDate);
+
+        List<SalesService> list = salesServiceDao.selectPagedServiceSales(param);
+        int total = salesServiceDao.countPagedServiceSales(param);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("data", list);
+        result.put("total", total);
+        return result;
     }
 
     // 서비스 매출 그래프 조회
     @Override
-    public List<Map<String, Object>> getServiceSalesGraph(String startDate, String endDate, List<Long> serviceIds, Long memNum, Long empNum) {
-        Map<String, Object> params = buildParams(startDate, endDate, serviceIds, memNum, empNum);
-        return salesServiceDao.selectServiceSalesGraph(params);
+    public List<Map<String, Object>> getServiceSalesGraph(String startDate, String endDate,
+                                                          List<Long> serviceIds, Long memNum, Long empNum) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("startDate", startDate);
+        param.put("endDate", endDate);
+        param.put("serviceIds", serviceIds);
+        param.put("memNum", memNum);
+        param.put("empNum", empNum);
+        return salesServiceDao.selectServiceSalesGraph(param);
     }
-
-    /**
-     * 조회 조건 공통 파라미터 생성 메서드
-     * - 기간, 직원, 회원, 품목 기준을 Map 형태로 구성
-     */
-    private Map<String, Object> buildParams(String startDate, String endDate, List<Long> serviceIds, Long memNum, Long empNum) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("startDate", startDate);
-        params.put("endDate", endDate);
-        params.put("serviceIds", serviceIds);
-        params.put("memNum", memNum);
-        params.put("empNum", empNum);
-
-        // ✅ 날짜 검증 로직 추가
-        if (startDate != null && endDate != null) {
-            LocalDate start = LocalDate.parse(startDate, DateTimeFormatter.ISO_DATE);
-            LocalDate end = LocalDate.parse(endDate, DateTimeFormatter.ISO_DATE);
-            LocalDate today = LocalDate.now();
-
-            // 시작일이 마감일보다 뒤일 경우 예외 발생
-            if (start.isAfter(end)) {
-                throw new IllegalArgumentException("시작일은 마감일보다 뒤일 수 없습니다.");
-            }
-
-            // 마감일이 오늘보다 미래일 경우 예외 발생
-            if (end.isAfter(today)) {
-                throw new IllegalArgumentException("마감일은 오늘 이후의 날짜를 지정할 수 없습니다.");
-            }
-
-            // ✅ 자동 기간 단위 계산
-            long days = ChronoUnit.DAYS.between(start, end);
-            String periodType = (days > 365) ? "YEAR" :
-                                (days > 30) ? "MONTH" :
-                                (days > 7) ? "WEEK" : "DAY";
-            params.put("periodType", periodType);
-        } else {
-            params.put("periodType", "DAY");
-        }
-
-        return params;
-    }
-
-    
 }
