@@ -16,7 +16,6 @@
     <result property="etcType" column="etcType"/>
   </resultMap>
 
-
   <!-- ============================= EmpVacation 일정 전용 ResultMap ============================= -->
   <resultMap id="EmpVacationMap" type="EmpVacationDto">
     <id property="vacNum" column="vacNum"/>
@@ -30,7 +29,6 @@
     <result property="usedDays" column="usedDays"/>
   </resultMap>
 
-
   <!-- ============================= ETC 등록 ============================= -->
   <insert id="insertEtc" parameterType="com.example.gymerp.dto.EtcDto">
     <selectKey keyProperty="etcNum" resultType="int" order="BEFORE">
@@ -40,16 +38,9 @@
       etcNum, empNum, etcCreated, startTime, endTime, etcMemo, etcType
     )
     VALUES (
-      #{etcNum},
-      #{empNum},
-      SYSTIMESTAMP,
-      #{startTime},
-      #{endTime},
-      #{etcMemo},
-      #{etcType}
+      #{etcNum}, #{empNum}, SYSTIMESTAMP, #{startTime}, #{endTime}, #{etcMemo}, #{etcType}
     )
   </insert>
-
 
   <!-- ============================= ETC 일정 전용 등록 ============================= -->
   <insert id="insertEmpEtc" parameterType="EmpScheduleDto">
@@ -57,8 +48,7 @@
       calNum, empNum, refType, refId, startTime, endTime, memo, color
     ) VALUES (
       SCHEDULE_SEQ.NEXTVAL,
-      #{empNum},
-      'ETC',
+      #{empNum}, 'ETC',
       #{etc.etcNum},
       #{etc.startTime},
       #{etc.endTime},
@@ -66,7 +56,6 @@
       #{color}
     )
   </insert>
-
 
   <!-- ============================= VACATION 등록 ============================= -->
   <insert id="insertVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
@@ -77,18 +66,10 @@
       vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
       earnedDays, remainingDays, usedDays
     ) VALUES (
-      #{vacNum},
-      #{empNum},
-      #{vacStartedAt},
-      #{vacEndedAt},
-      #{vacContent},
-      #{vacState},
-      #{earnedDays},
-      #{remainingDays},
-      #{usedDays}
+      #{vacNum}, #{empNum}, #{vacStartedAt}, #{vacEndedAt}, #{vacContent},
+      #{vacState}, #{earnedDays}, #{remainingDays}, #{usedDays}
     )
   </insert>
-
 
   <!-- ============================= VACATION 일정 전용 등록 ============================= -->
   <insert id="insertEmpVacation" parameterType="EmpScheduleDto">
@@ -96,8 +77,7 @@
       calNum, empNum, refType, refId, startTime, endTime, memo, color
     ) VALUES (
       SCHEDULE_SEQ.NEXTVAL,
-      #{empNum},
-      'VACATION',
+      #{empNum}, 'VACATION',
       #{vacation.vacNum},
       #{vacation.vacStartedAt},
       #{vacation.vacEndedAt},
@@ -105,7 +85,6 @@
       #{color}
     )
   </insert>
-
 
   <!-- ============================= PT REGISTRATION 등록 (회원 연계 포함) ============================= -->
   <insert id="insertRegistration" parameterType="com.example.gymerp.dto.PtRegistrationDto">
@@ -119,15 +98,13 @@
     )
   </insert>
 
-
   <!-- ============================= REGISTRATION 일정 전용 등록 ============================= -->
   <insert id="insertEmpRegistration" parameterType="EmpScheduleDto">
     INSERT INTO EmpSchedule (
       calNum, empNum, refType, refId, startTime, endTime, memo, color
     ) VALUES (
       SCHEDULE_SEQ.NEXTVAL,
-      #{empNum},
-      'REGISTRATION',
+      #{empNum}, 'REGISTRATION',
       #{registration.regNum},
       #{registration.regTime},
       #{registration.lastTime},
@@ -136,44 +113,12 @@
     )
   </insert>
 
-
-  <!-- ============================= 전체 일정 조회 (통합 + 회원 이름 JOIN 추가) ============================= -->
+  <!-- ============================= 전체 일정 조회 (Oracle 호환 + 회원명 포함) ============================= -->
   <select id="selectAll" resultType="EmpScheduleDto">
-    SELECT e.*, emp.empEmail, emp.empName,
-           m.memName, m.memNum,                         <!-- 회원 이름 추가 -->
-      CASE e.refType
-        WHEN 'REGISTRATION' THEN r.regNote
-        WHEN 'VACATION' THEN v.vacContent
-        WHEN 'ETC' THEN t.etcMemo
-        ELSE e.memo
-      END AS refDetail,
-      CASE e.refType
-        WHEN 'REGISTRATION' THEN r.regTime
-        WHEN 'VACATION' THEN v.vacStartedAt
-        WHEN 'ETC' THEN t.startTime
-      END AS refStartTime,
-      CASE e.refType
-        WHEN 'REGISTRATION' THEN r.lastTime
-        WHEN 'VACATION' THEN v.vacEndedAt
-        WHEN 'ETC' THEN t.endTime
-      END AS refEndTime
-    FROM EmpSchedule e
-      JOIN Employee emp ON e.empNum = emp.empNum
-      LEFT JOIN Registration r ON e.refType = 'REGISTRATION' AND e.refId = r.regNum
-      LEFT JOIN Member m ON r.memNum = m.memNum 
-      LEFT JOIN Member m ON r.memNum = m.memNum                <!-- ✅ 회원 JOIN -->
-      LEFT JOIN Vacation v ON e.refType = 'VACATION' AND e.refId = v.vacNum
-      LEFT JOIN Etc t ON e.refType = 'ETC' AND e.refId = t.etcNum
-    ORDER BY e.startTime, e.endTime
-  </select>
-
-
-  <!-- ============================= PK 단건 조회 (회원 포함) ============================= -->
-  <select id="selectByCalNum" resultType="EmpScheduleDto">
     SELECT e.*, emp.empEmail, emp.empName,
            m.memName, m.memNum,
       CASE e.refType
-        WHEN 'REGISTRATION' THEN r.regNote
+        WHEN 'REGISTRATION' THEN '[' || m.memName || '] ' || r.regNote
         WHEN 'VACATION' THEN v.vacContent
         WHEN 'ETC' THEN t.etcMemo
         ELSE e.memo
@@ -192,19 +137,46 @@
       JOIN Employee emp ON e.empNum = emp.empNum
       LEFT JOIN Registration r ON e.refType = 'REGISTRATION' AND e.refId = r.regNum
       LEFT JOIN Member m ON r.memNum = m.memNum
+      LEFT JOIN Vacation v ON e.refType = 'VACATION' AND e.refId = v.vacNum
+      LEFT JOIN Etc t ON e.refType = 'ETC' AND e.refId = t.etcNum
+    ORDER BY e.startTime, e.endTime
+  </select>
+
+  <!-- ============================= PK 단건 조회 ============================= -->
+  <select id="selectByCalNum" resultType="EmpScheduleDto">
+    SELECT e.*, emp.empEmail, emp.empName,
+           m.memName, m.memNum,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN '[' || m.memName || '] ' || r.regNote
+        WHEN 'VACATION' THEN v.vacContent
+        WHEN 'ETC' THEN t.etcMemo
+        ELSE e.memo
+      END AS refDetail,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN r.regTime
+        WHEN 'VACATION' THEN v.vacStartedAt
+        WHEN 'ETC' THEN t.startTime
+      END AS refStartTime,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN r.lastTime
+        WHEN 'VACATION' THEN v.vacEndedAt
+        WHEN 'ETC' THEN t.endTime
+      END AS refEndTime
+    FROM EmpSchedule e
+      JOIN Employee emp ON e.empNum = emp.empNum
+      LEFT JOIN Registration r ON e.refType = 'REGISTRATION' AND e.refId = r.regNum
       LEFT JOIN Member m ON r.memNum = m.memNum
       LEFT JOIN Vacation v ON e.refType = 'VACATION' AND e.refId = v.vacNum
       LEFT JOIN Etc t ON e.refType = 'ETC' AND e.refId = t.etcNum
     WHERE e.calNum = #{calNum}
   </select>
 
-
   <!-- ============================= 직원 + 날짜 범위 조회 ============================= -->
   <select id="selectByEmpAndDate" resultType="EmpScheduleDto">
     SELECT e.*, emp.empEmail, emp.empName,
            m.memName, m.memNum,
       CASE e.refType
-        WHEN 'REGISTRATION' THEN r.regNote
+        WHEN 'REGISTRATION' THEN '[' || m.memName || '] ' || r.regNote
         WHEN 'VACATION' THEN v.vacContent
         WHEN 'ETC' THEN t.etcMemo
         ELSE e.memo
@@ -222,7 +194,6 @@
     FROM EmpSchedule e
       JOIN Employee emp ON e.empNum = emp.empNum
       LEFT JOIN Registration r ON e.refType = 'REGISTRATION' AND e.refId = r.regNum
-      LEFT JOIN Member m ON r.memNum = m.memNum
       LEFT JOIN Member m ON r.memNum = m.memNum
       LEFT JOIN Vacation v ON e.refType = 'VACATION' AND e.refId = v.vacNum
       LEFT JOIN Etc t ON e.refType = 'ETC' AND e.refId = t.etcNum
@@ -230,7 +201,6 @@
       AND e.startTime BETWEEN #{startDate} AND #{endDate}
     ORDER BY e.startTime, e.endTime
   </select>
-
 
   <!-- ============================= 일정 수정 ============================= -->
   <update id="update" parameterType="EmpScheduleDto">
@@ -244,7 +214,6 @@
       memo = #{memo}
     WHERE calNum = #{calNum}
   </update>
-
 
   <!-- ============================= 일정 삭제 ============================= -->
   <delete id="delete" parameterType="int">

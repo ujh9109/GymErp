@@ -13,6 +13,7 @@ import com.example.gymerp.dto.EmpVacationDto;
 
 import lombok.RequiredArgsConstructor;
 
+
 @Repository
 @RequiredArgsConstructor
 public class EmpVacationDaoImpl implements EmpVacationDao {

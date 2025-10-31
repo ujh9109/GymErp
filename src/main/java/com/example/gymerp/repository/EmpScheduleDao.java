@@ -9,7 +9,6 @@ import org.apache.ibatis.annotations.Param;
 import com.example.gymerp.dto.EmpScheduleDto;
 import com.example.gymerp.dto.PtRegistrationDto;
 
-@Mapper
 public interface EmpScheduleDao {
     
     /** ============================= 일정 조회 ============================= */

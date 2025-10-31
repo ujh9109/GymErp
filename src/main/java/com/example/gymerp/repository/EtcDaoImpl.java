@@ -9,6 +9,7 @@ import com.example.gymerp.dto.EtcDto;
 
 import lombok.RequiredArgsConstructor;
 
+
 @Repository
 @RequiredArgsConstructor
 public class EtcDaoImpl implements EtcDao {
