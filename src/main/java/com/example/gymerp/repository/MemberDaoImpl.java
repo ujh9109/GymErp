@@ -1,6 +1,8 @@
 package com.example.gymerp.repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
@@ -56,4 +58,10 @@ public class MemberDaoImpl implements MemberDao {
 	    return session.update("MemberMapper.updateMemberProfile", dto);
 	}
 
+	@Override
+	public List<MemberDto> search(String keyword) {
+	    Map<String, Object> param = new HashMap<>();
+	    param.put("keyword", keyword);
+	    return session.selectList("MemberMapper.searchMembers", param);
+	}
 }

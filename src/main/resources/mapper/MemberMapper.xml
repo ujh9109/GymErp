@@ -65,5 +65,17 @@
         	memUpdated = SYSTIMESTAMP
     	WHERE memNum = #{memNum}
 	</update>
+	
+	<!-- 추가: 회원 검색 (이름/전화/이메일) -->
+	<select id="searchMembers" parameterType="map" resultType="MemberDto">
+    	SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
+           	memAddr, memCreated, memUpdated, memProfile, memNote
+    	FROM MEMBER
+    	WHERE
+        	LOWER(memName)  LIKE LOWER('%' || #{keyword} || '%')
+      	OR LOWER(memPhone) LIKE LOWER('%' || #{keyword} || '%')
+     	OR LOWER(memEmail) LIKE LOWER('%' || #{keyword} || '%')
+    	ORDER BY memCreated DESC
+</select>
 
 </mapper>

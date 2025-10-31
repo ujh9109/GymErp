@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.gymerp.dto.MemberDto;
@@ -51,4 +52,16 @@ public class MemberController {
 		return ResponseEntity.noContent().build();
 	}
 	
+	// 검색: /v1/member/search?keyword=값
+	@GetMapping("/member/search")
+	public List<MemberDto> search(@RequestParam String keyword) {
+	    return memberService.searchMembers(keyword);
+	}
+	
+	// 프로필만 수정: /v1/member/{memNum}/profile
+	@PatchMapping("/member/{memNum}/profile")
+	public ResponseEntity<Void> updateProfile(@PathVariable int memNum, @RequestBody MemberDto dto) {
+	    memberService.updateMemberProfile(memNum, dto.getMemProfile());
+	    return ResponseEntity.noContent().build();
+	}
 } 
