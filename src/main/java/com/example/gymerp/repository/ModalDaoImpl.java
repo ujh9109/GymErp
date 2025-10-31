@@ -7,6 +7,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
+import com.example.gymerp.dto.EmpDto;
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ServiceDto;
 
@@ -50,5 +51,23 @@ public class ModalDaoImpl implements ModalDao {
     public int getProductModalCount(Map<String, Object> param) {
         return sqlSession.selectOne("ModalMapper.getProductModalCount", param);
     }
+    
+	/* =============================
+		 직원 모달 시작
+	===============================*/
+	
+	@Override
+	public List<EmpDto> getEmployeeModalList(Map<String, Object> param) {
+	return sqlSession.selectList("ModalMapper.getEmployeeModalList", param);
+	}
+	
+	@Override
+	public int getEmployeeModalCount(Map<String, Object> param) {
+	return sqlSession.selectOne("ModalMapper.getEmployeeModalCount", param);
+	}
+	
+	/* =============================
+		 직원 모달 끝
+	===============================*/
     
 }

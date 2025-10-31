@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.EmpDto;
@@ -12,6 +13,7 @@ import com.example.gymerp.dto.EmpDto;
 import lombok.RequiredArgsConstructor;
 
 @Repository
+@Primary
 @RequiredArgsConstructor
 public class EmpDaoImpl implements EmpDao {
 	
@@ -28,28 +30,28 @@ public class EmpDaoImpl implements EmpDao {
 	@Override
 	public EmpDto getEmpByNum(int empNum) {
 		
-		return session.selectOne("EmployeeMapper.getEmpByNum");
+		return session.selectOne("EmployeeMapper.getEmpByNum", empNum);
 	}
 	
 	// 직원 등록
 	@Override
 	public int insertEmp(EmpDto dto) {
 		
-		return session.insert("EmployeeMapper.insertEmp");
+		return session.insert("EmployeeMapper.insertEmp", dto);
 	}
 
 	// 직원 정보 수정
 	@Override
 	public int updateEmp(EmpDto dto) {
 		
-		return session.update("EmployeeMapper.updateEmp");
+		return session.update("EmployeeMapper.updateEmp", dto);
 	}
 
 	// 직원 삭제
 	@Override
 	public int deleteEmp(EmpDto dto) {
 		
-		return session.delete("EmployeeMapper.deleteEmp");
+		return session.delete("EmployeeMapper.deleteEmp", dto);
 	}
 
 	// 직원 검색
@@ -63,4 +65,48 @@ public class EmpDaoImpl implements EmpDao {
         return session.selectList("EmployeeMapper.searchEmp", paramMap);
 	}
 	
+
+	// 직원 검색 + 페이징
+	@Override
+	public List<EmpDto> getEmpListPaged(String type, String keyword, int start, int end) {
+	    Map<String, Object> paramMap = new HashMap<>();
+	    paramMap.put("type", type);
+	    paramMap.put("keyword", keyword);
+	    paramMap.put("start", start);
+	    paramMap.put("end", end);
+	    return session.selectList("EmployeeMapper.getEmpListPaged", paramMap);
+	}
+
+	// 직원 총 개수
+	@Override
+	public int getTotalCount(String type, String keyword) {
+	    Map<String, Object> paramMap = new HashMap<>();
+	    paramMap.put("type", type);
+	    paramMap.put("keyword", keyword);
+	    return session.selectOne("EmployeeMapper.getTotalCount", paramMap);
+	}
+
+	// 프로필 이미지 업로드
+	@Override
+	public void updateProfileImage(int empNum, String fileName) {
+		Map<String, Object> params = new HashMap<>();
+        params.put("empNum", empNum);
+        params.put("fileName", fileName);
+        session.update("EmployeeMapper.updateProfileImage", params);
+	}
+	
+	
+	/** 이용내역 DB 관련 내용입니다.*/
+	
+	// 직원 이름 단건 조회 (로그용)
+	@Override
+	public String selectEmployeeNameById(int empNum) {
+		return session.selectOne("EmployeeMapper.selectEmployeeNameById", empNum);
+	}
+
+	// 직원 존재 여부 확인 (판매 등록 시 유효성 검증용)
+	@Override
+	public int checkEmployeeExists(int empNum) {
+		return session.selectOne("EmployeeMapper.checkEmployeeExists", empNum);
+	}
 }

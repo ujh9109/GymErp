@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="ModalMapper">
 
- 
-  <!-- ================================
+    <!-- ================================
          서비스 상품 선택 모달
     ================================= -->
 
@@ -35,19 +36,17 @@
             AND name LIKE CONCAT('%', #{keyword}, '%')
         </if>
     </select>
-
+    
     <!-- ================================
          서비스 상품 선택 모달 끝
-    ================================= -->
-    
-    
-    
-    
+    ================================= -->    
+
     <!-- ================================
-         실물 상품 선택 모달 시작 
+         실물 상품 선택 모달
     ================================= -->
-    
-    <select id="getProductModalList" resultType="com.example.gymerp.dto.Product"> 
+
+    <select id="getProductModalList"
+            resultType="com.example.gymerp.dto.ProductDto">
         SELECT
             productId,
             codeBId,
@@ -55,12 +54,12 @@
             price,
             isActive
         FROM product
-        WHERE isActive = 1 /* 활성화된 상품만 조회 */
+        WHERE isActive = 1
         <if test="keyword != null and keyword != ''">
-            AND name LIKE '%' || #{keyword} || '%' /* Oracle 환경을 위한 문자열 연결 */
+            AND name LIKE '%' || #{keyword} || '%'
         </if>
         ORDER BY name DESC
-        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY /* Oracle 12c+ 페이징 */
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
     </select>
 
     <select id="getProductModalCount" resultType="int">
@@ -72,10 +71,57 @@
         </if>
     </select>
     
+    <!-- ================================
+         실물 상품 선택 모달 끝
+    ================================= -->    
+
+    <!-- ================================
+         직원 선택 모달
+    ================================= -->
+
+    <sql id="employeeWhere">
+        <where>
+            emp_status = 'ACTIVE'
+            <if test="keyword != null and keyword != ''">
+                AND (emp_name LIKE '%' || #{keyword} || '%'
+                OR emp_email LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="getEmployeeModalList"
+            parameterType="map"
+            resultType="com.example.gymerp.dto.EmpDto">
+        SELECT
+            emp_num AS empNum,
+            emp_name AS empName,
+            emp_email AS empEmail,
+            emp_job AS empJob
+        FROM employee
+        <include refid="employeeWhere"/>
+        ORDER BY emp_name ASC
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+    </select>
+
+    <select id="getEmployeeModalCount"
+            parameterType="map"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM employee
+        <include refid="employeeWhere"/>
+    </select>
     
     <!-- ================================
-         실물 상품 선택 모달 끝 
+         직원 선택 모달 끝
+    ================================= -->
+    
+    <!-- ================================
+         회원 선택 모달
+    ================================= -->
+    
+    
+    <!-- ================================
+         회원 선택 모달 끝
     ================================= -->    
- 
- 
+
 </mapper>

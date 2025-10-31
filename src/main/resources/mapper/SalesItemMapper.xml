@@ -57,7 +57,7 @@
     </select>
 
         <select id="selectAllSalesItems" parameterType="map"
-            resultType="com.example.gymerp.dto.SalesItem">
+            resultType="com.example.gymerp.dto.SalesItemDto">
         SELECT *
         FROM (
             SELECT
@@ -76,7 +76,7 @@
         WHERE rn BETWEEN #{startRow} AND #{endRow}
     </select>
 
-        <select id="selectSalesItemById" parameterType="long"
+     <select id="selectSalesItemById" parameterType="long"
             resultType="com.example.gymerp.dto.SalesItem">
         SELECT
             si.itemSalesId, si.productId, p.name AS productName,
@@ -100,7 +100,7 @@
         WHERE si.itemSalesId = #{value}
     </select>
 
-        <insert id="insertSalesItem" parameterType="com.example.gymerp.dto.SalesItem">
+     <insert id="insertSalesItem" parameterType="com.example.gymerp.dto.SalesItem">
         <selectKey keyProperty="itemSalesId" resultType="long" order="BEFORE">
             SELECT SALES_ITEM_SEQ.NEXTVAL FROM DUAL
         </selectKey>

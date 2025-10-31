@@ -30,11 +30,11 @@ public class SalesController {
     public List<Map<String, Object>> getItemSalesAnalytics(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) List<Long> itemIds,
-            @RequestParam(required = false) Long memNum,
-            @RequestParam(required = false) Long empNum
+            @RequestParam(required = false) List<Integer> itemIds,
+            @RequestParam(required = false) Integer memNum,
+            @RequestParam(required = false) Integer empNum
     ) {
-        return salesItemService.getItemSalesAnalytics(startDate, endDate, itemIds, memNum, empNum);
+    	return salesItemService.getItemSalesAnalytics(startDate, endDate, itemIds, memNum, empNum);
     }
 
     // 상품 매출 그래프 데이터

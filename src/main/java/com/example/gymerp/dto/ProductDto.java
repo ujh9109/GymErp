@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductDto {
 
-	private int num;
+	private int productId;
 	private String codeA;
 	private String codeB;
 	private String name;
-	private BigDecimal price;
+	private int price;
 	private Boolean isActive;
 	private String note;
 	private int quantity; // 입고 내역 테이블에 수량으로 저장할 필드

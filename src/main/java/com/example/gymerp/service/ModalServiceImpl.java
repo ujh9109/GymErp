@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.example.gymerp.dto.EmpDto;
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ServiceDto;
 import com.example.gymerp.repository.ModalDao;
@@ -84,4 +85,29 @@ public class ModalServiceImpl implements ModalService {
 	/* ================================
 	   실물 상품 선택 모달 끝
 	================================ */
+	
+	
+	/* ================================
+	   [직원 선택 모달]
+	================================ */
+	
+	@Override
+	public List<EmpDto> getEmployeeModalList(String keyword, int page, int limit) {
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("keyword", keyword);
+	    params.put("offset", (page - 1) * limit);
+	    params.put("limit", limit);
+	    return dao.getEmployeeModalList(params); // 'dao'는 ModalDao 객체입니다.
+	}
+
+	@Override
+	public int getEmployeeModalCount(String keyword) {
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("keyword", keyword);
+	    return dao.getEmployeeModalCount(params);
+	}
+	
+	/* ================================
+	   [직원 선택 모달] 끝 
+	================================ */	
 }

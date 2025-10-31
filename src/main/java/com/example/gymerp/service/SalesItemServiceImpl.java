@@ -19,26 +19,31 @@ public class SalesItemServiceImpl implements SalesItemService {
 
     private final SalesItemDao salesItemDao;
     
-    // 상품 판매 내역 전체 조회 (페이징/필터링 적용)
+ // 상품 판매 내역 전체 조회 (페이징/필터링 적용)
     @Override
-    public Map<String, Object> getAllSalesItems(String startDate, String endDate, List<Long> itemIds, Long empNum, int page, int size) {
+    public Map<String, Object> getAllSalesItems(String startDate, String endDate, List<Integer> itemIds, Integer empNum, int page, int size) {
         
+        // 1. 파라미터 맵 준비
         Map<String, Object> params = new HashMap<>();
         
         params.put("startDate", startDate);
         params.put("endDate", endDate);
-        params.put("itemIds", itemIds); 
-        params.put("empNum", empNum);
+        params.put("itemIds", itemIds); // Integer 리스트로 변경 반영
+        params.put("empNum", empNum);   // Integer로 변경 반영
         
+        // 2. 페이징 범위 계산
+        // Oracle/MyBatis 환경의 RowNum 기반 페이징 공식 (혹은 OFFSET/FETCH 기반)
         int startRow = (page - 1) * size + 1;
         int endRow = page * size;
 
         params.put("startRow", startRow);
         params.put("endRow", endRow);
         
+        // 3. DAO 호출 및 데이터 조회
         List<SalesItemDto> salesItems = salesItemDao.selectAllSalesItems(params); 
         int totalCount = salesItemDao.selectSalesItemCount(params);             
         
+        // 4. 결과 맵 생성 및 반환
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("list", salesItems);      
         resultMap.put("totalCount", totalCount); 
@@ -75,26 +80,26 @@ public class SalesItemServiceImpl implements SalesItemService {
         }
 
         // 2. 기존 정보와 새 정보 추출
-        Long oldProductId = ((Number) oldSalesData.get("PRODUCTID")).longValue();
+        int oldProductId = ((Number) oldSalesData.get("PRODUCTID")).intValue();
         int oldQuantity = ((Number) oldSalesData.get("OLDQUANTITY")).intValue();
         Object oldCodeBId = oldSalesData.get("CODEBID"); // codeBId 추출
         
-        Long newProductId = salesItem.getProductId();
+        int newProductId = salesItem.getProductId();
         int newQuantity = salesItem.getQuantity();
         
-        // 3. 재고 조정 로직
-        // Case 1: 판매 상품이 변경된 경우 (oldProductId != newProductId)
-        if (!oldProductId.equals(newProductId)) {
-            // 1-1. 기존 상품은 전부 환불 처리 (전체 수량 입고)
-            // 기존 상품 A의 판매 기록은 소멸되므로, A의 수량 전체를 재고로 환원해야 함.
-            Map<String, Object> refundParams = new HashMap<>();
-            refundParams.put("productId", oldProductId);
-            refundParams.put("codeBId", oldCodeBId);
-            refundParams.put("quantity", oldQuantity); // 기존 수량 전체를 환불
-            salesItemDao.insertPurchaseForRefund(refundParams);
-
-            // 1-2. 새로운 상품 (B)의 출고는 아래 updateSalesItem에서 판매 수량이 업데이트 되면서 자연스럽게 반영됨.
-        }
+	     // 3. 재고 조정 로직
+	     if (oldProductId != newProductId) { 
+	         
+	         // 1-1. 기존 상품은 전부 환불 처리 (전체 수량 입고)
+	         // 기존 상품 A의 판매 기록은 소멸되므로, A의 수량 전체를 재고로 환원해야 함.
+	         Map<String, Object> refundParams = new HashMap<>();
+	         refundParams.put("productId", oldProductId);
+	         refundParams.put("codeBId", oldCodeBId);
+	         refundParams.put("quantity", oldQuantity); // 기존 수량 전체를 환불
+	         salesItemDao.insertPurchaseForRefund(refundParams);
+	
+	         // 1-2. 새로운 상품 (B)의 출고는 아래 updateSalesItem에서 판매 수량이 업데이트 되면서 자연스럽게 반영됨.
+	     }
         // Case 2: 판매 상품은 동일하고, 수량만 변경된 경우 (oldProductId == newProductId)
         else {
             int quantityToRefund = oldQuantity - newQuantity; // 감소분 (양수일 경우 환불 필요)
@@ -142,10 +147,10 @@ public class SalesItemServiceImpl implements SalesItemService {
         return salesItemDao.deleteSalesItem(itemSalesId);
     }
 
-	 // 상품 매출 통계 조회 (기존 유지)
+	 // 상품 매출 통계 조회
 	@Override
-	public List<Map<String, Object>> getItemSalesAnalytics(String startDate, String endDate, List<Long> itemIds,
-			Long memNum, Long empNum) {
+	public List<Map<String, Object>> getItemSalesAnalytics(String startDate, String endDate, List<Integer> itemIds,
+			Integer memNum, Integer empNum) {
 		
 		Map<String, Object> params = new HashMap<>(); 
 		params.put("startDate", startDate);
@@ -157,7 +162,7 @@ public class SalesItemServiceImpl implements SalesItemService {
 		return salesItemDao.selectItemSalesAnalytics(params);
 	}
 		
-	 // 상품 매출 그래프 데이터 조회 (기존 유지)
+	 // 상품 매출 그래프 데이터 조회
 	@Override
 	public Map<String, List<Map<String, Object>>> getItemSalesGraphData(String startDate, String endDate,
 			String groupByUnit) {

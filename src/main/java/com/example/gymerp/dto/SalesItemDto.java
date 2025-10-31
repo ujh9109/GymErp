@@ -18,11 +18,11 @@ public class SalesItemDto {
 
     /** SALES_ITEM */
     private Long itemSalesId;        // 상품 판매 ID (PK)         
-    private Long productId;          // 실물 상품 고유번호 (FK)     
-    private Long empNum;             // 직원 고유번호 (FK)          
+    private int productId;          // 실물 상품 고유번호 (FK)     
+    private int empNum;             // 직원 고유번호 (FK)          
 
     private String productName;      // 상품명                        
-    private Integer quantity;        // 수량                       
+    private int quantity;        // 수량                       
 
     private BigDecimal unitPrice;    // 단가                         
     private BigDecimal totalAmount;  // 총액                  

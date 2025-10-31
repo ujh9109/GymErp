@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.example.gymerp.dto.EmpDto;
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ServiceDto;
 import com.example.gymerp.service.ModalService;
@@ -46,7 +47,7 @@ public class ModalController {
     ================================ */
     
     /* ================================
-    [실물 상품 선택 모달]
+    	[실물 상품 선택 모달]
  	================================ */
 
 	 // 실물 상품 목록 조회 (검색 + 페이징 포함)
@@ -75,4 +76,32 @@ public class ModalController {
 	 /* ================================
 	    [실물 상품 선택 모달 끝]
 	 ================================ */    
+	 
+	 /* ================================
+     [직원 선택 모달] 🌟 추가된 부분
+  ================================ */
+
+	  // 직원 목록 조회 (검색 + 페이징 포함)
+	  @GetMapping("/modals/employees")
+	  public Map<String, Object> getEmployeeModalList(
+	          @RequestParam(value = "keyword", required = false) String keyword,
+	          @RequestParam(value = "page", defaultValue = "1") int page,
+	          @RequestParam(value = "limit", defaultValue = "20") int limit) {
+	
+	      // 1. Service를 통해 직원 목록과 전체 개수 조회
+	      List<EmpDto> list = modalService.getEmployeeModalList(keyword, page, limit);
+	      int totalCount = modalService.getEmployeeModalCount(keyword);
+	
+	      // 2. 결과를 Map에 담아 반환
+	      Map<String, Object> result = new HashMap<>();
+	      result.put("list", list);
+	      result.put("totalCount", totalCount);
+	      result.put("currentPage", page);
+	
+	      return result;
+	  }
+	
+	  /* ================================
+	     [직원 선택 모달 끝]
+	  ================================ */	 
 }

@@ -21,14 +21,14 @@ import com.example.gymerp.service.SalesItemService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/v1/sales") // 👈 명세서의 기본 경로 /v1/sales로 변경됨
+@RequestMapping("/v1/sales") 
 @RequiredArgsConstructor
 public class SalesItemController {
 
     private final SalesItemService salesItemService;
 
     // 1. 상품 판매 등록 (CREATE) - 명세: POST /sales/products
-    @PostMapping("/products") // 👈 /products로 변경됨
+    @PostMapping("/products") 
     public ResponseEntity<String> addSalesItem(@RequestBody SalesItemDto salesItem) {
         
         try {
@@ -50,8 +50,8 @@ public class SalesItemController {
     public ResponseEntity<Map<String, Object>> getAllSalesItems(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) List<Long> itemIds,
-            @RequestParam(required = false) Long empNum,
+            @RequestParam(required = false) List<Integer> itemIds,
+            @RequestParam(required = false) Integer empNum,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         
@@ -78,7 +78,7 @@ public class SalesItemController {
         
         // DTO에 PathVariable로 받은 ID를 설정해야 Service에서 사용 가능
         // (SalesItem DTO에 setItemSalesId(Long) 메서드가 있다고 가정)
-        // salesItem.setItemSalesId(itemSalesId); 
+        salesItem.setItemSalesId(itemSalesId); 
         
         try {
             int result = salesItemService.updateSalesItem(salesItem); // Service에서는 DTO의 ID를 사용해야 함
