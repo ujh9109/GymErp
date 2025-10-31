@@ -37,7 +37,7 @@ public class MemberDaoImpl implements MemberDao {
 		session.insert("MemberMapper.insertMember", dto);
 	}
 
-	// 회원 삭제 (소프트 삭제로 동작 가능)
+	// 회원 삭제 
 	@Override
 	public int delete(int memNum) {
 		return session.update("MemberMapper.deleteMember", memNum);
@@ -48,16 +48,16 @@ public class MemberDaoImpl implements MemberDao {
 	public int update(MemberDto dto) {
 		return session.update("MemberMapper.updateMember", dto);
 	}
-
-	// ▼ 추가: 프로필 이미지 수정
+	
+	//프로필 이미지수정
 	@Override
 	public int updateProfile(int memNum, String memProfile) {
 	    MemberDto dto = new MemberDto();
 	    dto.setMemNum(memNum);
 	    dto.setMemProfile(memProfile);
-	    return session.update("MemberMapper.updateMemberProfile", dto);
+	    
+	    return session.update("MemberMapper.updateProfile", dto);
 	}
-	
 	
 	/** 이용내역 DB 관련 내용입니다.*/
 

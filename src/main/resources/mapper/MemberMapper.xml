@@ -3,18 +3,20 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="MemberMapper">
+
+<!-- 인터페이스 매퍼용: MemberDao의 FQCN을 namespace로 -->
+<mapper namespace="com.example.gymerp.repository.MemberDao">
 
     <!-- 전체 회원 조회 -->
-    <select id="selectAllMembers" parameterType="MemberDto" resultType="MemberDto">
+    <select id="selectAll" resultType="MemberDto">
         SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
                memAddr, memCreated, memUpdated, memProfile, memNote
         FROM MEMBER
         ORDER BY memCreated DESC
     </select>
 
-    <!-- 단일 회원 조회 -->
-    <select id="selectMemberById" parameterType="int" resultType="MemberDto">
+    <!-- 회원 상세 조회 -->
+    <select id="getByNum" parameterType="int" resultType="MemberDto">
         SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
                memAddr, memCreated, memUpdated, memProfile, memNote
         FROM MEMBER
@@ -22,84 +24,82 @@
     </select>
 
     <!-- 회원 등록 -->
-    <insert id="insertMember" parameterType="MemberDto">
+    <insert id="insert" parameterType="MemberDto">
         <selectKey keyProperty="memNum" resultType="int" order="BEFORE">
             SELECT MEMBER_SEQ.NEXTVAL FROM DUAL
         </selectKey>
-
         INSERT INTO MEMBER (
             memNum, memName, memGender, memBirthday, memPhone,
             memEmail, memAddr, memCreated, memUpdated, memProfile, memNote
         ) VALUES (
-            #{memNum}, #{memName}, #{memGender}, #{memBirthday}, #{memPhone},
-            #{memEmail}, #{memAddr}, SYSDATE, SYSDATE, #{memProfile}, #{memNote}
+            #{memNum},
+            #{memName,    jdbcType=VARCHAR},
+            #{memGender,  jdbcType=VARCHAR},
+            #{memBirthday,jdbcType=DATE},
+            #{memPhone,   jdbcType=VARCHAR},
+            #{memEmail,   jdbcType=VARCHAR},
+            #{memAddr,    jdbcType=VARCHAR},
+            SYSTIMESTAMP,
+            SYSTIMESTAMP,
+            #{memProfile, jdbcType=VARCHAR},
+            #{memNote,    jdbcType=VARCHAR}
         )
     </insert>
 
     <!-- 회원 수정 -->
-    <update id="updateMember" parameterType="MemberDto">
+    <update id="update" parameterType="MemberDto">
         UPDATE MEMBER
         SET
-            memName = #{memName},
-            memGender = #{memGender},
-            memBirthday = #{memBirthday},
-            memPhone = #{memPhone},
-            memEmail = #{memEmail},
-            memAddr = #{memAddr},
-            memProfile = #{memProfile},
-            memNote = #{memNote},
-            memUpdated = SYSDATE
+            memName     = #{memName,    jdbcType=VARCHAR},
+            memGender   = #{memGender,  jdbcType=VARCHAR},
+            memBirthday = #{memBirthday,jdbcType=DATE},
+            memPhone    = #{memPhone,   jdbcType=VARCHAR},
+            memEmail    = #{memEmail,   jdbcType=VARCHAR},
+            memAddr     = #{memAddr,    jdbcType=VARCHAR},
+            memProfile  = #{memProfile, jdbcType=VARCHAR},
+            memNote     = #{memNote,    jdbcType=VARCHAR},
+            memUpdated  = SYSTIMESTAMP
         WHERE memNum = #{memNum}
     </update>
 
-    <!-- 회원 삭제 (물리 삭제) -->
-    <delete id="deleteMember" parameterType="int">
+    <!-- 회원 삭제 (물리삭제, 추후 상태 컬럼으로 변경 가능) -->
+    <delete id="delete" parameterType="int">
         DELETE FROM MEMBER
         WHERE memNum = #{memNum}
     </delete>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <!-- 이용내역 DB 관련 내용입니다.  -->
-    
-     <!-- 회원 이름 단건 조회 (로그용) -->
+
+    <!-- 회원 이름 조회 -->
     <select id="selectMemberNameById" parameterType="int" resultType="string">
         SELECT memName
         FROM MEMBER
         WHERE memNum = #{memNum}
     </select>
 
-    <!-- 회원 존재 여부 확인 (유효성 검증용) -->
+    <!-- 회원 존재 여부 확인 -->
     <select id="checkMemberExists" parameterType="int" resultType="int">
         SELECT COUNT(*)
         FROM MEMBER
         WHERE memNum = #{memNum}
     </select>
 
-	<!-- 프로필 이미지 수정 -->
-	<update id="updateMemberProfile" parameterType="MemberDto">
-    	UPDATE MEMBER
-    	SET memProfile = #{memProfile},
-        	memUpdated = SYSTIMESTAMP
-    	WHERE memNum = #{memNum}
-	</update>
-	
-	<!-- 추가: 회원 검색 (이름/전화/이메일) -->
-	<select id="searchMembers" parameterType="map" resultType="MemberDto">
-    	SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
-           	memAddr, memCreated, memUpdated, memProfile, memNote
-    	FROM MEMBER
-    	WHERE
-        	LOWER(memName)  LIKE LOWER('%' || #{keyword} || '%')
-      	OR LOWER(memPhone) LIKE LOWER('%' || #{keyword} || '%')
-     	OR LOWER(memEmail) LIKE LOWER('%' || #{keyword} || '%')
-    	ORDER BY memCreated DESC
-</select>
+    <!-- 프로필 이미지 수정 -->
+    <update id="updateProfile" parameterType="MemberDto">
+        UPDATE MEMBER
+        SET memProfile = #{memProfile, jdbcType=VARCHAR},
+            memUpdated = SYSTIMESTAMP
+        WHERE memNum = #{memNum}
+    </update>
+
+    <!-- 검색 기능 -->
+    <select id="search" resultType="MemberDto">
+        SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
+               memAddr, memCreated, memUpdated, memProfile, memNote
+        FROM MEMBER
+        WHERE
+            LOWER(memName)  LIKE LOWER('%' || #{keyword} || '%')
+        OR  LOWER(memPhone) LIKE LOWER('%' || #{keyword} || '%')
+        OR  LOWER(memEmail) LIKE LOWER('%' || #{keyword} || '%')
+        ORDER BY memCreated DESC
+    </select>
 
 </mapper>
