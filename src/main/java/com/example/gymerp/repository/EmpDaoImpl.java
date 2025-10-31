@@ -28,28 +28,28 @@ public class EmpDaoImpl implements EmpDao {
 	@Override
 	public EmpDto getEmpByNum(int empNum) {
 		
-		return session.selectOne("EmployeeMapper.getEmpByNum");
+		return session.selectOne("EmployeeMapper.getEmpByNum", empNum);
 	}
 	
 	// 직원 등록
 	@Override
 	public int insertEmp(EmpDto dto) {
 		
-		return session.insert("EmployeeMapper.insertEmp");
+		return session.insert("EmployeeMapper.insertEmp", dto);
 	}
 
 	// 직원 정보 수정
 	@Override
 	public int updateEmp(EmpDto dto) {
 		
-		return session.update("EmployeeMapper.updateEmp");
+		return session.update("EmployeeMapper.updateEmp", dto);
 	}
 
 	// 직원 삭제
 	@Override
 	public int deleteEmp(EmpDto dto) {
 		
-		return session.delete("EmployeeMapper.deleteEmp");
+		return session.delete("EmployeeMapper.deleteEmp", dto);
 	}
 
 	// 직원 검색
@@ -61,6 +61,21 @@ public class EmpDaoImpl implements EmpDao {
         paramMap.put("keyword", keyword);
         paramMap.put("filter", filter);
         return session.selectList("EmployeeMapper.searchEmp", paramMap);
+	}
+
+	@Override
+	public EmpDto selectAuthByEmail(String empEmail) {
+		
+		return session.selectOne("EmployeeMapper.selectAuthByEmail", empEmail);
+	}
+
+	@Override
+	public int updatePassword(int empNum, String hashed) {
+		Map<String, Object> params = new HashMap<>();
+        params.put("empNum", empNum);
+        params.put("password", hashed); // XML의 #{password}와 매칭
+		
+		return session.update("EmployeeMapper.updatePassword", params);
 	}
 	
 }

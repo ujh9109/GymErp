@@ -26,4 +26,8 @@ public interface EmpDao {
 	List<EmpDto> searchEmp(
 			@Param("keyword") String keyword, 
 			@Param("filter") String filter);
+	
+	// 로그인/인증 전용
+	EmpDto selectAuthByEmail(String email);
+	int updatePassword(int empNum, String hashed);
 }
