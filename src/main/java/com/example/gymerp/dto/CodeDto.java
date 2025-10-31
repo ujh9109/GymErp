@@ -13,4 +13,6 @@ public class CodeDto {
 
 	private String codeA;
 	private String codeB;
+	private String codeAName;
+	private String codeBName;
 }

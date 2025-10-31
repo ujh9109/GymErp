@@ -4,56 +4,93 @@
 
 <mapper namespace="SalesServiceMapper">
 
+    <!-- ===============================
+         [1. 전체 / 단일 조회]
+    =============================== -->
+
     <!-- 전체 서비스 판매 내역 조회 -->
     <select id="selectAllSalesServices" resultType="SalesService">
-        SELECT * FROM SALESSERVICE
-        WHERE status != 'DELETED'
+        SELECT *
+        FROM sales_service
+        WHERE status = 'ACTIVE'
         ORDER BY createdAt DESC
     </select>
 
     <!-- 단일 서비스 판매 내역 조회 -->
     <select id="selectSalesServiceById" parameterType="long" resultType="SalesService">
-        SELECT * FROM SALESSERVICE WHERE serviceSalesId = #{serviceSalesId}
+        SELECT *
+        FROM sales_service
+        WHERE serviceSalesId = #{serviceSalesId}
     </select>
 
-    <!-- 서비스 판매 등록 (purchase_seq 시퀀스로 PK 자동 생성) -->
+
+    <!-- ===============================
+         [2. 등록 / 수정 / 삭제]
+    =============================== -->
+
+    <!-- 서비스 판매 등록 -->
     <insert id="insertSalesService" parameterType="SalesService">
         <selectKey keyProperty="serviceSalesId" resultType="long" order="BEFORE">
             SELECT sales_service_seq.NEXTVAL FROM DUAL
         </selectKey>
 
-        INSERT INTO SALESSERVICE (
+        INSERT INTO sales_service (
             serviceSalesId, serviceId, serviceName, empNum, memNum,
             baseCount, actualCount, discount, baseAmount, actualAmount, avgPrice,
-            serviceType, status, createdAt, updatedAt
+            serviceType, status, createdAt
         ) VALUES (
             #{serviceSalesId}, #{serviceId}, #{serviceName}, #{empNum}, #{memNum},
             #{baseCount}, #{actualCount}, #{discount}, #{baseAmount}, #{actualAmount}, #{avgPrice},
-            #{serviceType}, #{status}, #{createdAt}, #{updatedAt}
+            #{serviceType}, 'ACTIVE', SYSDATE
         )
     </insert>
 
     <!-- 서비스 판매 수정 -->
     <update id="updateSalesService" parameterType="SalesService">
-        UPDATE SALESSERVICE
-        SET serviceName = #{serviceName}, actualAmount = #{actualAmount}, updatedAt = #{updatedAt}
+        UPDATE sales_service
+        SET 
+            empNum        = #{empNum},          <!-- 수정자(현재 로그인자) -->
+            serviceName   = #{serviceName},
+            baseCount     = #{baseCount},
+            actualCount   = #{actualCount},
+            discount      = #{discount},
+            baseAmount    = #{baseAmount},
+            actualAmount  = #{actualAmount},
+            avgPrice      = #{avgPrice},
+            updatedAt     = SYSDATE
         WHERE serviceSalesId = #{serviceSalesId}
+          AND status = 'ACTIVE'
     </update>
 
-    <!-- 서비스 판매 삭제 -->
+    <!-- 서비스 판매 삭제 (논리 삭제 처리) -->
     <update id="deleteSalesService" parameterType="long">
-        UPDATE SALESSERVICE SET status = 'DELETED' WHERE serviceSalesId = #{serviceSalesId}
+        UPDATE sales_service
+        SET status = 'DELETED',
+            updatedAt = SYSDATE
+        WHERE serviceSalesId = #{serviceSalesId}
+          AND status = 'ACTIVE'
     </update>
 
-    <!-- 서비스 판매 내역 조회 (페이지당 20개, 스크롤 10+10 로딩) -->
+
+    <!-- ===============================
+         [3. 페이징 / 검색 필터]
+    =============================== -->
+
+    <!-- 서비스 판매 내역 조회 (페이지네이션 + 필터) -->
     <select id="selectPagedServiceSales" parameterType="map" resultType="SalesService">
         SELECT 
-            s.serviceSalesId, s.createdAt, s.serviceType, s.serviceName,
-            s.memNum, s.empNum, s.actualCount, s.actualAmount
-        FROM SALESSERVICE s
-        WHERE s.status != 'DELETED'
+            s.serviceSalesId,
+            s.createdAt,
+            s.serviceType,
+            s.serviceName,
+            s.memNum,
+            s.empNum,
+            s.actualCount,
+            s.actualAmount
+        FROM sales_service s
+        WHERE s.status = 'ACTIVE'
         <if test="keyword != null and keyword != ''">
-            AND LOWER(s.serviceName) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+            AND LOWER(s.serviceName) LIKE '%' || LOWER(#{keyword}) || '%'
         </if>
         <if test="empNum != null">
             AND s.empNum = #{empNum}
@@ -68,19 +105,20 @@
             </foreach>
         </if>
         <if test="startDate != null and endDate != null">
-            AND DATE(s.createdAt) BETWEEN #{startDate} AND #{endDate}
+            AND s.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+                               AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
         </if>
         ORDER BY s.createdAt DESC
         OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
     </select>
 
-    <!-- 전체 행 개수 조회 -->
+    <!-- 전체 행 개수 조회 (페이지네이션용) -->
     <select id="countPagedServiceSales" parameterType="map" resultType="int">
-        SELECT COUNT(*) 
-        FROM SALESSERVICE s
-        WHERE s.status != 'DELETED'
+        SELECT COUNT(*)
+        FROM sales_service s
+        WHERE s.status = 'ACTIVE'
         <if test="keyword != null and keyword != ''">
-            AND LOWER(s.serviceName) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+            AND LOWER(s.serviceName) LIKE '%' || LOWER(#{keyword}) || '%'
         </if>
         <if test="empNum != null">
             AND s.empNum = #{empNum}
@@ -95,9 +133,15 @@
             </foreach>
         </if>
         <if test="startDate != null and endDate != null">
-            AND DATE(s.createdAt) BETWEEN #{startDate} AND #{endDate}
+            AND s.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+                               AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
         </if>
     </select>
+
+
+    <!-- ===============================
+         [4. 그래프용 통계]
+    =============================== -->
 
     <!-- 서비스 매출 그래프 조회 -->
     <select id="selectServiceSalesGraph" parameterType="map" resultType="map">
@@ -107,8 +151,8 @@
                 ELSE s.serviceType
             END AS label,
             SUM(s.actualAmount) AS totalSalesAmount
-        FROM SALESSERVICE s
-        WHERE s.status != 'DELETED'
+        FROM sales_service s
+        WHERE s.status = 'ACTIVE'
         <if test="empNum != null">
             AND s.empNum = #{empNum}
         </if>
@@ -122,9 +166,14 @@
             </foreach>
         </if>
         <if test="startDate != null and endDate != null">
-            AND DATE(s.createdAt) BETWEEN #{startDate} AND #{endDate}
+            AND s.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+                               AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
         </if>
-        GROUP BY label
+        GROUP BY 
+            CASE 
+                WHEN #{serviceIds} IS NOT NULL THEN s.serviceName
+                ELSE s.serviceType
+            END
         ORDER BY totalSalesAmount DESC
     </select>
 

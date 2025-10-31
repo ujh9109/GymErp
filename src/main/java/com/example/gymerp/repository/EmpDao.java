@@ -26,4 +26,31 @@ public interface EmpDao {
 	List<EmpDto> searchEmp(
 			@Param("keyword") String keyword, 
 			@Param("filter") String filter);
+	
+
+	// 직원 검색 + 페이징
+	List<EmpDto> getEmpListPaged(
+	    @Param("type") String type,
+	    @Param("keyword") String keyword,
+	    @Param("start") int start,
+	    @Param("end") int end
+	);
+
+	// 직원 총 개수
+	int getTotalCount(
+	    @Param("type") String type,
+	    @Param("keyword") String keyword
+	);
+	
+	// 프로필이미지 업로드
+	void updateProfileImage(int empNum, String fileName);
+
+	
+	/** 이용내역 DB 관련 내용입니다.*/
+	
+	// 직원 이름 단건 조회 (로그용: empNum → empName 매핑)
+    String selectEmployeeNameById(int empNum);
+
+    // 직원 존재 여부 확인 (판매 등록 시 유효성 검증용) 
+    int checkEmployeeExists(int empNum);
 }
