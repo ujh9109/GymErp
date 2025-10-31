@@ -50,7 +50,6 @@ public class EmpVacationController {
         return ResponseEntity.noContent().build();
     }
 
-    //aaa
     // 상태만 변경
     @PatchMapping("/vacation/{vacNum}/state")
     public ResponseEntity<Void> updateVacationState(@PathVariable int vacNum, @RequestParam String state) {
