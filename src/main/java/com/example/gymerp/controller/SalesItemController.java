@@ -27,7 +27,7 @@ public class SalesItemController {
 
     private final SalesItemService salesItemService;
 
-    // 1. 상품 판매 등록 (CREATE) - 명세: POST /sales/products
+    // 1. 상품. 판매 등록 (CREATE) - 명세: POST /sales/products
     @PostMapping("/products") 
     public ResponseEntity<String> addSalesItem(@RequestBody SalesItemDto salesItem) {
         

@@ -139,7 +139,7 @@
             #{productId},
             #{codeBId}, 
             SYSDATE,
-            #{quantity},   '판매 취소로 인한 재고 환원'       )
+            #{quantity},   '판매 취소로 인한 재고 환원'     )
     </insert>
 
     <update id="deleteSalesItem" parameterType="long">
