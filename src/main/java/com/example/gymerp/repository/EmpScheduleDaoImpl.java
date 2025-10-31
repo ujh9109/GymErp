@@ -64,5 +64,12 @@ public class EmpScheduleDaoImpl implements EmpScheduleDao {
 		
 		return sqlSession.insert("EmpScheduleMapper.insertEtc", dto);
 	}
+	
+	// vacation일정 등록
+		@Override
+		public int insertEmpVacation(EmpScheduleDto dto) {
+			
+			return sqlSession.insert("EmpScheduleMapper.insertEtc", dto);
+		}
 
 }

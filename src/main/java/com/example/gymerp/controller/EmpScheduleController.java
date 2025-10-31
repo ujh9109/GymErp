@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.CrossOrigin;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,11 +21,7 @@ import com.example.gymerp.service.EmpScheduleService;
 
 import lombok.RequiredArgsConstructor;
 
-@CrossOrigin(
-	    origins = "http://localhost:5173",
-	    allowedHeaders = "*",
-	    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
-	)
+
 @RestController
 @RequestMapping("/empSchedule")
 @RequiredArgsConstructor
@@ -44,6 +40,13 @@ public class EmpScheduleController {
     public int createEtcSchedule(@RequestBody EmpScheduleDto dto) {
         // dto.refType = "etc" + dto.etc 포함
         return empScheduleService.createEtcSchedule(dto);
+    }
+    
+    /** VACATION 일정 등록 */
+    @PostMapping("/vacation")
+    public int createEmpVationSchedule(@RequestBody EmpScheduleDto dto) {
+        // dto.refType = "vacation" + dto.vacation 포함
+        return empScheduleService.createEmpVacationSchedule(dto);
     }
     
     /** 일정 수정 */

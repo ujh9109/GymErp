@@ -34,5 +34,10 @@ public interface EmpScheduleDao {
     
     // ETC 일정
     int insertEtc(EmpScheduleDto dto); 
+    
+    // vacation 일정
+    int insertEmpVacation(EmpScheduleDto dto);
+
+
 
 }

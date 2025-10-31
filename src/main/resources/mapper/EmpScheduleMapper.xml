@@ -15,7 +15,21 @@
 		<result property="etcType" column="etcType" />
 	</resultMap>
 
-	<!-- 공통 일정 등록 (PT, VACATION 등) -->
+	<!-- ============================= EmpVacation 일정 전용 ResultMap ============================= -->
+	<resultMap id="EmpVacationMap"
+		type="EmpVacationDto">
+		<id property="vacNum" column="vacNum" />
+		<result property="empNum" column="empNum" />
+		<result property="vacStartedAt" column="vacStartedAt" />
+		<result property="vacEndedAt" column="vacEndedAt" />
+		<result property="vacContent" column="vacContent" />
+		<result property="vacState" column="vacState" />
+		<result property="earnedDays" column="earnedDays" />
+		<result property="remainingDays" column="remainingDays" />
+		<result property="usedDays" column="usedDays" />
+	</resultMap>
+
+	<!--  공통 일정 등록 (PT, VACATION 등) 
 	<insert id="insert" parameterType="EmpScheduleDto">
 		INSERT INTO EmpSchedule (
 		calNum,
@@ -43,7 +57,7 @@
 		#{color,
 		jdbcType=VARCHAR}
 		)
-	</insert>
+	</insert> -->
 
 	<!-- ETC 일정 전용 등록 -->
 	<insert id="insertEtc" parameterType="EmpScheduleDto">
@@ -70,6 +84,36 @@
 		#{color, jdbcType=VARCHAR}
 		)
 	</insert>
+	
+	<!-- ============================= VACATION 등록 ============================= -->
+<insert id="insertVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
+  <selectKey keyProperty="vacNum" resultType="int" order="BEFORE">
+    SELECT VACATION_SEQ.NEXTVAL FROM dual
+  </selectKey>
+
+  INSERT INTO vacation (
+    vacNum,
+    empNum,
+    vacStartedAt,
+    vacEndedAt,
+    vacContent,
+    vacState,
+    earnedDays,
+    remainingDays,
+    usedDays
+  ) VALUES (
+    #{vacNum},
+    #{empNum, jdbcType=INTEGER},
+    #{vacStartedAt, jdbcType=DATE},
+    #{vacEndedAt, jdbcType=DATE},
+    #{vacContent, jdbcType=VARCHAR},
+    #{vacState, jdbcType=VARCHAR},
+    #{earnedDays, jdbcType=INTEGER},
+    #{remainingDays, jdbcType=INTEGER},
+    #{usedDays, jdbcType=INTEGER}
+  )
+</insert>
+
 
 
 	<!-- ============================= 전체 일정 조회 (통합) ============================= -->
@@ -111,6 +155,30 @@
 		t.etcNum
 		ORDER BY e.startTime, e.endTime
 	</select>
+	
+	<!-- ============================= VACATION 일정 전용 등록 ============================= -->
+<insert id="insertEmpVacation" parameterType="EmpScheduleDto">
+  INSERT INTO EmpSchedule (
+    calNum,
+    empNum,
+    refType,
+    refId,
+    startTime,
+    endTime,
+    memo,
+    color
+  ) VALUES (
+    SCHEDULE_SEQ.NEXTVAL,
+    #{empNum, jdbcType=INTEGER},
+    'VACATION',
+    #{vacation.vacNum, jdbcType=INTEGER},
+    #{vacation.vacStartedAt, jdbcType=TIMESTAMP},
+    #{vacation.vacEndedAt, jdbcType=TIMESTAMP},
+    #{vacation.vacContent, jdbcType=VARCHAR},
+    #{color, jdbcType=VARCHAR}
+  )
+</insert>
+	
 
 	<!-- ============================= PK 단건 조회 ============================= -->
 	<select id="selectByCalNum" resultType="EmpScheduleDto">
@@ -208,12 +276,12 @@
 	<update id="update" parameterType="EmpScheduleDto">
 		UPDATE EmpSchedule
 		SET
-			color = #{color, jdbcType=VARCHAR},
-			refType = #{refType, jdbcType=VARCHAR},
-			refId = #{refId, jdbcType=NUMERIC},
-			startTime = #{startTime, jdbcType=TIMESTAMP},
-			endTime = #{endTime, jdbcType=TIMESTAMP},
-			memo = #{memo, jdbcType=VARCHAR}
+		color = #{color, jdbcType=VARCHAR},
+		refType = #{refType, jdbcType=VARCHAR},
+		refId = #{refId, jdbcType=NUMERIC},
+		startTime = #{startTime, jdbcType=TIMESTAMP},
+		endTime = #{endTime, jdbcType=TIMESTAMP},
+		memo = #{memo, jdbcType=VARCHAR}
 		WHERE calNum = #{calNum, jdbcType=NUMERIC}
 	</update>
 
