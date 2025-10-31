@@ -23,7 +23,7 @@
 			(SELECT result1.*, ROWNUM AS rnum
 			FROM
 				(SELECT productId, name, price, isActive, codeBId
-				FROM board
+				FROM product
 				<include refid="search"/>
 				ORDER BY codeBId DESC
 				) result1)
@@ -42,12 +42,12 @@
 		</selectKey>
 		INSERT INTO product
 		(productId, codeBId, name, price, isActive, createdAt, profileImage)
-		VALUES(#{productId}, #{codeB}, #{name}, #{price}, #{isActive}, SYSDATE, #{profileImage})
+		VALUES(#{productId}, #{codeBId}, #{name}, #{price}, #{isActive}, SYSDATE, #{profileImage})
 	</insert>
 	
 	<update id="update" parameterType="productDto">
 		UPDATE product
-		SET codeBId=#{codeB}, name=#{name}, price=#{price}, isActive=#{isActive},
+		SET codeBId=#{codeBId}, name=#{name}, price=#{price}, isActive=#{isActive},
 			updatedAt=SYSDATE, note=#{note}, seviceValue=#{serviceValue}
 			
 			<if test="profileImage != null">, profileImage=#{profileImage}</if>
