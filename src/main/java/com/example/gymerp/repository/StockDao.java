@@ -2,6 +2,8 @@ package com.example.gymerp.repository;
 
 import java.util.List;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.example.gymerp.dto.CurrentStockDto;
 import com.example.gymerp.dto.PurchaseDto;
 import com.example.gymerp.dto.StockAdjustmentDto;
@@ -21,4 +23,5 @@ public interface StockDao {
 
     // 3-2 출고 등록
     int insertStockAdjustment(StockAdjustmentDto dto);
+    
 }

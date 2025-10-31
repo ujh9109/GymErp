@@ -20,28 +20,32 @@
         WHERE EMPNUM = #{empNum}
     </select>
 
-	<!-- 직원 등록 -->
+    <!-- 직원 등록: sequence 로 PK 발급 + 비번 포함 -->
     <insert id="insertEmp" parameterType="EmpDto">
-	    INSERT INTO EMPLOYEE (
-	        EMPNUM, EMPNAME, GENDER, EMPADDRESS,
-	        EMPBIRTH, EMPPHONE, EMPEMAIL, HIREDATE, FIREDATE,
-	        PROFILEIMAGE, EMPMEMO, ROLE
-	    ) VALUES (
-	        EMPLOYEE_SEQ.NEXTVAL,
-	        #{empName, jdbcType=VARCHAR},
-	        #{gender, jdbcType=VARCHAR},
-	        #{empAddress, jdbcType=VARCHAR},
-	        #{empBirth, jdbcType=DATE},
-	        #{empPhone, jdbcType=VARCHAR},
-	        #{empEmail, jdbcType=VARCHAR},
-	        #{hireDate, jdbcType=DATE},
-	        #{fireDate, jdbcType=DATE},
-	        #{profileImage, jdbcType=VARCHAR},
-	        #{empMemo, jdbcType=VARCHAR},
-	        #{role, jdbcType=VARCHAR}
-	    )
-	</insert>
-	
+    	<selectKey keyProperty="empNum" resultType="int" order="BEFORE">
+    		SELECT employee_seq.NEXTVAL FROM DUAL
+    	</selectKey>
+        INSERT INTO EMPLOYEE (
+            EMPNUM, EMPNAME, GENDER, EMPADDRESS, EMPBIRTH,
+            EMPPHONE, EMPEMAIL, PASSWORD, HIREDATE, FIREDATE,
+            PROFILEIMAGE, EMPMEMO, ROLE
+        ) VALUES (
+                #{empNum, jdbcType=NUMERIC},
+				#{empName, jdbcType=VARCHAR},
+				#{gender, jdbcType=VARCHAR},
+				#{empAddress, jdbcType=VARCHAR},
+				#{empBirth, jdbcType=DATE},
+				#{empPhone, jdbcType=VARCHAR},
+				#{empEmail, jdbcType=VARCHAR},
+				#{password, jdbcType=VARCHAR},
+				#{hireDate, jdbcType=DATE},
+				#{fireDate, jdbcType=DATE},
+				#{profileImage, jdbcType=VARCHAR},
+				#{empMemo, jdbcType=VARCHAR},
+				#{role, jdbcType=VARCHAR}
+        )
+    </insert>
+
 	<!-- 직원 수정 -->
 	<update id="updateEmp" parameterType="EmpDto">
 	    UPDATE EMPLOYEE
@@ -88,6 +92,28 @@
         ORDER BY EMPNUM DESC
     </select>
     
+    <!-- 로그인 전용: 이메일로 비번 포함 조회 -->
+    <resultMap type="EmpDto" id="empAuthMap">
+    	<id property="empNum" column="EMPNUM"/>
+    	<result property="empName" column="EMPNAME"/>
+    	<result property="empEmail" column="EMPEMAIL"/>
+    	<result property="password" column="PASSWORD"/>
+    	<result property="role" column="ROLE"/>
+    </resultMap>
+    
+    <select id="selectAuthByEmail" parameterType="string" resultMap="empAuthMap">
+    	SELECT EMPNUM, EMPNAME, EMPEMAIL, PASSWORD, ROLE
+    		FROM EMPLOYEE
+    	WHERE EMPEMAIL = #{empEmail}
+    </select>
+    
+    <!-- 비밀번호만 변경 -->
+    <update id="updatePassword">
+    	UPDATE EMPLOYEE
+    		SET PASSWORD = #{password}
+    	WHERE EMPNUM = #{empNum}
+    </update>
+
 	<!-- 직원 검색 + 페이징 -->
 	<select id="getEmpListPaged" resultType="EmpDto">
 	    SELECT *

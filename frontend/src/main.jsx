@@ -1,10 +1,16 @@
-import { StrictMode } from 'react'
+// src/main.jsx
+
+import React from "react";
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+// SPA 를 구현하기 위한 RouterProvider 를 import
+import { RouterProvider } from "react-router-dom"; 
+import router from "./router"; // 라우팅 설정 
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
