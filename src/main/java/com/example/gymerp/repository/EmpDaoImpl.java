@@ -64,6 +64,21 @@ public class EmpDaoImpl implements EmpDao {
         paramMap.put("filter", filter);
         return session.selectList("EmployeeMapper.searchEmp", paramMap);
 	}
+
+	@Override
+	public EmpDto selectAuthByEmail(String empEmail) {
+		
+		return session.selectOne("EmployeeMapper.selectAuthByEmail", empEmail);
+	}
+
+	@Override
+	public int updatePassword(int empNum, String hashed) {
+		Map<String, Object> params = new HashMap<>();
+        params.put("empNum", empNum);
+        params.put("password", hashed); // XML의 #{password}와 매칭
+		
+		return session.update("EmployeeMapper.updatePassword", params);
+	}
 	
 
 	// 직원 검색 + 페이징
