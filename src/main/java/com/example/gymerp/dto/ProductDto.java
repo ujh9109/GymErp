@@ -16,8 +16,8 @@ import lombok.NoArgsConstructor;
 public class ProductDto {
 
 	private int productId;
-	private String codeA;
-	private String codeB;
+	private String codeAId;
+	private String codeBId;
 	private String name;
 	private BigDecimal price;
 	private Boolean isActive;
@@ -31,9 +31,6 @@ public class ProductDto {
 	private int endRowNum;
 	//프로필 이미지 출력을 위한 필드
 	private String ProfileImage;
-	//이전글, 다음글 처리를 위한 필드
-	private int prevNum;
-	private int nextNum;
 	//검색 키워드를 담기 위한 필드
 	private String keyword;
 	//검색 조건을 담기 위한 필드

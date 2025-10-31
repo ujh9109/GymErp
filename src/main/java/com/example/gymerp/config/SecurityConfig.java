@@ -15,7 +15,8 @@ public class SecurityConfig {
     private static final String[] SWAGGER = {
             "/swagger-ui.html", "/swagger-ui/**",
             "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**",
-            "/configuration/ui", "/configuration/security"
+            "/configuration/ui", "/configuration/security", "/upload/**",
+            "/v1/product/**"
             
     };
 

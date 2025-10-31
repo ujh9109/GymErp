@@ -42,12 +42,12 @@
 		</selectKey>
 		INSERT INTO service
 		(serviceId, codeBId, name, price, isActive, createdAt, serviceValue)
-		VALUES(#{serviceId}, #{codeB}, #{name}, #{price}, #{isActive}, SYSDATE, #{serviceValue})
+		VALUES(#{serviceId}, #{codeBId}, #{name}, #{price}, #{isActive}, SYSDATE, #{serviceValue})
 	</insert>
 	
 	<update id="update" parameterType="serviceDto">
 		UPDATE service
-		SET codeBId=#{codeB}, name=#{name}, price=#{price}, isActive=#{isActive},
+		SET codeBId=#{codeBId}, name=#{name}, price=#{price}, isActive=#{isActive},
 			updatedAt=SYSDATE, note=#{note}
 			
 			<if test="profileImage != null">, profileImage=#{profileImage}</if>
