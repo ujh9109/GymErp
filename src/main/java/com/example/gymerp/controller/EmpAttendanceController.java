@@ -1,3 +1,4 @@
+// src/main/java/com/example/gymerp/controller/EmpAttendanceController.java
 package com.example.gymerp.controller;
 
 import java.net.URI;
@@ -39,23 +40,25 @@ public class EmpAttendanceController {
         return service.getEmpAttendanceById(attNum);
     }
 
-    // 출근(등록)
+    // 출근(등록) - 바디로 empNum 전달(보안 미구현 상태용)
     @PostMapping("/attendance")
     public ResponseEntity<Void> checkIn(@RequestBody EmpAttendanceDto dto) {
         int rows = service.addEmpAttendance(dto);
         return rows > 0
-            ? ResponseEntity.created(URI.create("/v1/attendances")).build()
-            : ResponseEntity.badRequest().build();
+                ? ResponseEntity.created(URI.create("/v1/attendance")).build() // 단수 경로로 수정
+                : ResponseEntity.badRequest().build();
     }
 
-    // 퇴근시간 업데이트 (예: checkOut=2025-10-29T18:30:00)
+    // 퇴근시간 업데이트 (checkOut 없으면 now 로 처리)
     @PatchMapping("/attendance/{attNum}/checkout")
     public ResponseEntity<Void> checkOut(
             @PathVariable int attNum,
-            @RequestParam String checkOut
+            @RequestParam(required = false) String checkOut
     ) {
-        LocalDateTime ldt = LocalDateTime.parse(checkOut, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        service.updateEmpAttendanceCheckOut(attNum, Timestamp.valueOf(ldt));
+        Timestamp ts = (checkOut == null || checkOut.isBlank())
+                ? Timestamp.valueOf(LocalDateTime.now())
+                : Timestamp.valueOf(LocalDateTime.parse(checkOut, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        service.updateEmpAttendanceCheckOut(attNum, ts);
         return ResponseEntity.noContent().build();
     }
 
