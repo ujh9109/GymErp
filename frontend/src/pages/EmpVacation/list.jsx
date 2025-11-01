@@ -46,6 +46,7 @@ function EmpVacationList() {
 
   return (
     <>
+    <h3>휴가 작성 프로토타입</h3>
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h1 className="h4 m-0">휴가 목록</h1>
         <NavLink className="btn btn-primary" to="/vacation/new">

@@ -38,17 +38,22 @@ export default function ScheduleModal({ show, defaultTab = "pt", onClose, onSave
   );
 }
 
-/* ================= PT 탭 ================= */
+/* ================= PT 탭 (수정본) ================= */
 function PTTab({ onSaved }) {
   const [form, setForm] = useState({
     memberName: "",
     trainer: "",
     date: "",
     startTime: "",
+    endTime: "",          // ✅ 종료시간 필드 추가
     durationMin: 60,
     memo: "",
+    ptRemain: 20,         // ✅ 기본값 20
+    ptTotal: 20,          // ✅ 기본값 20
   });
-  const onChange = (e) => setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
+
+  const onChange = (e) =>
+    setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
 
   const submit = async (e) => {
     e.preventDefault();
@@ -62,31 +67,74 @@ function PTTab({ onSaved }) {
         <Col md={6}>
           <Form.Label>회원 검색</Form.Label>
           <InputGroup>
-            <Form.Control name="memberName" value={form.memberName} onChange={onChange} placeholder="회원명" />
+            <Form.Control
+              name="memberName"
+              value={form.memberName}
+              onChange={onChange}
+              placeholder="회원명"
+            />
             <Button variant="outline-secondary" type="button">검색</Button>
           </InputGroup>
         </Col>
+
         <Col md={6}>
           <Form.Label>트레이너</Form.Label>
-          <Form.Control name="trainer" value={form.trainer} onChange={onChange} placeholder="담당자" />
+          <Form.Control
+            name="trainer"
+            value={form.trainer}
+            onChange={onChange}
+            placeholder="담당자"
+          />
         </Col>
+
         <Col md={4}>
           <Form.Label>날짜</Form.Label>
-          <Form.Control type="date" name="date" value={form.date} onChange={onChange} />
+          <Form.Control
+            type="date"
+            name="date"
+            value={form.date}
+            onChange={onChange}
+          />
         </Col>
+
         <Col md={4}>
           <Form.Label>시작 시간</Form.Label>
-          <Form.Control type="time" name="startTime" value={form.startTime} onChange={onChange} />
+          <Form.Control
+            type="time"
+            name="startTime"
+            value={form.startTime}
+            onChange={onChange}
+          />
         </Col>
+
         <Col md={4}>
-          <Form.Label>총 시간(분)</Form.Label>
-          <Form.Control type="number" min={30} step={10} name="durationMin" value={form.durationMin} onChange={onChange} />
+          <Form.Label>종료 시간</Form.Label>
+          <Form.Control
+            type="time"
+            name="endTime"          // ✅ 올바른 name/value
+            value={form.endTime}
+            onChange={onChange}
+          />
         </Col>
+
+        {/* ✅ PT 남은 횟수 / 총 PT 횟수 표시 (기본 20/20) */}
+        <Col md={12}>
+          <Form.Label>PT 남은 횟수 / 총 PT 횟수</Form.Label>
+          <Form.Control readOnly value={`${form.ptRemain}/${form.ptTotal}`} />
+        </Col>
+
         <Col md={12}>
           <Form.Label>메모</Form.Label>
-          <Form.Control as="textarea" rows={4} name="memo" value={form.memo} onChange={onChange} />
+          <Form.Control
+            as="textarea"
+            rows={4}
+            name="memo"
+            value={form.memo}
+            onChange={onChange}
+          />
         </Col>
       </Row>
+
       <div className="d-flex justify-content-end mt-3">
         <Button type="submit" variant="primary">확인</Button>
       </div>
@@ -94,7 +142,6 @@ function PTTab({ onSaved }) {
   );
 }
 
-/* ================= 기타 탭 ================= */
 function EtcTab({ onSaved }) {
   const [form, setForm] = useState({
     registrant: "",

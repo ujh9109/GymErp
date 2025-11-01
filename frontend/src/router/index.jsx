@@ -15,11 +15,12 @@ import EmpList from "../pages/EmpList.jsx";
 import EmpDetail from "../pages/EmpDetail.jsx";
 import EmpEdit from "../pages/EmpEdit.jsx";
 
-import Home from "../pages/Home";
+import Home from "../pages/JONGBOKHome.jsx";
 import EmpVacationList from "../pages/EmpVacation/list";
 import EmpAttendanceList from "../pages/EmpAttendance/list";
 import EmpAttendanceMy from "../pages/EmpAttendance/myAttendance";
 import EmpAttendanceView from "../pages/EmpAttendance/viewAttendance";
+import JONGBOKHome from "../pages/JONGBOKHome.jsx";
 
 
 const router = createBrowserRouter([
@@ -27,15 +28,16 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />, // 공통 레이아웃
     children: [
-      { index: true, element: <Navigate to="emp" replace /> },
+      { index: true, element: //<Navigate to="emp" replace /> 
+      <JONGBOKHome/>},
       { path: "emp", element: <EmpList /> },
       { path: "emp/:empNum", element: <EmpDetail /> },
       { path: "emp/edit/:empNum", element: <EmpEdit /> },
-      { path: "/Home", element: <Home /> },
       { path: "/EmpvacationList", element: <EmpVacationList /> },
       { path: "/EmpattendanceList", element: <EmpAttendanceList /> },
       { path: "/EmpAttendanceMy", element: <EmpAttendanceMy /> },
       { path: "/EmpAttendanceView", element: <EmpAttendanceView /> },
+      {path:"/JONGBOKHome", element:<JONGBOKHome />},
     ],
   },
 ]);

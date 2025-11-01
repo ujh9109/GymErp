@@ -6,7 +6,7 @@ import { NavLink } from 'react-router-dom';
 import ScheduleModal from '../components/ScheduleModal';
 import { Button, Stack } from 'react-bootstrap';
 
-function Home() {
+function JONGBOKHome() {
     const [modal, setModal] = useState({ show: false, tab: "pt" });
     const open = (tab) => setModal({ show: true, tab });
     const close = () => setModal((s) => ({ ...s, show: false }));
@@ -41,4 +41,4 @@ function Home() {
         </ul>
     </>
 }
-export default Home;
+export default JONGBOKHome;

@@ -301,3 +301,16 @@ CREATE TABLE SALESSERVICE (
     CONSTRAINT FK_SALESSVC_SVC FOREIGN KEY (SERVICEID) REFERENCES SERVICE(SERVICEID)
 );
 CREATE SEQUENCE SALESSERVICE_SEQ;
+
+--------------------------------------------------------
+-- 18. 휴가 일수(VacationDays)
+--------------------------------------------------------
+CREATE TABLE vacationdays (
+  vacDaysNum     NUMBER       PRIMARY KEY,
+  empNum         NUMBER       NOT NULL,
+  earnedDays     NUMBER       NOT NULL,
+  remainingDays  NUMBER       NOT NULL,
+  usedDays       NUMBER       DEFAULT 0 NOT NULL,
+  CONSTRAINT FK_VACATIONDAYS FOREIGN KEY (EMPNUM) REFERENCES EMPLOYEE(EMPNUM)
+);
+CREATE SEQUENCE VACATIONDAYS_SEQ;

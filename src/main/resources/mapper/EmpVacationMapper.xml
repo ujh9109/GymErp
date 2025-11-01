@@ -2,55 +2,81 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="EmpVacationMapper">
 
-  <!-- 전체 목록 -->
-  <select id="selectAllEmpVacations" resultType="com.example.gymerp.dto.EmpVacationDto">
-    SELECT
-      vacNum, empNum, vacStartedAt, vacEndedAt,
-      vacContent, vacState, earnedDays, remainingDays, usedDays
-    FROM vacation
-    ORDER BY vacNum DESC
+  <!-- 공통 resultMap: 신청 + 잔고 JOIN 결과를 EmpVacationDto로 매핑 -->
+  <resultMap id="EmpVacationDtoMap" type="com.example.gymerp.dto.EmpVacationDto">
+    <id     property="vacNum"       column="vacNum"/>
+    <result property="empNum"       column="empNum"/>
+    <result property="vacStartedAt" column="vacStartedAt"/>
+    <result property="vacEndedAt"   column="vacEndedAt"/>
+    <result property="vacContent"   column="vacContent"/>
+    <result property="vacState"     column="vacState"/>
+    <!-- 잔고 테이블에서 가져온 값 -->
+    <result property="earnedDays"    column="earnedDays"/>
+    <result property="remainingDays" column="remainingDays"/>
+    <result property="usedDays"      column="usedDays"/>
+  </resultMap>
+
+  <!-- 전체 목록 (JOIN으로 잔고 같이) -->
+  <select id="selectAllEmpVacations" resultMap="EmpVacationDtoMap">
+    SELECT v.vacNum, v.empNum, v.vacStartedAt, v.vacEndedAt,
+           v.vacContent, v.vacState,
+           d.earnedDays, d.remainingDays, d.usedDays
+      FROM vacation v
+      LEFT JOIN vacationdays d ON d.empNum = v.empNum
+     ORDER BY v.vacNum DESC
   </select>
 
   <!-- 단건 조회 -->
-  <select id="selectEmpVacationById" parameterType="int" resultType="com.example.gymerp.dto.EmpVacationDto">
-    SELECT
-      vacNum, empNum, vacStartedAt, vacEndedAt,
-      vacContent, vacState, earnedDays, remainingDays, usedDays
-    FROM vacation
-    WHERE vacNum = #{vacNum}
+  <select id="selectEmpVacationById" parameterType="int" resultMap="EmpVacationDtoMap">
+    SELECT v.vacNum, v.empNum, v.vacStartedAt, v.vacEndedAt,
+           v.vacContent, v.vacState,
+           d.earnedDays, d.remainingDays, d.usedDays
+      FROM vacation v
+      LEFT JOIN vacationdays d ON d.empNum = v.empNum
+     WHERE v.vacNum = #{vacNum}
   </select>
 
   <!-- 직원별 목록 -->
-  <select id="selectEmpVacationsByEmpNum" parameterType="int" resultType="com.example.gymerp.dto.EmpVacationDto">
-    SELECT
-      vacNum, empNum, vacStartedAt, vacEndedAt,
-      vacContent, vacState, earnedDays, remainingDays, usedDays
-    FROM vacation
-    WHERE empNum = #{empNum}
-    ORDER BY vacStartedAt DESC
+  <select id="selectEmpVacationsByEmpNum" parameterType="int" resultMap="EmpVacationDtoMap">
+    SELECT v.vacNum, v.empNum, v.vacStartedAt, v.vacEndedAt,
+           v.vacContent, v.vacState,
+           d.earnedDays, d.remainingDays, d.usedDays
+      FROM vacation v
+      LEFT JOIN vacationdays d ON d.empNum = v.empNum
+     WHERE v.empNum = #{empNum}
+     ORDER BY v.vacStartedAt DESC, v.vacNum DESC
   </select>
 
-  <!-- 등록 -->
+  <!-- 달력 범위 조회: [from, to]와 겹치는 신청 + 잔고 -->
+  <select id="selectEmpVacationsByRange" resultMap="EmpVacationDtoMap">
+    SELECT v.vacNum, v.empNum, v.vacStartedAt, v.vacEndedAt,
+           v.vacContent, v.vacState,
+           d.earnedDays, d.remainingDays, d.usedDays
+      FROM vacation v
+      LEFT JOIN vacationdays d ON d.empNum = v.empNum
+     WHERE v.empNum = #{empNum}
+       AND v.vacStartedAt &lt;= #{to}
+       AND v.vacEndedAt   &gt;= #{from}
+     ORDER BY v.vacStartedAt DESC, v.vacNum DESC
+  </select>
+
+  <!-- 등록: days 컬럼 제거 -->
   <insert id="insertEmpVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
     INSERT INTO vacation
-      (vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
-       earnedDays, remainingDays, usedDays)
+      (vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState)
     VALUES
       (#{vacNum}, #{empNum}, #{vacStartedAt,jdbcType=DATE}, #{vacEndedAt,jdbcType=DATE},
-       #{vacContent}, #{vacState}, #{earnedDays}, #{remainingDays}, #{usedDays})
+       #{vacContent}, #{vacState})
   </insert>
 
-  <!-- 전체 수정 -->
+  <!-- 전체 수정: days 컬럼 제거 -->
   <update id="updateEmpVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
     UPDATE vacation
        SET empNum        = #{empNum},
            vacStartedAt  = #{vacStartedAt,jdbcType=DATE},
            vacEndedAt    = #{vacEndedAt,jdbcType=DATE},
            vacContent    = #{vacContent},
-           vacState      = #{vacState},
-           earnedDays    = #{earnedDays},
-           remainingDays = #{remainingDays},
-           usedDays      = #{usedDays}
+           vacState      = #{vacState}
      WHERE vacNum = #{vacNum}
   </update>
 
@@ -64,19 +90,7 @@
   <!-- 삭제 -->
   <delete id="deleteEmpVacation" parameterType="int">
     DELETE FROM vacation
-    WHERE vacNum = #{vacNum}
+     WHERE vacNum = #{vacNum}
   </delete>
-
-<!-- 달력 범위 용 sql -->
-<select id="selectEmpVacationsByRange" resultType="com.example.gymerp.dto.EmpVacationDto">
-  SELECT vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
-         earnedDays, remainingDays, usedDays
-  FROM vacation
-  WHERE empNum = #{empNum}
-    AND vacStartedAt &lt;= #{to}
-    AND vacEndedAt   &gt;= #{from}
-  ORDER BY vacStartedAt DESC
-</select>
-
 
 </mapper>
