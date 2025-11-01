@@ -22,6 +22,8 @@ import EmpAttendanceMy from "../pages/EmpAttendance/myAttendance";
 import EmpAttendanceView from "../pages/EmpAttendance/viewAttendance";
 import JONGBOKHome from "../pages/JONGBOKHome.jsx";
 
+import SchedulePage from "../pages/SchedulePage";
+
 
 const router = createBrowserRouter([
   {
@@ -37,7 +39,12 @@ const router = createBrowserRouter([
       { path: "/EmpattendanceList", element: <EmpAttendanceList /> },
       { path: "/EmpAttendanceMy", element: <EmpAttendanceMy /> },
       { path: "/EmpAttendanceView", element: <EmpAttendanceView /> },
+<<<<<<< HEAD
       {path:"/JONGBOKHome", element:<JONGBOKHome />},
+=======
+      { path: "schedule", element: <SchedulePage /> },
+      
+>>>>>>> af92dadf950abff5dee5f39779bd9ea0a4eb5c36
     ],
   },
 ]);

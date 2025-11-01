@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.EmpVacationDto;
 
 import lombok.RequiredArgsConstructor;
+
 
 @Repository
 @RequiredArgsConstructor
@@ -27,13 +29,13 @@ public class EmpVacationDaoImpl implements EmpVacationDao {
 
     // 휴가 단건 조회
     @Override
-    public EmpVacationDto selectEmpVacationById(int vacNum) {
+    public EmpVacationDto selectEmpVacationById(@Param("vacNum") int vacNum) {
         return session.selectOne("EmpVacationMapper.selectEmpVacationById", vacNum);
     }
 
     // 직원별 휴가 목록
     @Override
-    public List<EmpVacationDto> selectEmpVacationsByEmpNum(int empNum) {
+    public List<EmpVacationDto> selectEmpVacationsByEmpNum(@Param("empNum") int empNum) {
         return session.selectList("EmpVacationMapper.selectEmpVacationsByEmpNum", empNum);
     }
 
@@ -73,4 +75,8 @@ public class EmpVacationDaoImpl implements EmpVacationDao {
     public int deleteEmpVacation(int vacNum) {
         return session.delete("EmpVacationMapper.deleteEmpVacation", vacNum);
     }
+
+	
+    
+    
 }

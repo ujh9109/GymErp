@@ -35,4 +35,6 @@ public interface EmpVacationDao {
 
     // 휴가 삭제
     int deleteEmpVacation(@Param("vacNum") int	 vacNum);
+    
+    
 }
