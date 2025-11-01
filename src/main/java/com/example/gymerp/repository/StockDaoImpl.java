@@ -3,6 +3,7 @@ package com.example.gymerp.repository;
 import java.util.List;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.CurrentStockDto;
@@ -16,10 +17,21 @@ import lombok.RequiredArgsConstructor;
  *	Mapper: StockMapper
  */
 @Repository
+@Primary
 @RequiredArgsConstructor
 public class StockDaoImpl implements StockDao {
 
 	private final SqlSession session;
+	
+	/*
+	 * 	1-1.
+	 * 	가용 재고 조회
+	 */
+	@Override
+	public int getAvailableQty(int productId) {
+		
+		return session.selectOne("StockMapper.getAvailableQty", productId);
+	}
 	
 	/*
 	 *  2-1.
@@ -81,5 +93,6 @@ public class StockDaoImpl implements StockDao {
 		
 		return session.insert("StockMapper.insertStockAdjustment", dto);
 	}
+
 
 }
