@@ -9,6 +9,9 @@ import com.example.gymerp.dto.PurchaseDto;
 import com.example.gymerp.dto.StockAdjustmentDto;
 
 public interface StockDao {
+	// 1-1 가용 재고 조회
+	int getAvailableQty(int productId);
+	
 	// 2-1 입고 내역 조회
     List<PurchaseDto> getPurchaseList(int productId);
 

@@ -22,7 +22,36 @@ public class StockServiceImpl implements StockService {
 	private final StockDao stockDao;
 	private final ProductDao productDao;
 
+<<<<<<< HEAD
 	
+=======
+	// 1-1. 가용 재고 조회
+	@Override
+	public int getStockOne(int productId) {
+		
+		return stockDao.getAvailableQty(productId);
+	}
+	
+	// 1-2. 판매 가능 여부 리턴
+	@Override
+	public Boolean isStockSufficient(int productId, int quantity) {
+		Boolean result = false;
+		if(stockDao.getAvailableQty(productId)>=quantity) {
+			result = true;
+		}else {
+			result = false;
+		}
+			
+		return result;
+	}	
+	
+	// 2-1. 입고내역 리스트 (현재 재고 현황)
+    @Override
+    @Transactional(readOnly = true)
+    public List<CurrentStockDto> getProductStockList() {
+        return stockDao.getCurrentStockList();
+    }
+>>>>>>> 89d0e36f12b2493f79eaa7efd028851ab1a91744
 
     // 2-1. 상품 하나의 입고(인바운드) 내역 조회
     @Override
@@ -91,6 +120,7 @@ public class StockServiceImpl implements StockService {
 	    }
 		
 	}
+
 
 	
 

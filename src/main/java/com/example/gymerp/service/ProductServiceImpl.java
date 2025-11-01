@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ProductListResponse;
+import com.example.gymerp.dto.StockAdjustRequestDto;
 import com.example.gymerp.repository.ProductDao;
 
 
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductServiceImpl implements ProductService{
 	
 	private final ProductDao productDao;
+	private final StockService stockService;
 
 	@Override
 	public ProductListResponse getProducts(int pageNum, ProductDto dto) {
@@ -64,8 +66,13 @@ public class ProductServiceImpl implements ProductService{
 	}
 
 	@Override
-	public void save(ProductDto dto) {
+	@Transactional
+	public void save(ProductDto dto, StockAdjustRequestDto request) {
 		productDao.insert(dto);
+		//리액트에 등록 시 수량 기본값 0 넣기
+		if(dto.getQuantity() != 0) {
+			stockService.adjustProduct(dto.getProductId(), request);
+		}
 		
 	}
 

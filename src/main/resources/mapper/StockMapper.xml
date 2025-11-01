@@ -8,7 +8,11 @@
 	  SELECT
 	    COALESCE( (SELECT SUM(quantity) FROM Purchase        WHERE productId = #{productId}), 0 )
 	  - COALESCE( (SELECT SUM(quantity) FROM StockAdjustment WHERE productId = #{productId}), 0 )
+<<<<<<< HEAD
 	  - COALESCE( (SELECT SUM(quantity) FROM SalesItem       WHERE productId = #{productId}), 0 )
+=======
+	  - COALESCE( (SELECT SUM(quantity) FROM Sales_Item       WHERE productId = #{productId}), 0 )
+>>>>>>> 89d0e36f12b2493f79eaa7efd028851ab1a91744
 	  AS availableQty
 	  FROM DUAL
 	</select>
@@ -102,7 +106,7 @@
         #{codeBId},
         SYSDATE,
         #{quantity},
-        #{notes}
+        #{notes, jdbcType=VARCHAR}
     )
 	</insert>
 	
