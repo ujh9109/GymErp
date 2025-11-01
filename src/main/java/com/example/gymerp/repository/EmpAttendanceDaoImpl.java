@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.EmpAttendanceDto;
@@ -20,6 +21,7 @@ public class EmpAttendanceDaoImpl implements EmpAttendanceDao {
 
     private final SqlSession session;
 
+    @Qualifier("empAttendanceDaoImpl")   // ← 구현체 빈 이름 명시
     // 전체 근태 목록
     @Override
     public List<EmpAttendanceDto> selectAllEmpAttendances() {

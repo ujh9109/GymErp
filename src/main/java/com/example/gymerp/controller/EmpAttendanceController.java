@@ -1,3 +1,4 @@
+// src/main/java/com/example/gymerp/controller/EmpAttendanceController.java
 package com.example.gymerp.controller;
 
 import java.net.URI;
@@ -15,7 +16,7 @@ import com.example.gymerp.service.EmpAttendanceService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/v1")
+@RequestMapping("/v1") // ✅ 규칙 통일
 @RequiredArgsConstructor
 public class EmpAttendanceController {
 
@@ -39,27 +40,29 @@ public class EmpAttendanceController {
         return service.getEmpAttendanceById(attNum);
     }
 
-    // 출근(등록)
+    // 출근(등록) - 날짜/시간은 DB 기본값(SYSDATE/SYSTIMESTAMP) 사용
     @PostMapping("/attendance")
     public ResponseEntity<Void> checkIn(@RequestBody EmpAttendanceDto dto) {
-        int rows = service.addEmpAttendance(dto);
+        int rows = service.addEmpAttendance(dto); // dto.attDate / dto.checkIn null 그대로 전달
         return rows > 0
-            ? ResponseEntity.created(URI.create("/v1/attendances")).build()
-            : ResponseEntity.badRequest().build();
+                ? ResponseEntity.created(URI.create("/api/v1/attendance")).build()
+                : ResponseEntity.badRequest().build();
     }
 
-    // 퇴근시간 업데이트 (예: checkOut=2025-10-29T18:30:00)
-    @PatchMapping("/attendance/{attNum}/checkout")
+    // 퇴근(PUT) - checkOut 없으면 null 전달 → Mapper가 SYSTIMESTAMP로 처리
+    @PutMapping("/attendance/{attNum}/checkout")
     public ResponseEntity<Void> checkOut(
             @PathVariable int attNum,
-            @RequestParam String checkOut
+            @RequestParam(required = false) String checkOut
     ) {
-        LocalDateTime ldt = LocalDateTime.parse(checkOut, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        service.updateEmpAttendanceCheckOut(attNum, Timestamp.valueOf(ldt));
+        Timestamp ts = (checkOut == null || checkOut.isBlank())
+                ? null
+                : Timestamp.valueOf(LocalDateTime.parse(checkOut, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        service.updateEmpAttendanceCheckOut(attNum, ts);
         return ResponseEntity.noContent().build();
     }
 
-    // 전체 수정
+    // 전체 수정 (PUT)
     @PutMapping("/attendance/{attNum}")
     public ResponseEntity<Void> update(@PathVariable int attNum, @RequestBody EmpAttendanceDto dto) {
         dto.setAttNum(attNum);

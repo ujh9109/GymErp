@@ -48,8 +48,8 @@ public class MemberDaoImpl implements MemberDao {
 	public int update(MemberDto dto) {
 		return session.update("MemberMapper.updateMember", dto);
 	}
-	
-	//프로필 이미지수정
+
+	// ▼ 추가: 프로필 이미지 수정
 	@Override
 	public int updateProfile(int memNum, String memProfile) {
 	    MemberDto dto = new MemberDto();
@@ -79,7 +79,5 @@ public class MemberDaoImpl implements MemberDao {
     public int checkMemberExists(int memNum) {
         return session.selectOne("MemberMapper.checkMemberExists", memNum);
     }
-
-	
 
 }

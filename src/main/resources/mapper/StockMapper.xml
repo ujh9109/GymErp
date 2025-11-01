@@ -3,6 +3,16 @@
 
 <mapper namespace="StockMapper">
 
+	<!-- 1-1. 가용 재고 조회 -->
+	<select id="getAvailableQty" parameterType="int" resultType="int">
+	  SELECT
+	    COALESCE( (SELECT SUM(quantity) FROM Purchase        WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM StockAdjustment WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM Sales_Item       WHERE productId = #{productId}), 0 )
+	  AS availableQty
+	  FROM DUAL
+	</select>
+
 	<!-- 2-1. 입고 내역 조회 -->
 	<select id="getPurchaseList" parameterType="int" resultType="PurchaseDto">
 		SELECT
@@ -12,7 +22,7 @@
 			p.createdAt,
 			p.quantity,
 			p.notes
-		FROM Purchase p
+		FROM PURCHASE p
 		WHERE p.productId = #{productId}
 		ORDER BY p.createdAt DESC
 	</select>
@@ -20,29 +30,31 @@
 	<!-- 2-2. 출고 + 판매 내역 조회 -->
 	<!-- 재고출고 테이블과, 판매 테이블 데이터 합쳐서 select 판매 테이블에 없는 칼럼은 임시 칼럼으로 생성 -->
 	<select id="getAdjustStockAndSalesList" parameterType="int" resultType="StockAdjustmentDto">
-		SELECT
-			sa.adjustmentId AS adjustmentId,
-			sa.productId AS productId,
-			sa.codeBId AS codeBId,
-			sa.createdAt AS createdAt,
-			sa.quantity AS quantity,
-			sa.notes AS notes
-		FROM StockAdjustment sa
-		WHERE sa.productId = #{productId}
+		SELECT *
+		  FROM (
+		    SELECT
+		      sa.adjustmentId AS adjustmentId,
+		      sa.productId    AS productId,
+		      sa.codeBId      AS codeBId,
+		      sa.createdAt    AS createdAt,
+		      sa.quantity     AS quantity,
+		      sa.notes        AS notes
+		    FROM STOCKADJUSTMENT sa
+		    WHERE sa.productId = #{productId}
 		
-		UNION ALL
+		    UNION ALL
 		
-		SELECT
-			si.itemSalesId AS adjustmentId,
-			si.productId AS productId,
-			'SALES' AS codeBId,
-			si.createdAt AS createdAt,
-			si.quantity AS quantity,
-			'상품 판매' AS notes
-		FROM SalesItem si
-		WHERE si.productId = #{productId}
-		
-		ORDER BY createdAt DESC
+		    SELECT
+		      si.itemSalesId  AS adjustmentId,
+		      si.productId    AS productId,
+		      'SALES'         AS codeBId,
+		      si.createdAt    AS createdAt,
+		      si.quantity     AS quantity,
+		      '상품 판매'      AS notes
+		    FROM SALESITEM si
+		    WHERE si.productId = #{productId}
+		  ) t
+		  ORDER BY t.createdAt DESC
 	</select>
 
 	<!-- 2-3. 현재 재고 현황 조회 -->
@@ -56,7 +68,7 @@
 			NVL(SUM(pi.quantity), 0)
 				- NVL(SUM(sa.quantity), 0)
 				- NVL(SUM(si.quantity), 0) AS currentStock
-		FROM Product pr
+		FROM PRODUCT pr
 		LEFT JOIN Purchase pi ON pr.productId = pi.productId
 		LEFT JOIN StockAdjustment sa ON pr.productId = sa.productId
 		LEFT JOIN SalesItem si ON pr.productId = si.productId
@@ -74,12 +86,12 @@
         quantity,
         notes
     ) VALUES (
-        #{purchaseId},
+        PURCHASE_SEQ.NEXTVAL,
         #{productId},
         #{codeBId},
         SYSDATE,
         #{quantity},
-        #{notes}
+        #{notes, jdbcType=VARCHAR}
     )
 	</insert>
 	
@@ -93,7 +105,7 @@
         quantity,
         notes
     ) VALUES (
-        #{adjustmentId},
+        STOCK_ADJUSTMENT_SEQ.NEXTVAL,
         #{productId},
         #{codeBId},
         SYSDATE,
@@ -101,5 +113,7 @@
         #{notes}
     )
 	</insert>
+	
+	
 
 </mapper>
