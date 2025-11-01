@@ -9,8 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,13 +21,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.gymerp.dto.EmpDto;
 import com.example.gymerp.security.CustomUserDetails;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.example.gymerp.service.EmpService;
-
+import com.example.gymerp.service.SalesItemServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +35,8 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/v1/emp") 
 public class EmpController {
+
+    private final SalesItemServiceImpl salesItemServiceImpl;
 
     private final EmpService empService;
     public final AuthenticationManager authManager;
@@ -83,8 +85,12 @@ public class EmpController {
     			new UsernamePasswordAuthenticationToken(dto.getEmpEmail(), dto.getPassword()));
     	
 		// 인증 결과를 SecurityContext 에 저장 (세션에도 연동)
-    	SecurityContextHolder.getContext().setAuthentication(auth);
+		SecurityContext context = SecurityContextHolder.createEmptyContext();
+    	context.setAuthentication(auth);
+    	SecurityContextHolder.setContext(context);
+    	
     	HttpSession session = request.getSession(true); // true -> 없으면 새로 생성
+    	session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
     	
     	// 로그인 성공 시 사용자 정보 반환
     	CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
