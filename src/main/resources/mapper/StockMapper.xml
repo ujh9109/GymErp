@@ -3,7 +3,7 @@
 
 <mapper namespace="StockMapper">
 
-	<!-- 가용 재고 조회 -->
+	<!-- 1-1. 가용 재고 조회 -->
 	<select id="getAvailableQty" parameterType="int" resultType="int">
 	  SELECT
 	    COALESCE( (SELECT SUM(quantity) FROM Purchase        WHERE productId = #{productId}), 0 )
