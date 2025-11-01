@@ -2,7 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.gymerp.repository.EmpScheduleDao">
+
+<mapper namespace="EmpScheduleDao">
 
   <!-- ============================= ETC 일정 전용 ResultMap ============================= -->
   <resultMap id="EtcResultMap" type="EtcDto">
@@ -43,16 +44,20 @@
   </insert>
 
   <!-- ============================= ETC 일정 전용 등록 ============================= -->
-  <insert id="insertEmpEtc" parameterType="EmpScheduleDto">
+  <insert id="createEmpEtc" parameterType="EmpScheduleDto">
+    <selectKey keyProperty="calNum" resultType="int" order="BEFORE">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM dual
+    </selectKey>
     INSERT INTO EmpSchedule (
       calNum, empNum, refType, refId, startTime, endTime, memo, color
     ) VALUES (
-      SCHEDULE_SEQ.NEXTVAL,
-      #{empNum}, 'ETC',
-      #{etc.etcNum},
-      #{etc.startTime},
-      #{etc.endTime},
-      #{etc.etcMemo},
+      #{calNum},
+      #{empNum},
+      'ETC',
+      #{refId},
+      #{startTime},
+      #{endTime},
+      #{memo},
       #{color}
     )
   </insert>
@@ -72,49 +77,57 @@
   </insert>
 
   <!-- ============================= VACATION 일정 전용 등록 ============================= -->
-  <insert id="insertEmpVacation" parameterType="EmpScheduleDto">
+  <insert id="createEmpVacation" parameterType="EmpScheduleDto">
+    <selectKey keyProperty="calNum" resultType="int" order="BEFORE">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM dual
+    </selectKey>
     INSERT INTO EmpSchedule (
       calNum, empNum, refType, refId, startTime, endTime, memo, color
     ) VALUES (
-      SCHEDULE_SEQ.NEXTVAL,
-      #{empNum}, 'VACATION',
-      #{vacation.vacNum},
-      #{vacation.vacStartedAt},
-      #{vacation.vacEndedAt},
-      #{vacation.vacContent},
+      #{calNum},
+      #{empNum},
+      'VACATION',
+      #{refId},
+      #{startTime},
+      #{endTime},
+      #{memo},
+      #{color}
+    )
+  </insert>
+
+  <!-- ============================= REGISTRATION 일정 전용 등록 ============================= -->
+  <insert id="createEmpRegistration" parameterType="EmpScheduleDto">
+    <selectKey keyProperty="calNum" resultType="int" order="BEFORE">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM dual
+    </selectKey>
+    INSERT INTO EmpSchedule (
+      calNum, empNum, refType, refId, startTime, endTime, memo, color
+    ) VALUES (
+      #{calNum},
+      #{empNum},
+      #{refType},
+      #{refId},
+      #{startTime},
+      #{endTime},
+      #{memo},
       #{color}
     )
   </insert>
 
   <!-- ============================= PT REGISTRATION 등록 (회원 연계 포함) ============================= -->
-  <insert id="insertRegistration" parameterType="com.example.gymerp.dto.PtRegistrationDto">
+  <insert id="insertRegistration" parameterType="PtRegistrationDto">
     <selectKey keyProperty="regNum" resultType="int" order="BEFORE">
-      SELECT registration_seq.NEXTVAL FROM dual
+      SELECT REGNUM.NEXTVAL FROM dual
     </selectKey>
     INSERT INTO Registration (
-      regNum, empNum, memNum, regTime, lastTime, regNote
+      regNum, empNum, memNum, regTime, lastTime, regNote, regDate
     ) VALUES (
-      #{regNum}, #{empNum}, #{memNum}, #{regTime}, #{lastTime}, #{regNote}
+      #{regNum}, #{empNum}, #{memNum}, #{regTime}, #{lastTime}, #{regNote}, SYSDATE
     )
   </insert>
 
-  <!-- ============================= REGISTRATION 일정 전용 등록 ============================= -->
-  <insert id="insertEmpRegistration" parameterType="EmpScheduleDto">
-    INSERT INTO EmpSchedule (
-      calNum, empNum, refType, refId, startTime, endTime, memo, color
-    ) VALUES (
-      SCHEDULE_SEQ.NEXTVAL,
-      #{empNum}, 'REGISTRATION',
-      #{registration.regNum},
-      #{registration.regTime},
-      #{registration.lastTime},
-      #{registration.regNote},
-      #{color}
-    )
-  </insert>
-
-  <!-- ============================= 전체 일정 조회 (Oracle 호환 + 회원명 포함) ============================= -->
-  <select id="selectAll" resultType="EmpScheduleDto">
+  <!-- ============================= 전체 일정 조회 ============================= -->
+  <select id="scheduleSelectAll" resultType="EmpScheduleDto">
     SELECT e.*, emp.empEmail, emp.empName,
            m.memName, m.memNum,
       CASE e.refType

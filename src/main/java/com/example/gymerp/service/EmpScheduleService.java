@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.gymerp.dto.EmpScheduleDto;
+import com.example.gymerp.dto.EmpVacationDto;
+import com.example.gymerp.dto.EtcDto;
+import com.example.gymerp.dto.PtRegistrationDto;
 
 public interface EmpScheduleService {
 
@@ -21,13 +24,14 @@ public interface EmpScheduleService {
 
     /** ============================= 일정 등록 ============================= */
 
-    // 4. ETC 전용 일정 등록
+
+    // ETC 일정 생성
     int createEtcSchedule(EmpScheduleDto dto);
 
-    // 5. VACATION 전용 일정 등록
+    // VACATION 일정 생성
     int createEmpVacationSchedule(EmpScheduleDto dto);
 
-    // 6. REGISTRATION 전용 일정 등록 (회원 정보 포함)
+    // REGISTRATION 일정 생성
     int createEmpRegistrationSchedule(EmpScheduleDto dto);
 
 

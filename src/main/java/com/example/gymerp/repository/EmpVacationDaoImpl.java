@@ -74,4 +74,8 @@ public class EmpVacationDaoImpl implements EmpVacationDao {
     public int deleteEmpVacation(int vacNum) {
         return session.delete("EmpVacationMapper.deleteEmpVacation", vacNum);
     }
+
+	
+    
+    
 }

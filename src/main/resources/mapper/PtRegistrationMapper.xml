@@ -30,7 +30,10 @@
         )
         VALUES (
             REGNUM.NEXTVAL,#{empNum},#{memNum},#{shNum},SYSTIMESTAMP,
-            #{regTime},#{lastTime},#{regDate},SYSTIMESTAMP,#{regNote}
+            #{regTime, jdbcType=DATE},
+            #{lastTime},
+            NVL(#{regDate, jdbcType=DATE}, SYSDATE),
+            SYSTIMESTAMP,#{regNote}
         )
     </insert>
 

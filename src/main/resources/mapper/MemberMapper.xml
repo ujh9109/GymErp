@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="MemberMapper">
+<mapper namespace="com.example.gymerp.repository.MemberDao">
 
     <!-- 전체 회원 조회 -->
     <select id="selectAllMembers" parameterType="MemberDto" resultType="MemberDto">
@@ -59,7 +59,12 @@
     </delete>
     
     
-    
+    <select id="selectAll" resultType="MemberDto">
+	    SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
+	           memAddr, memCreated, memUpdated, memProfile, memNote
+	    FROM MEMBER
+	    ORDER BY memCreated DESC
+	</select>
     
     
     

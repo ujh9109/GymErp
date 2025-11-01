@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.example.gymerp.dto.EmpScheduleDto;
+import com.example.gymerp.dto.EmpVacationDto;
+import com.example.gymerp.dto.EtcDto;
 import com.example.gymerp.dto.PtRegistrationDto;
 
 public interface EmpScheduleDao {
@@ -14,7 +16,7 @@ public interface EmpScheduleDao {
     /** ============================= 일정 조회 ============================= */
 
     // 1. 전체 일정 조회 (PT / VACATION / ETC 상세 포함)
-    List<EmpScheduleDto> selectAll();
+    List<EmpScheduleDto> scheduleSelectAll();
 
     // 2. PK 단건 조회
     EmpScheduleDto selectByCalNum(@Param("calNum") int calNum);
@@ -30,16 +32,19 @@ public interface EmpScheduleDao {
     /** ============================= 일정 등록 ============================= */
 
     // ETC 일정 등록
-    int insertEmpEtc(EmpScheduleDto dto); 
+    int insertEtc(EtcDto dto); 
+    
+    int createEmpEtc(EmpScheduleDto dto);
 
     // Vacation 일정 등록
-    int insertEmpVacation(EmpScheduleDto dto);
-
-    // PT Registration 일정 등록 (EmpSchedule 테이블)
-    int insertEmpRegistration(EmpScheduleDto dto);
+    int insertEmpVacation(EmpVacationDto dto);
+    
+    int createEmpVacation(EmpScheduleDto dto);
 
     // Registration 테이블 등록 (회원 정보 포함)
-    int insertRegistration(PtRegistrationDto dto);
+    int insertPtRegistration(PtRegistrationDto dto);
+    
+    int createEmpRegistration(EmpScheduleDto dto);
 
 
     /** ============================= 일정 수정 및 삭제 ============================= */
