@@ -21,6 +21,8 @@ import EmpAttendanceList from "../pages/EmpAttendance/list";
 import EmpAttendanceMy from "../pages/EmpAttendance/myAttendance";
 import EmpAttendanceView from "../pages/EmpAttendance/viewAttendance";
 
+import SchedulePage from "../pages/SchedulePage";
+
 
 const router = createBrowserRouter([
   {
@@ -36,6 +38,8 @@ const router = createBrowserRouter([
       { path: "/EmpattendanceList", element: <EmpAttendanceList /> },
       { path: "/EmpAttendanceMy", element: <EmpAttendanceMy /> },
       { path: "/EmpAttendanceView", element: <EmpAttendanceView /> },
+      { path: "schedule", element: <SchedulePage /> },
+      
     ],
   },
 ]);
