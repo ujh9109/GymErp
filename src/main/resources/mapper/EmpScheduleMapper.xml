@@ -1,85 +1,236 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="EmpScheduleMapper">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 
- <!-- 전체 조회 (Registration / Vacation / Etc 상세 포함) -->
-    <select id="selectAll" resultType="EmpScheduleDto">
-        SELECT e.*,
-            CASE e.refType
-                WHEN 'registration' THEN r.detail
-                WHEN 'vacation' THEN v.detail
-                WHEN 'etc' THEN t.detail
-                ELSE e.memo
-            END AS refDetail
-        FROM EmpSchedule e
-        LEFT JOIN Registration r
-            ON e.refType = 'registration' AND e.refId = r.regNum
-        LEFT JOIN Vacation v
-            ON e.refType = 'vacation' AND e.refId = v.vacNum
-        LEFT JOIN Etc t
-            ON e.refType = 'etc' AND e.refId = t.etcNum
-        ORDER BY e.date, e.startTime
-    </select>
+<mapper namespace="EmpScheduleDao">
 
-    <!-- PK 단건 조회 -->
-    <select id="selectByCalNum" resultType="EmpScheduleDto">
-        SELECT e.*,
-            CASE e.ref_type
-                WHEN 'registration' THEN r.detail
-                WHEN 'vacation' THEN v.detail
-                WHEN 'etc' THEN t.detail
-                ELSE e.memo
-            END AS refDetail
-        FROM EmpSchedule e
-        LEFT JOIN Registration r
-            ON e.refType = 'registration' AND e.refId = r.regNum
-        LEFT JOIN Vacation v
-            ON e.refType = 'vacation' AND e.refId = v.vacNum
-        LEFT JOIN Etc t
-            ON e.refType = 'etc' AND e.refId = t.etcNum
-        WHERE e.calNum = #{calNum}
-    </select>
+  <!-- ============================= ETC 일정 전용 ResultMap ============================= -->
+  <resultMap id="EtcResultMap" type="EtcDto">
+    <id property="etcNum" column="etcNum"/>
+    <result property="empNum" column="empNum"/>
+    <result property="etcCreated" column="etcCreated"/>
+    <result property="startTime" column="startTime"/>
+    <result property="endTime" column="endTime"/>
+    <result property="etcUpdatedAt" column="etcUpdatedAt"/>
+    <result property="etcMemo" column="etcMemo"/>
+    <result property="etcType" column="etcType"/>
+  </resultMap>
 
-    <!-- 직원 + 날짜 범위 조회 -->
-    <select id="selectByEmpAndDate" resultType="EmpScheduleDto">
-        SELECT e.*,
-            CASE e.ref_type
-                WHEN 'registration' THEN r.detail
-                WHEN 'vacation' THEN v.detail
-                WHEN 'etc' THEN t.detail
-                ELSE e.memo
-            END AS refDetail
-        FROM EmpSchedule e
-        LEFT JOIN Registration r
-            ON e.refType = 'registration' AND e.refId = r.regNum
-        LEFT JOIN Vacation v
-           ON e.refType = 'vacation' AND e.refId = v.vacNum
-        LEFT JOIN Etc t
-             ON e.refType = 'etc' AND e.refId = t.etcNum
-        WHERE e.empNum = #{empNum}
-          AND e."DATE" BETWEEN #{startDate} AND #{endDate}
-        ORDER BY e.date, e.startTime
-    </select>
+  <!-- ============================= EmpVacation 일정 전용 ResultMap ============================= -->
+  <resultMap id="EmpVacationMap" type="EmpVacationDto">
+    <id property="vacNum" column="vacNum"/>
+    <result property="empNum" column="empNum"/>
+    <result property="vacStartedAt" column="vacStartedAt"/>
+    <result property="vacEndedAt" column="vacEndedAt"/>
+    <result property="vacContent" column="vacContent"/>
+    <result property="vacState" column="vacState"/>
+    <result property="earnedDays" column="earnedDays"/>
+    <result property="remainingDays" column="remainingDays"/>
+    <result property="usedDays" column="usedDays"/>
+  </resultMap>
 
-    <!-- 수정 -->
-    <update id="update" parameterType="EmpScheduleDto">
-        UPDATE EmpSchedule
-        SET color = #{color},
-            ref_type = #{refType},
-            ref_id = #{refId},
-            date = #{date},
-            start_time = #{startTime},
-            end_time = #{endTime},
-            memo = #{memo}
-        WHERE cal_num = #{calNum}
-    </update>
+  <!-- ============================= ETC 등록 ============================= -->
+  <insert id="insertEtc" parameterType="com.example.gymerp.dto.EtcDto">
+    <selectKey keyProperty="etcNum" resultType="int" order="BEFORE">
+      SELECT ETC_SEQ.NEXTVAL FROM dual
+    </selectKey>
+    INSERT INTO Etc (
+      etcNum, empNum, etcCreated, startTime, endTime, etcMemo, etcType
+    )
+    VALUES (
+      #{etcNum}, #{empNum}, SYSTIMESTAMP, #{startTime}, #{endTime}, #{etcMemo}, #{etcType}
+    )
+  </insert>
 
-    <!-- 삭제 -->
-    <delete id="delete" parameterType="int">
-        DELETE FROM EmpSchedule
-        WHERE cal_num = #{calNum}
-    </delete>
+  <!-- ============================= ETC 일정 전용 등록 ============================= -->
+  <insert id="createEmpEtc" parameterType="EmpScheduleDto">
+    <selectKey keyProperty="calNum" resultType="int" order="BEFORE">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM dual
+    </selectKey>
+    INSERT INTO EmpSchedule (
+      calNum, empNum, refType, refId, startTime, endTime, memo, color
+    ) VALUES (
+      #{calNum},
+      #{empNum},
+      'ETC',
+      #{refId},
+      #{startTime},
+      #{endTime},
+      #{memo},
+      #{color}
+    )
+  </insert>
+
+  <!-- ============================= VACATION 등록 ============================= -->
+  <insert id="insertVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
+    <selectKey keyProperty="vacNum" resultType="int" order="BEFORE">
+      SELECT VACATION_SEQ.NEXTVAL FROM dual
+    </selectKey>
+    INSERT INTO Vacation (
+      vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
+      earnedDays, remainingDays, usedDays
+    ) VALUES (
+      #{vacNum}, #{empNum}, #{vacStartedAt}, #{vacEndedAt}, #{vacContent},
+      #{vacState}, #{earnedDays}, #{remainingDays}, #{usedDays}
+    )
+  </insert>
+
+  <!-- ============================= VACATION 일정 전용 등록 ============================= -->
+  <insert id="createEmpVacation" parameterType="EmpScheduleDto">
+    <selectKey keyProperty="calNum" resultType="int" order="BEFORE">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM dual
+    </selectKey>
+    INSERT INTO EmpSchedule (
+      calNum, empNum, refType, refId, startTime, endTime, memo, color
+    ) VALUES (
+      #{calNum},
+      #{empNum},
+      'VACATION',
+      #{refId},
+      #{startTime},
+      #{endTime},
+      #{memo},
+      #{color}
+    )
+  </insert>
+
+  <!-- ============================= REGISTRATION 일정 전용 등록 ============================= -->
+  <insert id="createEmpRegistration" parameterType="EmpScheduleDto">
+    <selectKey keyProperty="calNum" resultType="int" order="BEFORE">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM dual
+    </selectKey>
+    INSERT INTO EmpSchedule (
+      calNum, empNum, refType, refId, startTime, endTime, memo, color
+    ) VALUES (
+      #{calNum},
+      #{empNum},
+      #{refType},
+      #{refId},
+      #{startTime},
+      #{endTime},
+      #{memo},
+      #{color}
+    )
+  </insert>
+
+  <!-- ============================= PT REGISTRATION 등록 (회원 연계 포함) ============================= -->
+  <insert id="insertRegistration" parameterType="PtRegistrationDto">
+    <selectKey keyProperty="regNum" resultType="int" order="BEFORE">
+      SELECT REGNUM.NEXTVAL FROM dual
+    </selectKey>
+    INSERT INTO Registration (
+      regNum, empNum, memNum, regTime, lastTime, regNote, regDate
+    ) VALUES (
+      #{regNum}, #{empNum}, #{memNum}, #{regTime}, #{lastTime}, #{regNote}, SYSDATE
+    )
+  </insert>
+
+  <!-- ============================= 전체 일정 조회 ============================= -->
+  <select id="scheduleSelectAll" resultType="EmpScheduleDto">
+    SELECT e.*, emp.empEmail, emp.empName,
+           m.memName, m.memNum,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN '[' || m.memName || '] ' || r.regNote
+        WHEN 'VACATION' THEN v.vacContent
+        WHEN 'ETC' THEN t.etcMemo
+        ELSE e.memo
+      END AS refDetail,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN r.regTime
+        WHEN 'VACATION' THEN v.vacStartedAt
+        WHEN 'ETC' THEN t.startTime
+      END AS refStartTime,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN r.lastTime
+        WHEN 'VACATION' THEN v.vacEndedAt
+        WHEN 'ETC' THEN t.endTime
+      END AS refEndTime
+    FROM EmpSchedule e
+      JOIN Employee emp ON e.empNum = emp.empNum
+      LEFT JOIN Registration r ON e.refType = 'REGISTRATION' AND e.refId = r.regNum
+      LEFT JOIN Member m ON r.memNum = m.memNum
+      LEFT JOIN Vacation v ON e.refType = 'VACATION' AND e.refId = v.vacNum
+      LEFT JOIN Etc t ON e.refType = 'ETC' AND e.refId = t.etcNum
+    ORDER BY e.startTime, e.endTime
+  </select>
+
+  <!-- ============================= PK 단건 조회 ============================= -->
+  <select id="selectByCalNum" resultType="EmpScheduleDto">
+    SELECT e.*, emp.empEmail, emp.empName,
+           m.memName, m.memNum,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN '[' || m.memName || '] ' || r.regNote
+        WHEN 'VACATION' THEN v.vacContent
+        WHEN 'ETC' THEN t.etcMemo
+        ELSE e.memo
+      END AS refDetail,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN r.regTime
+        WHEN 'VACATION' THEN v.vacStartedAt
+        WHEN 'ETC' THEN t.startTime
+      END AS refStartTime,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN r.lastTime
+        WHEN 'VACATION' THEN v.vacEndedAt
+        WHEN 'ETC' THEN t.endTime
+      END AS refEndTime
+    FROM EmpSchedule e
+      JOIN Employee emp ON e.empNum = emp.empNum
+      LEFT JOIN Registration r ON e.refType = 'REGISTRATION' AND e.refId = r.regNum
+      LEFT JOIN Member m ON r.memNum = m.memNum
+      LEFT JOIN Vacation v ON e.refType = 'VACATION' AND e.refId = v.vacNum
+      LEFT JOIN Etc t ON e.refType = 'ETC' AND e.refId = t.etcNum
+    WHERE e.calNum = #{calNum}
+  </select>
+
+  <!-- ============================= 직원 + 날짜 범위 조회 ============================= -->
+  <select id="selectByEmpAndDate" resultType="EmpScheduleDto">
+    SELECT e.*, emp.empEmail, emp.empName,
+           m.memName, m.memNum,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN '[' || m.memName || '] ' || r.regNote
+        WHEN 'VACATION' THEN v.vacContent
+        WHEN 'ETC' THEN t.etcMemo
+        ELSE e.memo
+      END AS refDetail,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN r.regTime
+        WHEN 'VACATION' THEN v.vacStartedAt
+        WHEN 'ETC' THEN t.startTime
+      END AS refStartTime,
+      CASE e.refType
+        WHEN 'REGISTRATION' THEN r.lastTime
+        WHEN 'VACATION' THEN v.vacEndedAt
+        WHEN 'ETC' THEN t.endTime
+      END AS refEndTime
+    FROM EmpSchedule e
+      JOIN Employee emp ON e.empNum = emp.empNum
+      LEFT JOIN Registration r ON e.refType = 'REGISTRATION' AND e.refId = r.regNum
+      LEFT JOIN Member m ON r.memNum = m.memNum
+      LEFT JOIN Vacation v ON e.refType = 'VACATION' AND e.refId = v.vacNum
+      LEFT JOIN Etc t ON e.refType = 'ETC' AND e.refId = t.etcNum
+    WHERE e.empNum = #{empNum}
+      AND e.startTime BETWEEN #{startDate} AND #{endDate}
+    ORDER BY e.startTime, e.endTime
+  </select>
+
+  <!-- ============================= 일정 수정 ============================= -->
+  <update id="update" parameterType="EmpScheduleDto">
+    UPDATE EmpSchedule
+    SET
+      color = #{color},
+      refType = #{refType},
+      refId = #{refId},
+      startTime = #{startTime},
+      endTime = #{endTime},
+      memo = #{memo}
+    WHERE calNum = #{calNum}
+  </update>
+
+  <!-- ============================= 일정 삭제 ============================= -->
+  <delete id="delete" parameterType="int">
+    DELETE FROM EmpSchedule WHERE calNum = #{calNum}
+  </delete>
 
 </mapper>
-

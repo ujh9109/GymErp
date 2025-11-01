@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ScheduleServiceImpl implements ScheduleService {
 
 	// DAO 주입
@@ -48,6 +47,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
 	// 스케줄 등록
 	@Override
+	@Transactional
 	public int addSchedule(ScheduleDto schedule) {
 
 		return scheduleDao.insert(schedule);
@@ -55,6 +55,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
 	// 스케줄 수정
 	@Override
+	@Transactional
 	public int updateSchedule(ScheduleDto schedule) {
 
 		 return scheduleDao.update(schedule);
@@ -62,6 +63,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
 	// 스케줄 삭제
 	@Override
+	@Transactional
 	public int deleteSchedule(int shNum) {
 
 		return scheduleDao.delete(shNum);

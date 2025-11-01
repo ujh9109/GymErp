@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ProductListResponse;
+import com.example.gymerp.dto.StockAdjustRequestDto;
 import com.example.gymerp.service.ProductService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,8 +35,12 @@ public class ProductController {
 	//실물 상품 등록
 	@PostMapping("/product")
 	public void createProduct(@RequestBody ProductDto dto) {
-		
-		productService.save(dto);
+		new StockAdjustRequestDto();
+		StockAdjustRequestDto request = StockAdjustRequestDto.builder()
+				.action("ADD")
+				.quantity(dto.getQuantity())
+				.build();
+		productService.save(dto, request);
 	}
 	
 	//실물 상품 수정
