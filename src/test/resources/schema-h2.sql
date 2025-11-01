@@ -102,22 +102,6 @@ CREATE TABLE ATTENDANCE (
 );
 CREATE SEQUENCE ATTNUM_SEQ;
 
---------------------------------------------------------
--- 7. 휴가 (VACATION)
---------------------------------------------------------
-CREATE TABLE VACATION (
-    VACNUM NUMBER PRIMARY KEY,
-    EMPNUM NUMBER NOT NULL,
-    VACSTARTEDAT DATE NOT NULL,
-    VACENDEDAT DATE NOT NULL,
-    VACCONTENT VARCHAR(250),
-    VACSTATE VARCHAR(30),
-    EARNEDDAYS NUMBER,
-    REMAININGDAYS NUMBER,
-    USEDDAYS NUMBER,
-    CONSTRAINT FK_VAC_EMP FOREIGN KEY (EMPNUM) REFERENCES EMPLOYEE(EMPNUM)
-);
-CREATE SEQUENCE VACATION_SEQ;
 
 --------------------------------------------------------
 -- 8. 기타 일정 (ETC)
@@ -301,16 +285,3 @@ CREATE TABLE SALESSERVICE (
     CONSTRAINT FK_SALESSVC_SVC FOREIGN KEY (SERVICEID) REFERENCES SERVICE(SERVICEID)
 );
 CREATE SEQUENCE SALESSERVICE_SEQ;
-
---------------------------------------------------------
--- 18. 휴가 일수(VacationDays)
---------------------------------------------------------
-CREATE TABLE vacationdays (
-  vacDaysNum     NUMBER       PRIMARY KEY,
-  empNum         NUMBER       NOT NULL,
-  earnedDays     NUMBER       NOT NULL,
-  remainingDays  NUMBER       NOT NULL,
-  usedDays       NUMBER       DEFAULT 0 NOT NULL,
-  CONSTRAINT FK_VACATIONDAYS FOREIGN KEY (EMPNUM) REFERENCES EMPLOYEE(EMPNUM)
-);
-CREATE SEQUENCE VACATIONDAYS_SEQ;
