@@ -26,4 +26,8 @@ public interface MemberDao {
 	// ▼ 추가: 프로필 이미지 수정
 	public int updateProfile(int memNum, String memProfile);
 
+	// 검색
+	List<MemberDto> search(String keyword);  
+
+
 }
