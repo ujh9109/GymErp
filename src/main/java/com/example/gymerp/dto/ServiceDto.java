@@ -1,6 +1,7 @@
 package com.example.gymerp.dto;
 
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class ServiceDto {
 	private String codeAId;
 	private String codeBId;
 	private String name;
-	private int price;
+	private BigDecimal price;
 	private Boolean isActive;
 	private String note;
 	private int serviceValue;

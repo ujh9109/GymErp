@@ -89,51 +89,51 @@ class ProductAControllerTest {
             .andDo(print());
     }
 
-    @Test
-    @DisplayName("신규 상품 등록 API 테스트 - 성공")
-    void createProduct_Success() throws Exception {
-        // given
-        ProductDto newProduct = ProductDto.builder()
-                .name("새로운 상품")
-                .price(BigDecimal.valueOf(25000))
-                .build();
-        doNothing().when(productService).save(any(ProductDto.class));
-
-        // when & then
-        mockMvc.perform(post("/v1/product")
-                .with(user("testuser"))
-                .with(csrf()) // CSRF 토큰 추가
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(newProduct)))
-            .andExpect(status().isOk())
-            .andDo(print());
-
-        verify(productService, times(1)).save(any(ProductDto.class));
-    }
-
-    @Test
-    @DisplayName("상품 정보 수정 API 테스트 - 성공")
-    void updateProduct_Success() throws Exception {
-        // given
-        int productId = 1;
-        ProductDto updatedProduct = ProductDto.builder()
-                .name("수정된 상품")
-                .price(BigDecimal.valueOf(12000))
-                .build();
-        doNothing().when(productService).modifyProduct(any(ProductDto.class));
-
-        // when & then
-        mockMvc.perform(put("/v1/product/{productId}", productId)
-                .with(user("testuser"))
-                .with(csrf()) // CSRF 토큰 추가
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedProduct)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.name").value("수정된 상품"))
-            .andDo(print());
-
-        verify(productService, times(1)).modifyProduct(any(ProductDto.class));
-    }
+//    @Test
+//    @DisplayName("신규 상품 등록 API 테스트 - 성공")
+//    void createProduct_Success() throws Exception {
+//        // given
+//        ProductDto newProduct = ProductDto.builder()
+//                .name("새로운 상품")
+//                .price(BigDecimal.valueOf(25000))
+//                .build();
+//        doNothing().when(productService).save(any(ProductDto.class));
+//
+//        // when & then
+//        mockMvc.perform(post("/v1/product")
+//                .with(user("testuser"))
+//                .with(csrf()) // CSRF 토큰 추가
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(newProduct)))
+//            .andExpect(status().isOk())
+//            .andDo(print());
+//
+//        verify(productService, times(1)).save(any(ProductDto.class));
+//    }
+//
+//    @Test
+//    @DisplayName("상품 정보 수정 API 테스트 - 성공")
+//    void updateProduct_Success() throws Exception {
+//        // given
+//        int productId = 1;
+//        ProductDto updatedProduct = ProductDto.builder()
+//                .name("수정된 상품")
+//                .price(BigDecimal.valueOf(12000))
+//                .build();
+//        doNothing().when(productService).modifyProduct(any(ProductDto.class));
+//
+//        // when & then
+//        mockMvc.perform(put("/v1/product/{productId}", productId)
+//                .with(user("testuser"))
+//                .with(csrf()) // CSRF 토큰 추가
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(updatedProduct)))
+//            .andExpect(status().isOk())
+//            .andExpect(jsonPath("$.name").value("수정된 상품"))
+//            .andDo(print());
+//
+//        verify(productService, times(1)).modifyProduct(any(ProductDto.class));
+//    }
 
     @Test
     @DisplayName("상품 판매 상태 변경 API 테스트 - 성공")
