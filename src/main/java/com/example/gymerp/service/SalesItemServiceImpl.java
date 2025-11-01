@@ -62,6 +62,7 @@ public class SalesItemServiceImpl implements SalesItemService {
     // 상품 판매 내역 등록
     @Override
     public int addSalesItem(SalesItemDto salesItem) {
+    	
         salesItem.setCreatedAt(java.time.LocalDateTime.now());
         return salesItemDao.insertSalesItem(salesItem); 
     }
