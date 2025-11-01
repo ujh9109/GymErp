@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="EmpVacationMapper">
+<mapper namespace="com.example.gymerp.repository.EmpVacationDao">
 
   <!-- 전체 목록 -->
   <select id="selectAllEmpVacations" resultType="com.example.gymerp.dto.EmpVacationDto">
@@ -31,13 +31,13 @@
   </select>
 
   <!-- 등록 -->
-  <insert id="insertEmpVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
+  <insert id="insertEmpVacation1" parameterType="com.example.gymerp.dto.EmpVacationDto">
     INSERT INTO vacation
       (vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
        earnedDays, remainingDays, usedDays)
     VALUES
       (#{vacNum}, #{empNum}, #{vacStartedAt,jdbcType=DATE}, #{vacEndedAt,jdbcType=DATE},
-       #{vacContent}, #{vacState}, #{earnedDays}, #{remainingDays}, #{usedDays})
+       #{vacContent}, #{vacState, jdbcType=VARCHAR}, #{earnedDays}, #{remainingDays}, #{usedDays})
   </insert>
 
   <!-- 전체 수정 -->
@@ -77,6 +77,26 @@
     AND vacEndedAt   &gt;= #{from}
   ORDER BY vacStartedAt DESC
 </select>
+
+  
+<!-- 등록 -->
+  <insert id="insertEmpVacation" parameterType="com.example.gymerp.dto.EmpVacationDto">
+     INSERT INTO vacation (
+    vacNum, empNum, vacStartedAt, vacEndedAt, vacContent, vacState,
+    earnedDays, remainingDays, usedDays
+  ) VALUES (
+    VACATION_SEQ.NEXTVAL,
+    #{empNum, jdbcType=NUMERIC},
+    #{vacStartedAt, jdbcType=TIMESTAMP},
+    #{vacEndedAt, jdbcType=TIMESTAMP},
+    #{vacContent, jdbcType=VARCHAR},
+    #{vacState, jdbcType=VARCHAR},
+    #{earnedDays, jdbcType=NUMERIC},
+    #{remainingDays, jdbcType=NUMERIC},
+    #{usedDays, jdbcType=NUMERIC}
+  )
+  </insert>
+
 
 
 </mapper>

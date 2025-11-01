@@ -1,12 +1,13 @@
 package com.example.gymerp.repository;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
-import com.example.gymerp.dto.SalesItem;
+import com.example.gymerp.dto.SalesItemDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,34 +17,77 @@ import lombok.RequiredArgsConstructor;
 public class SalesItemDaoImpl implements SalesItemDao {
 
     private final SqlSession session;
+    // MyBatis Mapper XML의 namespace와 일치하는 변수
+    private static final String NAMESPACE = "SalesItemMapper";
 
-    // 전체 상품 판매 내역 조회
+    // 1. 전체 상품 판매 내역 조회 (페이징/필터 포함)
     @Override
-    public List<SalesItem> selectAllSalesItems() {
-        return session.selectList("SalesItemMapper.selectAllSalesItems");
+    public List<SalesItemDto> selectAllSalesItems(Map<String, Object> params) {
+        return session.selectList(NAMESPACE + ".selectAllSalesItems", params);
     }
 
-    // 단일 상품 판매 내역 조회
+    // 2. 전체 개수 조회 (페이징 total)
     @Override
-    public SalesItem selectSalesItemById(Long itemSalesId) {
-        return session.selectOne("SalesItemMapper.selectSalesItemById", itemSalesId);
+    public int selectSalesItemCount(Map<String, Object> params) {
+        return session.selectOne(NAMESPACE + ".selectSalesItemCount", params);
     }
 
-    // 상품 판매 내역 등록
+    // 3. 단일 상품 판매 내역 조회
     @Override
-    public int insertSalesItem(SalesItem salesItem) {
-        return session.insert("SalesItemMapper.insertSalesItem", salesItem);
+    public SalesItemDto selectSalesItemById(Long itemSalesId) {
+        return session.selectOne(NAMESPACE + ".selectSalesItemById", itemSalesId);
+    }
+    
+    // ========== [재고/수정 관련 추가 구현] ==========
+    
+    /**
+     * 판매 내역 수정 및 삭제 시, 기존 수량(oldQuantity)과 상품 정보(productId, codeBId)를 조회합니다.
+     */
+    @Override
+    public Map<String, Object> selectSalesItemForAdjustment(Long itemSalesId) {
+        // 맵퍼 ID: selectSalesItemForAdjustment
+        return session.selectOne(NAMESPACE + ".selectSalesItemForAdjustment", itemSalesId);
     }
 
-    // 상품 판매 내역 수정
+    /**
+     * 재고 환원 (입고) 내역을 Purchase 테이블에 기록합니다. (판매 취소/수량 감소 시 사용)
+     */
     @Override
-    public int updateSalesItem(SalesItem salesItem) {
-        return session.update("SalesItemMapper.updateSalesItem", salesItem);
+    public void insertPurchaseForRefund(Map<String, Object> params) {
+        // 맵퍼 ID: insertPurchaseForRefund
+        session.insert(NAMESPACE + ".insertPurchaseForRefund", params);
+    }
+    
+    // ============================================
+
+
+    // 4. 상품 판매 내역 등록
+    @Override
+    public int insertSalesItem(SalesItemDto salesItem) {
+        return session.insert(NAMESPACE + ".insertSalesItem", salesItem);
     }
 
-    // 상품 판매 내역 삭제 (status = 'DELETED')
+    // 5. 상품 판매 내역 수정
+    @Override
+    public int updateSalesItem(SalesItemDto salesItem) {
+        return session.update(NAMESPACE + ".updateSalesItem", salesItem);
+    }
+
+    // 6. 상품 판매 내역 삭제 (status = 'DELETED')
     @Override
     public int deleteSalesItem(Long itemSalesId) {
-        return session.update("SalesItemMapper.deleteSalesItem", itemSalesId);
+        return session.update(NAMESPACE + ".deleteSalesItem", itemSalesId);
+    }
+
+    // 7. 상품 매출 통계 조회
+    @Override
+    public List<Map<String, Object>> selectItemSalesAnalytics(Map<String, Object> params) {
+        return session.selectList(NAMESPACE + ".selectItemSalesAnalytics", params);
+    }
+
+    // 8. 상품 매출 그래프 데이터 조회
+    @Override
+    public List<Map<String, Object>> selectItemSalesGraphData(Map<String, Object> params) {
+        return session.selectList(NAMESPACE + ".selectItemSalesGraphData", params);
     }
 }

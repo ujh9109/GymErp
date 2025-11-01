@@ -23,6 +23,9 @@ public interface MemberService {
     
     // ▼ 추가: 프로필 이미지 수정 (파일명/경로만 업데이트)
     public int updateMemberProfile(int memNum, String memProfile);
+    
+    //검색
+    List<MemberDto> searchMembers(String keyword); 
 
   
 	
