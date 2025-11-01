@@ -42,7 +42,8 @@ public class EmpScheduleDaoImpl implements EmpScheduleDao {
     }
 
     /** ============================= 일정 등록 ============================= */
-
+    
+    //기타 일정
     @Override
     public int insertEtc(EtcDto dto) {
         return sqlSession.insert("EtcMapper.insertEtc", dto);
@@ -52,7 +53,8 @@ public class EmpScheduleDaoImpl implements EmpScheduleDao {
     public int createEmpEtc(EmpScheduleDto dto) {
         return sqlSession.insert("EmpScheduleDao.createEmpEtc", dto);
     }
-
+    
+    // 휴가
     @Override
     public int insertEmpVacation(EmpVacationDto dto) {
         return sqlSession.insert("EmpVacationMapper.insertEmpVacation", dto);
@@ -64,7 +66,7 @@ public class EmpScheduleDaoImpl implements EmpScheduleDao {
     	return sqlSession.insert("EmpScheduleDao.createEmpVacation", dto);
 	}
 
-
+    //PT 일정
     @Override
     public int insertPtRegistration(PtRegistrationDto dto) {
         return sqlSession.insert("PtRegistrationMapper.insertPtRegistration", dto);

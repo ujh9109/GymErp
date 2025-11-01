@@ -81,7 +81,7 @@ public class EmpScheduleServiceImpl implements EmpScheduleService {
 	        throw new IllegalArgumentException("휴가 정보가 없습니다.");
 	    }
 
-	    // 2️ EmpVacation 테이블 등록 (PK: vacNum 생성)
+	    // 2️ EmpVacation 테이블 등록
 	    dto.getVacation().setEmpNum(dto.getEmpNum());
 	    empVacationDao.insertEmpVacation(dto.getVacation());
 
@@ -89,7 +89,7 @@ public class EmpScheduleServiceImpl implements EmpScheduleService {
 	    EmpScheduleDto schedule = new EmpScheduleDto();
 	    schedule.setEmpNum(dto.getEmpNum());
 	    schedule.setRefType("VACATION");
-	    schedule.setRefId(dto.getVacation().getVacNum()); // 새로 생성된 휴가 번호 참조
+	    schedule.setRefId(dto.getVacation().getVacNum()); 
 	    schedule.setStartTime(dto.getVacation().getVacStartedAt().toLocalDate().atStartOfDay());
 	    schedule.setEndTime(dto.getVacation().getVacEndedAt().toLocalDate().atStartOfDay().plusDays(1));
 	    schedule.setMemo(dto.getVacation().getVacContent());
@@ -124,7 +124,7 @@ public class EmpScheduleServiceImpl implements EmpScheduleService {
 	    if (regStart == null) regStart = LocalDateTime.now();
 	    if (regEnd == null) regEnd = regStart.plusHours(1); // 기본 1시간 PT
 
-	    // 3️ Registration 테이블 등록 (PK: regNum 생성)
+	    // 3️ Registration 테이블 등록 
 	    dto.getRegistration().setEmpNum(dto.getEmpNum());
 	    empScheduleDao.insertPtRegistration(dto.getRegistration());
 
