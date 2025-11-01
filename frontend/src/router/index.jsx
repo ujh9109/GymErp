@@ -15,7 +15,6 @@ import EmpList from "../pages/EmpList.jsx";
 import EmpDetail from "../pages/EmpDetail.jsx";
 import EmpEdit from "../pages/EmpEdit.jsx";
 
-import Home from "../pages/JONGBOKHome.jsx";
 import EmpVacationList from "../pages/EmpVacation/list";
 import EmpAttendanceList from "../pages/EmpAttendance/list";
 import EmpAttendanceMy from "../pages/EmpAttendance/myAttendance";
@@ -39,12 +38,9 @@ const router = createBrowserRouter([
       { path: "/EmpattendanceList", element: <EmpAttendanceList /> },
       { path: "/EmpAttendanceMy", element: <EmpAttendanceMy /> },
       { path: "/EmpAttendanceView", element: <EmpAttendanceView /> },
-<<<<<<< HEAD
       {path:"/JONGBOKHome", element:<JONGBOKHome />},
-=======
       { path: "schedule", element: <SchedulePage /> },
       
->>>>>>> af92dadf950abff5dee5f39779bd9ea0a4eb5c36
     ],
   },
 ]);
