@@ -8,17 +8,10 @@ import com.example.gymerp.dto.StockAdjustRequestDto;
 import com.example.gymerp.dto.StockAdjustmentDto;
 
 public interface StockService {
-<<<<<<< HEAD
-    List<PurchaseDto> getProductInboundDetail(int productId); // 2-1
-    List<StockAdjustmentDto> getProductOutboundDetail(int productId); // 2-2
-    List<CurrentStockDto> getProductStockList(); // 2-3
-    void adjustProduct(int productId, StockAdjustRequestDto request); // 3-*
-=======
 	int getStockOne(int productId);
 	Boolean isStockSufficient(int productId, int quantity);
-	List<CurrentStockDto> getProductStockList();
-    List<PurchaseDto> getProductInboundDetail(int productId);
-    List<StockAdjustmentDto> getProductOutboundDetail(int productId);
-    void adjustProduct(int productId, StockAdjustRequestDto request);
->>>>>>> 89d0e36f12b2493f79eaa7efd028851ab1a91744
+    List<PurchaseDto> getProductInboundDetail(int productId, int page, int size); // 2-1
+    List<StockAdjustmentDto> getProductOutboundDetail(int productId, int page, int size); // 2-2
+    List<CurrentStockDto> getProductStockList(int page, int size, String keyword); // 2-3
+    void adjustProduct(int productId, StockAdjustRequestDto request); // 3-*
 }

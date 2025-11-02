@@ -50,34 +50,42 @@ class StockServiceImplTest {
     @InjectMocks
     private StockServiceImpl stockService;
 
+    private static final int DEFAULT_PAGE = 1;
+    private static final int DEFAULT_SIZE = 20;
+
     // ─────────────────────────────────────────────────────────────
     //  조회 계열 테스트
     // ─────────────────────────────────────────────────────────────
 
+    /*
+     *  - 서비스가 전달받은 파라미터로 (page-1) * size를 정확히 계산한다.
+     *  - 계산된 값과 keyword가 DAO로 그대로 전달된다.
+     *  - DAO에서 반환된 컬렉션을 가공 없이 돌려준다.
+     */
     @Test
-    @DisplayName("getProductStockList: 현재 재고현황 - DTO 없이도 위임 검증 가능(빈 리스트)")
+    @DisplayName("getProductStockList: 요청 파라미터를 그대로 DAO에 위임하고 결과를 반환")
     void getProductStockList_ok() {
-        //  given
-        // CurrentStockDto 클래스를 만들지 않아도 됨. 서비스는 리스트만 반환하므로 "빈 리스트"로도 위임 검증 가능!
-        when(stockDao.getCurrentStockList()).thenReturn(List.of());
+        // given
+        int page = 2;
+        int size = 5;
+        String keyword = "creatine";
+        int expectedOffset = (page - 1) * size;
+        when(stockDao.getCurrentStockListPaged(expectedOffset, size, keyword)).thenReturn(List.of());
 
-        //  when
-        var result = stockService.getProductStockList();
+        // when
+        var result = stockService.getProductStockList(page, size, keyword);
 
-        //  then
-        // - 결과가 "빈 리스트"인지 확인 (= DAO의 반환을 그대로 전달하는지)
+        // then
         assertThat(result).isEmpty();
-        // - DAO 메서드가 정확히 1번 호출됐는지 확인
-        verify(stockDao, times(1)).getCurrentStockList();
-        // - 그 외 불필요한 상호작용이 없었는지 확인 (안전망)
+        verify(stockDao).getCurrentStockListPaged(expectedOffset, size, keyword);
         verifyNoMoreInteractions(stockDao, productDao);
-    }
+    } 
 
     @Test
     @DisplayName("getProductInboundDetail: productId <= 0 이면 예외")
     void getProductInboundDetail_invalidId() {
         //  when + then
-        assertThatThrownBy(() -> stockService.getProductInboundDetail(0))
+        assertThatThrownBy(() -> stockService.getProductInboundDetail(0, DEFAULT_PAGE, DEFAULT_SIZE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("유효하지 않은 productId");
 
@@ -90,28 +98,31 @@ class StockServiceImplTest {
     void getProductInboundDetail_ok() {
         //  given
         int productId = 7;
+        int page = 2;
+        int size = 10;
+        int offset = (page - 1) * size;
         var p = PurchaseDto.builder()
                 .productId(productId)
                 .codeBId("CREATINE")
                 .quantity(5)
                 .build();
-        when(stockDao.getPurchaseList(productId)).thenReturn(List.of(p));
+        when(stockDao.getPurchaseList(productId, offset, size)).thenReturn(List.of(p));
 
-        // 🍩 when
-        var result = stockService.getProductInboundDetail(productId);
+        //  when
+        var result = stockService.getProductInboundDetail(productId, page, size);
 
-        // 🍰 then
+        //  then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getQuantity()).isEqualTo(5);
-        verify(stockDao).getPurchaseList(productId);
+        verify(stockDao).getPurchaseList(productId, offset, size);
         verifyNoMoreInteractions(stockDao, productDao);
     }
 
     @Test
     @DisplayName("getProductOutboundDetail: productId <= 0 이면 예외")
     void getProductOutboundDetail_invalidId() {
-        // 🧁 when + then
-        assertThatThrownBy(() -> stockService.getProductOutboundDetail(-1))
+        //  when + then
+        assertThatThrownBy(() -> stockService.getProductOutboundDetail(-1, DEFAULT_PAGE, DEFAULT_SIZE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("유효하지 않은 productId");
 
@@ -121,25 +132,26 @@ class StockServiceImplTest {
     @Test
     @DisplayName("getProductOutboundDetail: 정상 입력이면 DAO 위임")
     void getProductOutboundDetail_ok() {
-        // 🧁 given
+        //  given
         int productId = 9;
+        int page = 3;
+        int size = 5;
+        int offset = (page - 1) * size;
 
         // StockAdjustmentDto는 실제 클래스가 있으니 빌더/세터/목 중 하나를 선택할 수 있음.
         // 여기선 필드 몇 개만 확인하면 되므로 "목(mock)"으로 최소 스텁만 한다.
         StockAdjustmentDto a = mock(StockAdjustmentDto.class);
-        when(a.getProductId()).thenReturn(productId);
-        when(a.getCodeBId()).thenReturn("WHEY");
         when(a.getQuantity()).thenReturn(2);
 
-        when(stockDao.getAdjustStockAndSalesList(productId)).thenReturn(List.of(a));
+        when(stockDao.getAdjustStockAndSalesList(productId, offset, size)).thenReturn(List.of(a));
 
-        // 🍩 when
-        var result = stockService.getProductOutboundDetail(productId);
+        //  when
+        var result = stockService.getProductOutboundDetail(productId, page, size);
 
-        // 🍰 then
+        //  then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getQuantity()).isEqualTo(2);
-        verify(stockDao).getAdjustStockAndSalesList(productId);
+        verify(stockDao).getAdjustStockAndSalesList(productId, offset, size);
         verifyNoMoreInteractions(stockDao, productDao);
     }
 
@@ -154,13 +166,13 @@ class StockServiceImplTest {
         @Test
         @DisplayName("수량이 0 이하이면 예외")
         void adjust_invalidQuantity() {
-            // 🧁 given
+            //  given
             var req = StockAdjustRequestDto.builder()
                     .action("ADD")
                     .quantity(0) // ❌ 유효하지 않음
                     .build();
 
-            // 🍩 when + 🍰 then
+            //  when +  then
             assertThatThrownBy(() -> stockService.adjustProduct(1, req))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("수량은 1 이상");
@@ -172,7 +184,7 @@ class StockServiceImplTest {
         @Test
         @DisplayName("상품이 없으면 예외")
         void adjust_productNotFound() {
-            // 🧁 given
+            //  given
             int productId = 123;
             when(productDao.getByNum(productId)).thenReturn(null); // 없는 상품
 
@@ -181,7 +193,7 @@ class StockServiceImplTest {
                     .quantity(3)
                     .build();
 
-            // 🍩 when + 🍰 then
+            //  when +  then
             assertThatThrownBy(() -> stockService.adjustProduct(productId, req))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("유효하지 않은 상품");
@@ -195,13 +207,14 @@ class StockServiceImplTest {
         @Test
         @DisplayName("ADD(입고)면 insertPurchase 호출")
         void adjust_add_ok() {
-            // 🧁 given
+            //  given
             int productId = 55;
 
             // 서비스 로직은 productDto에서 사실상 codeBId만 꺼내 씀 → mock이 제일 간단
             ProductDto product = mock(ProductDto.class);
             when(product.getCodeBId()).thenReturn("WHEY");
             when(productDao.getByNum(productId)).thenReturn(product);
+            when(stockDao.insertPurchase(any())).thenReturn(1);
 
             var req = StockAdjustRequestDto.builder()
                     .action("ADD")      // 입고
@@ -209,10 +222,10 @@ class StockServiceImplTest {
                     .notes("초기 입고")
                     .build();
 
-            // 🍩 when
+            //  when
             stockService.adjustProduct(productId, req);
 
-            // 🍰 then
+            //  then
             // - purchase 인자가 우리가 기대한 값인지 argThat으로 정밀 검증
             verify(productDao).getByNum(productId);
             verify(stockDao).insertPurchase(
@@ -227,12 +240,14 @@ class StockServiceImplTest {
         @Test
         @DisplayName("SUBTRACT(출고)면 insertStockAdjustment 호출")
         void adjust_subtract_ok() {
-            // 🧁 given
+            //  given
             int productId = 77;
 
             ProductDto product = mock(ProductDto.class);
             when(product.getCodeBId()).thenReturn("CREATINE");
             when(productDao.getByNum(productId)).thenReturn(product);
+            when(stockDao.getAvailableQty(productId)).thenReturn(10);
+            when(stockDao.insertStockAdjustment(any())).thenReturn(1);
 
             var req = StockAdjustRequestDto.builder()
                     .action("SUBTRACT") // 출고
@@ -240,11 +255,12 @@ class StockServiceImplTest {
                     .notes("테스트 출고")
                     .build();
 
-            // 🍩 when
+            //  when
             stockService.adjustProduct(productId, req);
 
-            // 🍰 then
+            //  then
             verify(productDao).getByNum(productId);
+            verify(stockDao).getAvailableQty(productId);
             verify(stockDao).insertStockAdjustment(
                     argThat(a -> a.getProductId() == productId
                             && "CREATINE".equals(a.getCodeBId())
@@ -255,9 +271,37 @@ class StockServiceImplTest {
         }
 
         @Test
+        @DisplayName("SUBTRACT 시 재고 부족하면 예외")
+        void adjust_subtract_insufficientStock() {
+            //  given
+            int productId = 88;
+
+            ProductDto product = mock(ProductDto.class);
+            when(product.getCodeBId()).thenReturn("BCAA");
+            when(productDao.getByNum(productId)).thenReturn(product);
+            when(stockDao.getAvailableQty(productId)).thenReturn(1);
+
+            var req = StockAdjustRequestDto.builder()
+                    .action("SUBTRACT")
+                    .quantity(5)
+                    .notes("과도한 차감")
+                    .build();
+
+            //  when + 🍰 then
+            assertThatThrownBy(() -> stockService.adjustProduct(productId, req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("재고가 부족합니다");
+
+            verify(productDao).getByNum(productId);
+            verify(stockDao).getAvailableQty(productId);
+            verifyNoMoreInteractions(productDao);
+            verifyNoMoreInteractions(stockDao);
+        }
+
+        @Test
         @DisplayName("action 값이 잘못되면 예외")
         void adjust_invalidAction() {
-            // 🧁 given
+            //  given
             int productId = 10;
 
             ProductDto product = mock(ProductDto.class);
@@ -269,7 +313,7 @@ class StockServiceImplTest {
                     .quantity(1)
                     .build();
 
-            // 🍩 when + 🍰 then
+            //  when +  then
             assertThatThrownBy(() -> stockService.adjustProduct(productId, req))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("올바르지 않은 action");

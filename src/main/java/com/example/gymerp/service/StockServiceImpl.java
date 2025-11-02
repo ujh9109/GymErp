@@ -21,10 +21,10 @@ public class StockServiceImpl implements StockService {
 	
 	private final StockDao stockDao;
 	private final ProductDao productDao;
+	private static final int DEFAULT_PAGE = 1;
+	private static final int DEFAULT_SIZE = 20;
+	private static final int MAX_SIZE = 100;
 
-<<<<<<< HEAD
-	
-=======
 	// 1-1. 가용 재고 조회
 	@Override
 	public int getStockOne(int productId) {
@@ -35,57 +35,58 @@ public class StockServiceImpl implements StockService {
 	// 1-2. 판매 가능 여부 리턴
 	@Override
 	public Boolean isStockSufficient(int productId, int quantity) {
-		Boolean result = false;
-		if(stockDao.getAvailableQty(productId)>=quantity) {
-			result = true;
-		}else {
-			result = false;
-		}
-			
-		return result;
+		return stockDao.getAvailableQty(productId) >= quantity;
 	}	
-	
-	// 2-1. 입고내역 리스트 (현재 재고 현황)
-    @Override
-    @Transactional(readOnly = true)
-    public List<CurrentStockDto> getProductStockList() {
-        return stockDao.getCurrentStockList();
-    }
->>>>>>> 89d0e36f12b2493f79eaa7efd028851ab1a91744
 
     // 2-1. 상품 하나의 입고(인바운드) 내역 조회
     @Override
     @Transactional(readOnly = true)
-    public List<PurchaseDto> getProductInboundDetail(int productId) {
+    public List<PurchaseDto> getProductInboundDetail(int productId, int page, int size) {
         if (productId <= 0) {
             throw new IllegalArgumentException("유효하지 않은 productId 입니다.");
         }
-        return stockDao.getPurchaseList(productId);
+        int normalizedPage = normalizePage(page);
+        int normalizedSize = normalizeSize(size);
+        int offset = (normalizedPage - 1) * normalizedSize;
+        return stockDao.getPurchaseList(productId, offset, normalizedSize);
     }
 
     // 2-2. 상품 하나의 출고 + 판매 내역 조회
     @Override
     @Transactional(readOnly = true)
-    public List<StockAdjustmentDto> getProductOutboundDetail(int productId) {
+    public List<StockAdjustmentDto> getProductOutboundDetail(int productId, int page, int size) {
         if (productId <= 0) {
             throw new IllegalArgumentException("유효하지 않은 productId 입니다.");
         }
-        return stockDao.getAdjustStockAndSalesList(productId);
+        int normalizedPage = normalizePage(page);
+        int normalizedSize = normalizeSize(size);
+        int offset = (normalizedPage - 1) * normalizedSize;
+        return stockDao.getAdjustStockAndSalesList(productId, offset, normalizedSize);
     }
     
-    // 2-3. 현재 재고내역 리스트 (현재 재고 현황)
+    
+    // 2-3. 현재 재고내역 리스트 페이지 (현재 재고 현황)
     @Override
     @Transactional(readOnly = true)
-    public List<CurrentStockDto> getProductStockList() {
-        return stockDao.getCurrentStockList();
+    public List<CurrentStockDto> getProductStockList(int page, int size, String keyword) {
+        int normalizedPage = normalizePage(page);
+        int normalizedSize = normalizeSize(size);
+        int offset = (normalizedPage - 1) * normalizedSize;
+        return stockDao.getCurrentStockListPaged(offset, normalizedSize, keyword);
     }
 
 	// 3. adjustProduct
+	/**
+	 * 상품 재고 조정 흐름
+	 *  1. 요청 파라미터의 기본 유효성 확인 (수량·액션)
+	 *  2. 상품 메타 조회로 존재 여부 및 codeBId 확보
+	 *  3. 차감 요청인 경우 현재 가용 재고와 비교해 부족 시 즉시 예외 처리
+	 *  4. 최종적으로 입고/출고 각 전용 INSERT 쿼리를 호출하고 1행 반영 여부를 확인
+	 */
 	@Override
 	@Transactional
 	public void adjustProduct(int productId, StockAdjustRequestDto request) {
-		// 수량 검증. 입출고시, 수량이 0보다 작으면 예외.
-		System.out.println(" adjustProduct called with quantity=" + request.getQuantity());
+		// 1) 요청 파라미터 기초 검증
 	    if (request.getQuantity() <= 0) {
 	        throw new IllegalArgumentException("수량은 1 이상이어야 합니다.");
 	    }
@@ -96,31 +97,60 @@ public class StockServiceImpl implements StockService {
 	    }
 
 	    String codeBId = productDto.getCodeBId();
+	    String action = request.getAction();
+	    if (action == null || action.isBlank()) { //재고 비었는지 확인 
+	        throw new IllegalArgumentException("action 값은 필수입니다."); // 비었으면 예외처리 
+	    }
 
-	    // 나중에 DAO 호출 로직 들어올 자리
-	    if ("ADD".equalsIgnoreCase(request.getAction())) { // 대소문자 무시하고 문자열 비교 
+		    if ("SUBTRACT".equalsIgnoreCase(action)) { // 재고 있으면 차감 가능한지 인지 확인 
+		    	// 2) 차감 시에는 현재 가용 재고를 다시 조회해 충분한지 확인
+		    	int availableQty = stockDao.getAvailableQty(productId);
+		    	
+		        boolean hasEnoughStock = availableQty >= request.getQuantity();
+		        if (!hasEnoughStock) {
+		            throw new IllegalArgumentException(
+		                    "재고가 부족합니다. 요청 수량=" + request.getQuantity() + ", 가용 재고=" + availableQty);
+		        }
+		    }// 재고가 0이 아님 + 차감할만큼 재고가 있음.
+
+	    // 3) ADD / SUBTRACT에 따라 각각 Purchase, StockAdjustment 테이블에 기록
+	    if ("ADD".equalsIgnoreCase(action)) { // 대소문자 무시하고 문자열 비교 
 	        PurchaseDto purchase = PurchaseDto.builder()
 	        		.productId(productId)
 	        		.codeBId(codeBId) 
 	        		.quantity(request.getQuantity())
 	        		.notes(request.getNotes())
 	        		.build();
-	        stockDao.insertPurchase(purchase); // call DaoImpl 3-1
-	    } else if ("SUBTRACT".equalsIgnoreCase(request.getAction())) {
+	        int inserted = stockDao.insertPurchase(purchase); // call DaoImpl 3-1
+	        if (inserted != 1) {
+	            throw new IllegalStateException("입고 등록에 실패했습니다.");
+	        }
+	    } else if ("SUBTRACT".equalsIgnoreCase(action)) {
 	        StockAdjustmentDto adjust = StockAdjustmentDto.builder()
 	        		.productId(productId)
 	        		.codeBId(codeBId) 
 	        		.quantity(request.getQuantity())
 	        		.notes(request.getNotes())
 	        		.build();
-	        stockDao.insertStockAdjustment(adjust); // call DaoImpl 3-2
+	        int inserted = stockDao.insertStockAdjustment(adjust); // call DaoImpl 3-2
+	        if (inserted != 1) {
+	            throw new IllegalStateException("출고(차감) 등록에 실패했습니다.");
+	        }
 	    } else {
-	    	System.out.println("⚠️ invalid action → 예외 발생 예정");
 	        throw new IllegalArgumentException("올바르지 않은 action 값입니다.");
 	    }
-		
 	}
 
+    private int normalizePage(int page) {
+        return page < 1 ? DEFAULT_PAGE : page;
+    }
+
+    private int normalizeSize(int size) {
+        if (size < 1) {
+            return DEFAULT_SIZE;
+        }
+        return Math.min(size, MAX_SIZE);
+    }
 
 	
 
