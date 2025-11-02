@@ -137,7 +137,7 @@ public class StockServiceImpl implements StockService {
 	            throw new IllegalStateException("출고(차감) 등록에 실패했습니다.");
 	        }
 	    } else {
-	        throw new IllegalArgumentException("올바르지 않은 action 값입니다.");
+	        throw new IllegalArgumentException("올바르지 않은 action 값입니다. 추가 또는 삭제를 선택해주세요.");
 	    }
 	}
 
