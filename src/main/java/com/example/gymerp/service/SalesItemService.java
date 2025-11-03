@@ -25,7 +25,5 @@ public interface SalesItemService {
 
 
 
-	Map<String, List<Map<String, Object>>> getItemSalesGraphData(String startDate, String endDate, String groupByUnit);
-
 	
 }
