@@ -41,21 +41,24 @@ public class SalesItemController {
             }
         } catch (Exception e) {
             // 로깅 처리 (e.getMessage())
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("판매 내역 등록 중 서버 오류가 발생했습니다.");
+            e.printStackTrace(); // 🚨 디버깅을 위해 스택 트레이스 추가
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("판매 내역 등록 중 서버 오류가 발생했습니다: " + e.getMessage());
         }
     }
-    
+
     // 2. 상품 판매 전체 목록 조회 (READ ALL) - 명세: GET /sales/products
     @GetMapping("/products") 
     public ResponseEntity<Map<String, Object>> getAllSalesItems(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) List<Integer> itemIds,
+            @RequestParam(required = false) String productNameKeyword, 
             @RequestParam(required = false) Integer empNum,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         
-        Map<String, Object> result = salesItemService.getAllSalesItems(startDate, endDate, itemIds, empNum, page, size);
+        // (수정 2) Service 메소드 호출 시 변경된 파라미터 (productNameKeyword) 사용
+        Map<String, Object> result = salesItemService.getAllSalesItems(startDate, endDate, productNameKeyword, empNum, page, size);
+        
         return ResponseEntity.ok(result);
     }
 

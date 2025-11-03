@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.gymerp.dto.EmpDto;
 import com.example.gymerp.dto.ProductDto;
@@ -52,34 +53,29 @@ public class ModalServiceImpl implements ModalService {
     /* ================================
 	   실물 상품 선택 모달 (추가)
 	================================ */
-	
-	// 실물 상품 목록 조회
-	@Override
-	public List<ProductDto> getProductModalList(String keyword, int page, int limit) {
-     
-     // 1. 페이징 시작 지점 (offset) 계산
-     int offset = (page - 1) * limit;
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductDto> getProductModalList(String keyword, int page, int limit) {
+        int p = Math.max(page, 1), l = Math.max(limit, 1);
+        int startRow = (p - 1) * l + 1;
+        int endRow   = p * l;
+        String kw = (keyword == null) ? "" : keyword.trim();
 
-     // 2. DAO에 전달할 파라미터 Map 생성 및 값 할당
-     Map<String, Object> param = new HashMap<>();
-     param.put("keyword", keyword);
-     param.put("limit", limit);
-     param.put("offset", offset);
+        Map<String, Object> param = new HashMap<>();
+        param.put("keyword", kw);
+        param.put("startRow", startRow);
+        param.put("endRow", endRow);
 
-     // 3. DAO 호출
-	    return dao.getProductModalList(param);
-	}
-	
-	// 실물 상품 전체 개수 조회
-	@Override
-	public int getProductModalCount(String keyword) {
-     // 1. DAO에 전달할 파라미터 Map 생성 및 값 할당 (검색 조건만 전달)
-     Map<String, Object> param = new HashMap<>();
-     param.put("keyword", keyword);
-     
-     // 2. DAO 호출
-	    return dao.getProductModalCount(param);
-	}
+        return dao.getProductModalList(param);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getProductModalCount(String keyword) {
+        String kw = (keyword == null) ? "" : keyword.trim();
+        return dao.getProductModalCount(Map.of("keyword", kw));
+    }
+
 	
 	
 	/* ================================
@@ -91,21 +87,29 @@ public class ModalServiceImpl implements ModalService {
 	   [직원 선택 모달]
 	================================ */
 	
-	@Override
-	public List<EmpDto> getEmployeeModalList(String keyword, int page, int limit) {
-	    Map<String, Object> params = new HashMap<>();
-	    params.put("keyword", keyword);
-	    params.put("offset", (page - 1) * limit);
-	    params.put("limit", limit);
-	    return dao.getEmployeeModalList(params); // 'dao'는 ModalDao 객체입니다.
-	}
+	// ModalServiceImpl.java
 
-	@Override
-	public int getEmployeeModalCount(String keyword) {
-	    Map<String, Object> params = new HashMap<>();
-	    params.put("keyword", keyword);
-	    return dao.getEmployeeModalCount(params);
-	}
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmpDto> getEmployeeModalList(String keyword, int page, int limit) {
+        int p = Math.max(page, 1), l = Math.max(limit, 1);
+        int startRow = (p - 1) * l + 1, endRow = p * l;
+        String kw = (keyword == null) ? "" : keyword.trim(); // Map.of는 null 불가
+
+        return dao.getEmployeeModalList(Map.of(
+            "keyword", kw,
+            "startRow", startRow,
+            "endRow", endRow
+        ));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getEmployeeModalCount(String keyword) {
+        String kw = (keyword == null) ? "" : keyword.trim();
+        return dao.getEmployeeModalCount(Map.of("keyword", kw));
+    }
+
 	
 	/* ================================
 	   [직원 선택 모달] 끝 

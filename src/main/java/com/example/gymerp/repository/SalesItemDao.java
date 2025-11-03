@@ -45,11 +45,12 @@ public interface SalesItemDao {
     // 판매 내역 수정
     int updateSalesItem(SalesItemDto salesItem);
 
-    // 판매 내역 삭제 (status = 'DELETED')
-    // MyBatis가 단일 Long 값을 처리하도록 @Param 사용을 권장합니다.
-    int deleteSalesItem(@Param("itemSalesId") Long itemSalesId);
-
-    // (통계 메서드들)
+	 /**
+	  * 상품 판매 내역을 소프트 삭제(status='DELETED') 처리합니다.
+	  * @param itemSalesId 삭제할 판매 내역 ID
+	  * @return 업데이트된 행의 수
+	  */
+	 int deleteSalesItem(Long itemSalesId);
 
     // 상품 매출 통계 조회
     List<Map<String, Object>> selectItemSalesAnalytics(Map<String, Object> params);

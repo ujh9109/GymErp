@@ -17,7 +17,8 @@ import lombok.RequiredArgsConstructor;
 public class SalesItemDaoImpl implements SalesItemDao {
 
     private final SqlSession session;
-    // MyBatis Mapper XML의 namespace와 일치하는 변수
+    // 🚨 MyBatis Mapper XML의 namespace와 일치하는 변수를 "SalesItemMapper"로 수정했습니다.
+    // 이는 XML 파일의 <mapper namespace="SalesItemMapper">와 일치해야 합니다.
     private static final String NAMESPACE = "SalesItemMapper";
 
     // 1. 전체 상품 판매 내역 조회 (페이징/필터 포함)
@@ -45,7 +46,6 @@ public class SalesItemDaoImpl implements SalesItemDao {
      */
     @Override
     public Map<String, Object> selectSalesItemForAdjustment(Long itemSalesId) {
-        // 맵퍼 ID: selectSalesItemForAdjustment
         return session.selectOne(NAMESPACE + ".selectSalesItemForAdjustment", itemSalesId);
     }
 
@@ -54,7 +54,6 @@ public class SalesItemDaoImpl implements SalesItemDao {
      */
     @Override
     public void insertPurchaseForRefund(Map<String, Object> params) {
-        // 맵퍼 ID: insertPurchaseForRefund
         session.insert(NAMESPACE + ".insertPurchaseForRefund", params);
     }
     
@@ -64,6 +63,7 @@ public class SalesItemDaoImpl implements SalesItemDao {
     // 4. 상품 판매 내역 등록
     @Override
     public int insertSalesItem(SalesItemDto salesItem) {
+        // 이제 "SalesItemMapper.insertSalesItem" 쿼리를 찾게 됩니다.
         return session.insert(NAMESPACE + ".insertSalesItem", salesItem);
     }
 
