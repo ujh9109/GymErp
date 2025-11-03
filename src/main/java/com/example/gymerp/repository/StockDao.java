@@ -13,13 +13,13 @@ public interface StockDao {
 	int getAvailableQty(int productId);
 	
 	// 2-1 입고 내역 조회
-    List<PurchaseDto> getPurchaseList(int productId);
+    List<PurchaseDto> getPurchaseList(int productId, int offset, int size);
 
     // 2-2 출고 + 판매 내역 조회
-    List<StockAdjustmentDto> getAdjustStockAndSalesList(int productId);
+    List<StockAdjustmentDto> getAdjustStockAndSalesList(int productId, int offset, int size);
 
     // 2-3 현재 재고 현황 조회
-    List<CurrentStockDto> getCurrentStockList();
+    List<CurrentStockDto> getCurrentStockListPaged(int offset, int size, String keyword);
 
     // 3-1 입고 등록
     int insertPurchase(PurchaseDto dto);

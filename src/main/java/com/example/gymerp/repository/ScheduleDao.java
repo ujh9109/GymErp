@@ -1,5 +1,6 @@
 package com.example.gymerp.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
@@ -10,24 +11,27 @@ import com.example.gymerp.dto.ScheduleDto;
 @Mapper
 public interface ScheduleDao {
 
-	// 전체 스케줄 조회
-	List<ScheduleDto> selectAllSchedules();
+    /* 전체 일정 조회 (관리자용) */
+    public List<ScheduleDto> selectAll();
 
-	// 1. 특정 날짜 스케줄 조회
-	List<ScheduleDto> findByDate(@Param("date") String date);
+    /* 특정 일정 상세조회 */
+    public ScheduleDto selectByShNum(@Param("shNum") int shNum);
 
-	// 2. 특정 직원 스케줄 조회 (선택적)
-	List<ScheduleDto> findByEmpNum(@Param("empNum") int empNum);
+    /* 직원별 일정 조회 */
+    public List<ScheduleDto> selectByEmpNum(@Param("empNum") int empNum);
 
-	// 3. 단건 조회
-	ScheduleDto findByShNum(@Param("shNum") int shNum);
+    /* 날짜 범위별 조회 (월간 캘린더) */
+    public List<ScheduleDto> selectByDateRange(
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
 
-	// 4. 스케줄 등록
-	int insert(ScheduleDto schedule);
+    /* 일정 등록 */
+    public int insert(ScheduleDto schedule);
 
-	// 5. 스케줄 수정
-	int update(ScheduleDto schedule);
+    /* 일정 수정 */
+    public int update(ScheduleDto schedule);
 
-	// 6. 스케줄 삭제
-	int delete(@Param("shNum") int shNum);
+    /* 일정 삭제 */
+    public int delete(@Param("shNum") int shNum);
 }

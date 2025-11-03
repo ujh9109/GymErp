@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.example.gymerp.dto.CurrentStockDto;
+import com.example.gymerp.dto.PurchaseDto;
+import com.example.gymerp.dto.StockAdjustmentDto;
 
 @MybatisTest
 @ActiveProfiles("test")           // 네가 만든 테스트 프로퍼티 사용
@@ -20,24 +22,32 @@ public class StockDaoTest {
 	@Autowired
 	private StockDao stockDao ; 
 	
+	private static final int DEFAULT_OFFSET = 0;
+	private static final int DEFAULT_SIZE = 100;
+	private static final String NO_KEYWORD = null;
+	
 	// StockDao 2-3
+	// 페이지 기반 조회 쿼리가 기본 파라미터로 최소 한 건 이상 돌려주는지 확인
 	@Test
 	@DisplayName("현재 재고 현황 쿼리 실행")
 	void basicContextAndQuery() {
-        List<CurrentStockDto> list = stockDao.getCurrentStockList();
+        List<CurrentStockDto> list = stockDao.getCurrentStockListPaged(DEFAULT_OFFSET, DEFAULT_SIZE, NO_KEYWORD);
         assertThat(list).isNotNull();          // NPE 방지
         assertThat(list.size()).isGreaterThan(0); // 최소 1행 이상 나와야함 
         
     }
 	
 	// StockDao 2-1
+	// 실제 존재하는 상품의 입고 내역이 최근 등록 순으로 정렬돼 반환되는지 검증
 	@Test
 	@DisplayName("입고 내역: 존재하는 productId는 최근순으로 1건 이상 반환")
 	void purchaseList_existingProduct_recentFirst() {
 	    // 픽스처: DB에 있는 아무 상품 id 한 개 뽑기 (하드코딩 회피)
-	    int productId = stockDao.getCurrentStockList().get(0).getProductId();
+	    List<CurrentStockDto> firstPage = stockDao.getCurrentStockListPaged(DEFAULT_OFFSET, 1, NO_KEYWORD);
+	    assertThat(firstPage).isNotEmpty();
+	    int productId = firstPage.get(0).getProductId();
 
-	    var list = stockDao.getPurchaseList(productId);
+        List<PurchaseDto> list = stockDao.getPurchaseList(productId, DEFAULT_OFFSET, DEFAULT_SIZE);
 	    assertThat(list).isNotNull();
 	    assertThat(list.size()).isGreaterThan(0);
 
@@ -50,20 +60,24 @@ public class StockDaoTest {
 	}
 
 	// StockDao 2-1
+	// 존재하지 않는 상품 번호 조회 시 빈 리스트를 돌려주는지 검증
 	@Test
 	@DisplayName("입고 내역: 없는 productId는 빈 리스트")
 	void purchaseList_nonExistingProduct_returnsEmpty() {
 	    int none = 999_999;
-	    assertThat(stockDao.getPurchaseList(none)).isEmpty();
+	    assertThat(stockDao.getPurchaseList(none, DEFAULT_OFFSET, DEFAULT_SIZE)).isEmpty();
 	}
 	
 	// StockDao 2-2
+	// 출고/판매 합산 쿼리 결과가 지정한 상품 번호와 일치하고 음수 수량이 없는지 확인
 	@Test
 	@DisplayName("출고+판매 내역: 존재하는 productId는 1건 이상, 수량은 0 이상")
 	void outboundAndSales_existingProduct_nonNegative() {
-	    int productId = stockDao.getCurrentStockList().get(0).getProductId();
+        List<CurrentStockDto> firstPage = stockDao.getCurrentStockListPaged(DEFAULT_OFFSET, 1, NO_KEYWORD);
+        assertThat(firstPage).isNotEmpty();
+	    int productId = firstPage.get(0).getProductId();
 
-	    var list = stockDao.getAdjustStockAndSalesList(productId);
+	    List<StockAdjustmentDto> list = stockDao.getAdjustStockAndSalesList(productId, DEFAULT_OFFSET, DEFAULT_SIZE);
 	    assertThat(list).isNotNull();
 
 	    // 없을 수도 있으므로 크기 검증은 선택, 대신 필드 무결성 확인
@@ -77,17 +91,20 @@ public class StockDaoTest {
 	}
 
 	// StockDao 2-2
+	// 존재하지 않는 상품 번호로 조회하면 빈 리스트가 내려오는지 검증
 	@Test
 	@DisplayName("출고+판매 내역: 없는 productId는 빈 리스트")
 	void outboundAndSales_nonExistingProduct_returnsEmpty() {
 	    int none = 999_999;
-	    assertThat(stockDao.getAdjustStockAndSalesList(none)).isEmpty();
+	    assertThat(stockDao.getAdjustStockAndSalesList(none, DEFAULT_OFFSET, DEFAULT_SIZE)).isEmpty();
 	}
 
+	// StockDao 2-3
+	// 재고 목록이 이름 오름차순 정렬이며 합계 컬럼이 NULL-safe하게 조회되는지 확인
 	@Test
 	@DisplayName("현재 재고: 이름 오름차순, 합계 NULL 안전(NVL/COALESCE 처리)")
 	void currentStock_sortedAndNullSafe() {
-	    var list = stockDao.getCurrentStockList();
+	    List<CurrentStockDto> list = stockDao.getCurrentStockListPaged(DEFAULT_OFFSET, DEFAULT_SIZE, NO_KEYWORD);
 	    assertThat(list).isNotEmpty();
 
 	    // 이름 오름차순

@@ -57,5 +57,10 @@ public class MemberServiceImpl implements MemberService {
     public int updateMemberProfile(int memNum, String memProfile) {
         return memberDao.updateProfile(memNum, memProfile);
     }
-
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<MemberDto> searchMembers(String keyword) {
+        return memberDao.search(keyword);
+    }
 }

@@ -37,8 +37,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // cors 설정 (react)
             .authorizeHttpRequests(auth -> auth // 요청 권한 제어
                 .requestMatchers(SWAGGER).permitAll() // Swagger 허용
-                .requestMatchers("/v1/login/**").permitAll() // 로그인 허용
-                .anyRequest().permitAll()       // 전체 허용 (초기 개발용)
+                .requestMatchers("/v1/emp/login", "/v1/emp/logout").permitAll() // 로그인 허용
+                .anyRequest().authenticated()     // 전체 허용 (초기 개발용)
             )
             
             // 로그인 폼 비활성화

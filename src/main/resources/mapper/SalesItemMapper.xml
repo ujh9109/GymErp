@@ -3,49 +3,41 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.gymerp.repository.SalesItemDao">
+<mapper namespace="SalesItemMapper">
 
-    <sql id="baseWhereProduct">
-        <where>
-            <if test="startDate != null and startDate != ''">
-                AND si.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
-            </if>
-            <if test="endDate != null and endDate != ''">
-                AND si.createdAt &lt;= TO_DATE(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
-            </if>
-
-            <if test="productIds != null and productIds.size() > 0">
-                AND si.productId IN
-                <foreach collection="productIds" item="pid" open="(" separator="," close=")">
-                    #{pid}
-                </foreach>
-            </if>
-            
-            <if test="categoryIds != null and categoryIds.size() > 0">
-                AND p.codeBId IN
-                <foreach collection="categoryIds" item="cid" open="(" separator="," close=")">
-                    #{cid}
-                </foreach>
-            </if>
-            <if test="categoryName != null and categoryName != ''">
-                AND cb.name = #{categoryName}
-            </if>
-
-            <if test="empNum != null">
-                AND si.empNum = #{empNum}
-            </if>
-            <if test="empEmail != null and empEmail != ''">
-                AND e.empEmail LIKE '%' || #{empEmail} || '%'
-            </if>
-
-            <if test="keyword != null and keyword != ''">
-                AND ( p.name LIKE '%' || #{keyword} || '%'
-                      OR cb.name LIKE '%' || #{keyword} || '%' )
-            </if>
-
-            AND si.status = 'ACTIVE'
-        </where>
-    </sql>
+	<sql id="baseWhereProduct">
+	    <where>
+	        <if test="startDate != null and startDate != ''">
+	            AND si.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="endDate != null and endDate != ''">
+	            AND si.createdAt &lt;= TO_DATE(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+	        </if>
+	
+	        <if test="categoryIds != null and categoryIds.size() > 0">
+	            AND p.codeBId IN
+	            <foreach collection="categoryIds" item="cid" open="(" separator="," close=")">
+	                #{cid}
+	            </foreach>
+	        </if>
+	        <if test="categoryName != null and categoryName != ''">
+	            AND cb.name = #{categoryName}
+	        </if>
+	
+	        <if test="empNum != null">
+	            AND si.empNum = #{empNum}
+	        </if>
+	        <if test="empEmail != null and empEmail != ''">
+	            AND e.empEmail LIKE '%' || #{empEmail} || '%'
+	        </if>
+	
+	        <if test="productNameKeyword != null and productNameKeyword != ''">
+	            AND p.name LIKE '%' || #{productNameKeyword} || '%'
+	        </if>
+	
+	        AND si.status = 'ACTIVE'
+	    </where>
+	</sql>
 
     <select id="selectSalesItemCount" parameterType="map" resultType="int">
         SELECT COUNT(1)
@@ -100,33 +92,59 @@
         WHERE si.itemSalesId = #{value}
     </select>
 
-    <insert id="insertSalesItem" parameterType="com.example.gymerp.dto.SalesItemDto">
+<insert id="insertSalesItem" parameterType="com.example.gymerp.dto.SalesItemDto">
         <selectKey keyProperty="itemSalesId" resultType="long" order="BEFORE">
             SELECT SALES_ITEM_SEQ.NEXTVAL FROM DUAL
         </selectKey>
-        INSERT INTO sales_item (
-            itemSalesId, productId, productName,
-            empNum, quantity, unitPrice, totalAmount,
-            productType, status, createdAt, updatedAt
-        ) VALUES (
-            #{itemSalesId}, #{productId}, #{productName},
-            #{empNum}, #{quantity}, #{unitPrice}, #{totalAmount},
-            #{productType}, #{status}, SYSDATE, SYSDATE
-        )
+                INSERT INTO sales_item ( 
+                    itemSalesId, productId, productName, 
+                    empNum, quantity, unitPrice, totalAmount, 
+                    productType, status, createdAt, updatedAt 
+                ) VALUES ( 
+                    #{itemSalesId}, #{productId}, #{productName}, 
+                    #{empNum}, #{quantity}, #{unitPrice, jdbcType=DECIMAL}, #{totalAmount, jdbcType=DECIMAL}, 
+                    #{productType}, #{status}, SYSDATE, SYSDATE 
+                )    
     </insert>
 
-    <update id="updateSalesItem" parameterType="com.example.gymerp.dto.SalesItemDto">
-        UPDATE sales_item
-        SET productId   = #{productId},
-            productName = #{productName},
-            empNum      = #{empNum},
-            quantity    = #{quantity},  unitPrice   = #{unitPrice},
-            totalAmount = #{totalAmount},
-            productType = #{productType},
-            status      = #{status},
-            updatedAt   = SYSDATE
-        WHERE itemSalesId = #{itemSalesId}
-    </update>
+<update id="updateSalesItem" parameterType="com.example.gymerp.dto.SalesItemDto">
+    UPDATE sales_item 
+    <set>
+        <if test="productId != null and productId != 0">
+            productId = #{productId}, 
+        </if>
+        <if test="productName != null">
+            productName = #{productName}, 
+        </if>
+        <if test="empNum != null and empNum != 0">
+            empNum = #{empNum}, 
+        </if>
+        
+		<!--
+			quantity 필드는 0으로 업데이트될 수 있습니다.
+			이는 판매 기록 자체는 유지하되, 판매 수량이 0개로 조정되었음을 의미합니다.
+			완전한 판매 취소(소프트 삭제)와는 구분되며, 데이터 변경 이력 추적 및 유연한 비즈니스 처리를 위해
+		 	허용됩니다.
+		 -->        
+        <if test="quantity != null">
+            quantity = #{quantity}, 
+        </if>
+        
+        <if test="unitPrice != null">
+            unitPrice = #{unitPrice, jdbcType=DECIMAL}, 
+        </if>
+        <if test="totalAmount != null">
+            totalAmount = #{totalAmount, jdbcType=DECIMAL}, 
+        </if>
+        <if test="productType != null">
+            productType = #{productType}, 
+        </if>
+        <if test="status != null"> 
+            status = #{status}, 
+        </if>
+        updatedAt = SYSDATE </set>
+    WHERE itemSalesId = #{itemSalesId}
+</update>
 
     <insert id="insertPurchaseForRefund" parameterType="map">
         <selectKey keyProperty="purchaseId" resultType="long" order="BEFORE">
@@ -160,27 +178,43 @@
         ORDER BY totalSalesAmount DESC
     </select>
 
-    <select id="selectItemSalesGraphData" parameterType="map" resultType="map">
-        SELECT
-            CASE WHEN #{groupByUnit} = 'MONTH'
-                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
-                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
-            END AS groupDate,
-            SUM(si.totalAmount) AS totalSales
-        FROM sales_item si
-        <where>
-            <if test="startDate != null and endDate != null">
-                si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
-                                   AND TO_DATE(#{endDate},  'YYYY-MM-DD') + 0.99999
-            </if>
-            AND si.status = 'ACTIVE'
-        </where>
-        GROUP BY
-            CASE WHEN #{groupByUnit} = 'MONTH'
-                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
-                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
-            END
-        ORDER BY groupDate ASC
-    </select>
+
+    
+
+	<select id="selectItemSalesGraphData" parameterType="map" resultType="map">
+	    SELECT 
+	        <choose>
+	            <when test="groupByUnit == 'MONTH'">
+	                TO_CHAR(si.createdAt, 'YYYY-MM') AS groupDate
+	            </when>
+	            <otherwise>
+	                TO_CHAR(si.createdAt, 'YYYY-MM-DD') AS groupDate
+	            </otherwise>
+	        </choose>,
+	        SUM(si.totalAmount) AS totalSales
+	    FROM sales_item si 
+	    <where>
+	        si.status = 'ACTIVE' 
+	        <if test="startDate != null and startDate != ''">
+	            AND si.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="endDate != null and endDate != ''">
+	            AND si.createdAt &lt; TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1 
+	        </if>
+	    </where>
+	    
+	    GROUP BY
+	        <choose>
+	            <when test="groupByUnit == 'MONTH'">
+	                TO_CHAR(si.createdAt, 'YYYY-MM')
+	            </when>
+	            <otherwise>
+	                TO_CHAR(si.createdAt, 'YYYY-MM-DD')
+	            </otherwise>
+	        </choose>
+	        
+	    ORDER BY groupDate ASC
+	</select>
+
 
 </mapper>

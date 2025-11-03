@@ -33,4 +33,10 @@ public class CategoryController {
 	public void createCategory(@RequestBody CodeDto dto) {
 		categoryService.save(dto);
 	}
+	
+	// 일정유형 코드 목록 조회
+    @GetMapping("/schedule-types")
+    public List<CodeDto> getScheduleCodes() {
+        return categoryService.getScheduleCodes();
+    }
 }

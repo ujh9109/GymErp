@@ -15,4 +15,5 @@ public class CodeDto {
 	private String codeBId;
 	private String codeAName;
 	private String codeBName;
+	
 }

@@ -18,6 +18,10 @@ public class SalesServiceDaoImpl implements SalesServiceDao {
 
     private final SqlSession sqlSession;
 
+    // ===============================
+    // [조회]
+    // ===============================
+
     // 전체 서비스 판매 내역 조회
     @Override
     public List<SalesService> selectAllSalesServices() {
@@ -29,6 +33,11 @@ public class SalesServiceDaoImpl implements SalesServiceDao {
     public SalesService selectSalesServiceById(long serviceSalesId) {
         return sqlSession.selectOne("SalesServiceMapper.selectSalesServiceById", serviceSalesId);
     }
+
+
+    // ===============================
+    // [등록 / 수정 / 삭제]
+    // ===============================
 
     // 서비스 판매 등록
     @Override
@@ -48,21 +57,9 @@ public class SalesServiceDaoImpl implements SalesServiceDao {
         return sqlSession.update("SalesServiceMapper.deleteSalesService", serviceSalesId);
     }
 
-    // 서비스 판매 내역 조회 (페이지네이션 + 필터)
+    // PT_LOG 생성 후 refundId 연동
     @Override
-    public List<SalesService> selectPagedServiceSales(Map<String, Object> param) {
-        return sqlSession.selectList("SalesServiceMapper.selectPagedServiceSales", param);
-    }
-
-    // 전체 행 개수 조회 (페이지네이션용)
-    @Override
-    public int countPagedServiceSales(Map<String, Object> param) {
-        return sqlSession.selectOne("SalesServiceMapper.countPagedServiceSales", param);
-    }
-
-    // 서비스 매출 그래프 조회
-    @Override
-    public List<Map<String, Object>> selectServiceSalesGraph(Map<String, Object> param) {
-        return sqlSession.selectList("SalesServiceMapper.selectServiceSalesGraph", param);
+    public int updateRefundIdBySalesId(Map<String, Object> param) {
+        return sqlSession.update("SalesServiceMapper.updateRefundIdBySalesId", param);
     }
 }

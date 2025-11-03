@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class SalesItemDaoImpl implements SalesItemDao {
 
     private final SqlSession session;
-    // MyBatis Mapper XML의 namespace와 일치하는 변수
+    
     private static final String NAMESPACE = "SalesItemMapper";
 
     // 1. 전체 상품 판매 내역 조회 (페이징/필터 포함)
@@ -40,30 +40,26 @@ public class SalesItemDaoImpl implements SalesItemDao {
     
     // ========== [재고/수정 관련 추가 구현] ==========
     
-    /**
-     * 판매 내역 수정 및 삭제 시, 기존 수량(oldQuantity)과 상품 정보(productId, codeBId)를 조회합니다.
-     */
+
+    // 판매 내역 수정 및 삭제 시, 기존 수량(oldQuantity)과 상품 정보(productId, codeBId)를 조회합니다.
+
     @Override
     public Map<String, Object> selectSalesItemForAdjustment(Long itemSalesId) {
-        // 맵퍼 ID: selectSalesItemForAdjustment
         return session.selectOne(NAMESPACE + ".selectSalesItemForAdjustment", itemSalesId);
     }
 
-    /**
-     * 재고 환원 (입고) 내역을 Purchase 테이블에 기록합니다. (판매 취소/수량 감소 시 사용)
-     */
+
+    // 재고 환원 (입고) 내역을 Purchase 테이블에 기록합니다. (판매 취소/수량 감소 시 사용)
+
     @Override
     public void insertPurchaseForRefund(Map<String, Object> params) {
-        // 맵퍼 ID: insertPurchaseForRefund
         session.insert(NAMESPACE + ".insertPurchaseForRefund", params);
     }
     
-    // ============================================
-
-
     // 4. 상품 판매 내역 등록
     @Override
     public int insertSalesItem(SalesItemDto salesItem) {
+        // 이제 "SalesItemMapper.insertSalesItem" 쿼리를 찾게 됩니다.
         return session.insert(NAMESPACE + ".insertSalesItem", salesItem);
     }
 
@@ -85,9 +81,5 @@ public class SalesItemDaoImpl implements SalesItemDao {
         return session.selectList(NAMESPACE + ".selectItemSalesAnalytics", params);
     }
 
-    // 8. 상품 매출 그래프 데이터 조회
-    @Override
-    public List<Map<String, Object>> selectItemSalesGraphData(Map<String, Object> params) {
-        return session.selectList(NAMESPACE + ".selectItemSalesGraphData", params);
-    }
+    
 }
