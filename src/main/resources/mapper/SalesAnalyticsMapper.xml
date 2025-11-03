@@ -3,35 +3,39 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.gymerp.repository.SalesAnalyticsDao">
+<mapper namespace="SalesAnalyticsDao">
 
     <!-- =======================================================
          [START] 서비스 매출 그래프
-         - 필터: 기간, 품목, 회원, 직원
-         - 품목 미선택 시 serviceType 기준 그룹화
-         - 필터 간 AND 조건, 품목 내부는 OR
-         - 기본 출력: 원형 그래프용 (항목별 총 매출)
     ======================================================== -->
+
+    <!-- 서비스 매출 내역을 기간/품목/회원/직원 기준으로 집계 -->
     <select id="selectServiceSalesChart" parameterType="map" resultType="map">
         SELECT
-            <choose>
-                <when test="serviceTypes != null and serviceTypes.size() > 0">
-                    s.service_name AS label
-                </when>
-                <otherwise>
-                    s.service_type AS label
-                </otherwise>
-            </choose>,
+            CASE 
+                WHEN #{serviceTypes} IS NOT NULL AND #{serviceTypes}.size > 0 
+                THEN s.service_name
+                ELSE s.service_type
+            END AS label,
             SUM(s.price * s.quantity) AS total_sales
         FROM sales_service s
         WHERE 1=1
 
-        <!-- 기간 필터 -->
-        <if test="startDate != null and endDate != null">
-            AND s.sale_date BETWEEN #{startDate} AND #{endDate}
+        <!-- ① 모든 필터 미선택 시 → 올해 전체 자동 적용 -->
+        <if test="(startDate == null or startDate == '') 
+                   and (endDate == null or endDate == '') 
+                   and (serviceTypes == null or serviceTypes.size == 0) 
+                   and (memberId == null) 
+                   and (empId == null)">
+            AND s.sale_date BETWEEN TRUNC(SYSDATE, 'YYYY') AND SYSDATE
         </if>
 
-        <!-- 품목 필터 (최대 3개까지 OR 조건) -->
+        <!-- ② 기간 필터 -->
+        <if test="startDate != null and endDate != null and startDate != '' and endDate != ''">
+            AND s.sale_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        </if>
+
+        <!-- 품목 필터 -->
         <if test="serviceTypes != null and serviceTypes.size() > 0">
             AND (
                 <foreach collection="serviceTypes" item="type" separator=" OR ">
@@ -50,17 +54,15 @@
             AND s.emp_id = #{empId}
         </if>
 
-        <choose>
-            <when test="serviceTypes != null and serviceTypes.size() > 0">
-                GROUP BY s.service_name
-                ORDER BY total_sales DESC
-            </when>
-            <otherwise>
-                GROUP BY s.service_type
-                ORDER BY total_sales DESC
-            </otherwise>
-        </choose>
+        GROUP BY 
+            CASE 
+                WHEN #{serviceTypes} IS NOT NULL AND #{serviceTypes}.size > 0 
+                THEN s.service_name
+                ELSE s.service_type
+            END
+        ORDER BY total_sales DESC
     </select>
+
     <!-- =======================================================
          [END] 서비스 매출 그래프
     ======================================================== -->
@@ -68,31 +70,34 @@
 
     <!-- =======================================================
          [START] 실물 상품 매출 그래프
-         - 필터: 기간, 품목, 직원
-         - 품목 미선택 시 productType 기준 그룹화
-         - 필터 간 AND 조건, 품목 내부는 OR
-         - 기본 출력: 원형 그래프용 (항목별 총 매출)
     ======================================================== -->
+
+    <!-- 실물 상품 매출 내역을 기간/품목/직원 기준으로 집계 -->
     <select id="selectItemSalesChart" parameterType="map" resultType="map">
         SELECT
-            <choose>
-                <when test="productTypes != null and productTypes.size() > 0">
-                    i.product_name AS label
-                </when>
-                <otherwise>
-                    i.product_type AS label
-                </otherwise>
-            </choose>,
+            CASE 
+                WHEN #{productTypes} IS NOT NULL AND #{productTypes}.size > 0 
+                THEN i.product_name
+                ELSE i.product_type
+            END AS label,
             SUM(i.price * i.quantity) AS total_sales
         FROM sales_item i
         WHERE 1=1
 
-        <!-- 기간 필터 -->
-        <if test="startDate != null and endDate != null">
-            AND i.sale_date BETWEEN #{startDate} AND #{endDate}
+        <!-- ① 모든 필터 미선택 시 → 올해 전체 자동 적용 -->
+        <if test="(startDate == null or startDate == '') 
+                   and (endDate == null or endDate == '') 
+                   and (productTypes == null or productTypes.size == 0) 
+                   and (empId == null)">
+            AND i.sale_date BETWEEN TRUNC(SYSDATE, 'YYYY') AND SYSDATE
         </if>
 
-        <!-- 품목 필터 (최대 3개까지 OR 조건) -->
+        <!-- ② 기간 필터 -->
+        <if test="startDate != null and endDate != null and startDate != '' and endDate != ''">
+            AND i.sale_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        </if>
+
+        <!-- 품목 필터 -->
         <if test="productTypes != null and productTypes.size() > 0">
             AND (
                 <foreach collection="productTypes" item="type" separator=" OR ">
@@ -106,19 +111,180 @@
             AND i.emp_id = #{empId}
         </if>
 
-        <choose>
-            <when test="productTypes != null and productTypes.size() > 0">
-                GROUP BY i.product_name
-                ORDER BY total_sales DESC
-            </when>
-            <otherwise>
-                GROUP BY i.product_type
-                ORDER BY total_sales DESC
-            </otherwise>
-        </choose>
+        GROUP BY 
+            CASE 
+                WHEN #{productTypes} IS NOT NULL AND #{productTypes}.size > 0 
+                THEN i.product_name
+                ELSE i.product_type
+            END
+        ORDER BY total_sales DESC
     </select>
+
     <!-- =======================================================
          [END] 실물 상품 매출 그래프
+    ======================================================== -->
+
+
+    <!-- =======================================================
+         [START] 트레이너 실적 그래프
+    ======================================================== -->
+
+    <!-- 트레이너별 PT 소비 이력(기간/단위별)을 기준으로 실적 집계 -->
+    <select id="selectTrainerPerformanceChart" parameterType="map" resultType="map">
+        SELECT
+            CASE 
+                WHEN #{groupUnit} = 'DAY' THEN TO_CHAR(p.used_at, 'YYYY-MM-DD')
+                WHEN #{groupUnit} = 'WEEK' THEN TO_CHAR(p.used_at, 'IYYY-IW')
+                WHEN #{groupUnit} = 'MONTH' THEN TO_CHAR(p.used_at, 'YYYY-MM')
+                ELSE TO_CHAR(p.used_at, 'YYYY')
+            END AS group_date,
+            e.name AS trainer_name,
+            COUNT(p.pt_id) AS total_sessions
+        FROM pt_log p
+        JOIN employee e ON p.trainer_id = e.emp_id
+        WHERE p.status = '소비'
+
+        <if test="startDate != null and endDate != null">
+            AND p.used_at BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        </if>
+
+        <if test="trainerIds != null and trainerIds.size() > 0">
+            AND (
+                <foreach collection="trainerIds" item="tid" separator=" OR ">
+                    p.trainer_id = #{tid}
+                </foreach>
+            )
+        </if>
+
+        GROUP BY 
+            CASE 
+                WHEN #{groupUnit} = 'DAY' THEN TO_CHAR(p.used_at, 'YYYY-MM-DD')
+                WHEN #{groupUnit} = 'WEEK' THEN TO_CHAR(p.used_at, 'IYYY-IW')
+                WHEN #{groupUnit} = 'MONTH' THEN TO_CHAR(p.used_at, 'YYYY-MM')
+                ELSE TO_CHAR(p.used_at, 'YYYY')
+            END, e.name
+        ORDER BY group_date ASC, total_sessions DESC
+    </select>
+
+    <!-- =======================================================
+         [END] 트레이너 실적 그래프
+    ======================================================== -->
+
+
+    <!-- =======================================================
+         [START] 트레이너 실적 TOP3 조회
+    ======================================================== -->
+
+    <!-- 지정 기간 내 PT 소비 횟수 기준 상위 3명의 트레이너 조회 -->
+    <select id="selectTop3TrainerPerformance" parameterType="map" resultType="map">
+        SELECT
+            p.trainer_id,
+            e.name AS trainer_name,
+            COUNT(p.pt_id) AS total_sessions
+        FROM pt_log p
+        JOIN employee e ON p.trainer_id = e.emp_id
+        WHERE p.status = '소비'
+        <if test="startDate != null and endDate != null">
+            AND p.used_at BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        </if>
+        GROUP BY p.trainer_id, e.name
+        ORDER BY total_sessions DESC
+        FETCH FIRST 3 ROWS ONLY
+    </select>
+
+    <!-- =======================================================
+         [END] 트레이너 실적 TOP3 조회
+    ======================================================== -->
+
+
+    <!-- =======================================================
+         [START] AI 회원수 예측 그래프
+    ======================================================== -->
+
+    <!-- Flask 예측 결과를 ai_member_prediction 테이블에 저장 -->
+    <insert id="insertAiMemberPrediction" parameterType="map">
+        INSERT INTO ai_member_prediction (
+            predict_id,
+            predict_date,
+            predicted_count,
+            created_at
+        ) VALUES (
+            AI_MEMBER_PREDICT_SEQ.NEXTVAL,
+            TO_DATE(#{predictDate}, 'YYYY-MM-DD'),
+            #{predictedCount},
+            SYSDATE
+        )
+    </insert>
+
+    <!-- 현재 연도의 예측 회원수를 월별로 조회 -->
+    <select id="selectAiMemberPredictions" resultType="map">
+        SELECT
+            TO_CHAR(predict_date, 'YYYY-MM') AS month,
+            predicted_count AS predictedCount
+        FROM ai_member_prediction
+        WHERE TO_CHAR(predict_date, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY')
+        ORDER BY predict_date ASC
+    </select>
+
+    <!-- =======================================================
+         [END] AI 회원수 예측 그래프
+    ======================================================== -->
+
+
+    <!-- =======================================================
+         [START] AI 매출 예측 그래프
+    ======================================================== -->
+
+    <!-- 최근 3년간 서비스/상품 매출 데이터를 월별로 집계 (AI 학습용) -->
+    <select id="selectPastSalesForAi" resultType="map">
+        SELECT
+            TO_CHAR(sale_date, 'YYYY') AS year,
+            TO_CHAR(sale_date, 'MM') AS month,
+            SUM(total_price) AS total_sales
+        FROM (
+            SELECT sale_date, (price * quantity) AS total_price FROM sales_service
+            UNION ALL
+            SELECT sale_date, (price * quantity) AS total_price FROM sales_item
+        )
+        WHERE sale_date >= ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -36)
+        GROUP BY TO_CHAR(sale_date, 'YYYY'), TO_CHAR(sale_date, 'MM')
+        ORDER BY year ASC, month ASC
+    </select>
+
+    <!-- Flask 예측 결과를 ai_sales_prediction 테이블에 저장 -->
+    <insert id="insertAiSalesPrediction" parameterType="map">
+        INSERT INTO ai_sales_prediction (
+            predict_id,
+            predict_year,
+            predict_month,
+            predicted_sales,
+            created_at
+        ) VALUES (
+            AI_SALES_PRED_SEQ.NEXTVAL,
+            #{predictYear},
+            #{predictMonth},
+            #{predictedSales},
+            SYSDATE
+        )
+    </insert>
+
+    <!-- 작년/올해/내년의 월별 예측 매출 데이터를 조회 -->
+    <select id="selectAiSalesPredictions" resultType="map">
+        SELECT
+            predict_year AS year,
+            predict_month AS month,
+            predicted_sales AS predictedSales
+        FROM ai_sales_prediction
+        WHERE predict_year IN (
+            TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - 1,
+            TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')),
+            TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) + 1
+        )
+        ORDER BY predict_year ASC, predict_month ASC
+    </select>
+
+    <!-- =======================================================
+         [END] AI 매출 예측 그래프
     ======================================================== -->
 
 </mapper>

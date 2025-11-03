@@ -160,27 +160,6 @@
         ORDER BY totalSalesAmount DESC
     </select>
 
-    <select id="selectItemSalesGraphData" parameterType="map" resultType="map">
-        SELECT
-            CASE WHEN #{groupByUnit} = 'MONTH'
-                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
-                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
-            END AS groupDate,
-            SUM(si.totalAmount) AS totalSales
-        FROM sales_item si
-        <where>
-            <if test="startDate != null and endDate != null">
-                si.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
-                                   AND TO_DATE(#{endDate},  'YYYY-MM-DD') + 0.99999
-            </if>
-            AND si.status = 'ACTIVE'
-        </where>
-        GROUP BY
-            CASE WHEN #{groupByUnit} = 'MONTH'
-                 THEN TO_CHAR(si.createdAt, 'YYYY-MM')
-                 ELSE TO_CHAR(si.createdAt, 'YYYY-MM-DD')
-            END
-        ORDER BY groupDate ASC
-    </select>
+    
 
 </mapper>
