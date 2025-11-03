@@ -13,6 +13,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
+@Hidden //  Swagger에서 이 컨트롤러 제외
 @Controller
 public class ImageController {
 	

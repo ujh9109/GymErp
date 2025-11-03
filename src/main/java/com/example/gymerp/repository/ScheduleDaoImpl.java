@@ -1,0 +1,68 @@
+package com.example.gymerp.repository;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
+
+import com.example.gymerp.dto.ScheduleDto;
+
+import lombok.RequiredArgsConstructor;
+
+@Repository
+@Primary
+@RequiredArgsConstructor
+public class ScheduleDaoImpl implements ScheduleDao {
+
+    private final SqlSession session;
+
+    /* 전체 일정 조회 */
+    @Override
+    public List<ScheduleDto> selectAll() {
+        return session.selectList("ScheduleMapper.selectAll");
+    }
+    
+    /* 특정 일정 상세조회 */
+	@Override
+	public ScheduleDto selectByShNum(int shNum) {
+		return session.selectOne( "ScheduleMapper.selectByShNum", shNum);
+	}
+	
+    /* 직원별 일정 조회 */
+    @Override
+    public List<ScheduleDto> selectByEmpNum(int empNum) {
+        return session.selectList("ScheduleMapper.selectByEmpNum", empNum);
+    }
+
+    /* 날짜 범위 조회 */
+    @Override
+    public List<ScheduleDto> selectByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("startDate", startDate);
+        param.put("endDate", endDate);
+        return session.selectList("ScheduleMapper.selectByDateRange", param);
+    }
+
+    /* 일정 등록 */
+    @Override
+    public int insert(ScheduleDto schedule) {
+        return session.insert("ScheduleMapper.insert", schedule);
+    }
+
+    /* 일정 수정 */
+    @Override
+    public int update(ScheduleDto schedule) {
+        return session.update("ScheduleMapper.update", schedule);
+    }
+
+    /* 일정 삭제 */
+    @Override
+    public int delete(int shNum) {
+        return session.delete("ScheduleMapper.delete", shNum);
+    }
+    
+}

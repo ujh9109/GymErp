@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ScheduleMapper">
+
+  <!-- ====================== 공통 ResultMap ====================== -->
+  <resultMap id="ScheduleMap" type="com.example.gymerp.dto.ScheduleDto">
+    <id property="shNum" column="shNum" />
+    <result property="empNum" column="empNum" />
+    <result property="codeBid" column="codeBid" />
+    <result property="startTime" column="startTime" />
+    <result property="endTime" column="endTime" />
+    <result property="memo" column="memo" />
+    <result property="codeBName" column="codeBName" />
+    <result property="empName" column="empName" />
+    <result property="memName" column="memName" />
+  </resultMap>
+
+  <!-- 전체 일정 조회  -->
+  <select id="selectAll" resultMap="ScheduleMap">
+    SELECT 
+      s.shNum,s.empNum,
+      s.codeBid,s.startTime,
+      s.endTime,s.memo,
+      e.empName,cb.name AS codeBName,m.memName
+    FROM SCHEDULE s
+      JOIN Employee e ON s.empNum = e.empNum
+      LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
+      LEFT JOIN Registration r ON s.shNum = r.shNum
+      LEFT JOIN Member m ON r.memNum = m.memNum
+    ORDER BY s.startTime ASC
+  </select>
+
+  <!--  단건 조회 -->
+  <select id="selectByShNum" parameterType="int" resultMap="ScheduleMap">
+    SELECT 
+      s.shNum,s.empNum,
+      s.codeBid,s.startTime,
+      s.endTime,s.memo,
+      e.empName,cb.name AS codeBName,
+      m.memName
+    FROM SCHEDULE s
+      JOIN Employee e ON s.empNum = e.empNum
+      LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
+      LEFT JOIN Registration r ON s.shNum = r.shNum
+      LEFT JOIN Member m ON r.memNum = m.memNum
+    WHERE s.shNum = #{shNum}
+  </select>
+
+  <!--  직원별 일정 조회  -->
+  <select id="selectByEmpNum" parameterType="int" resultMap="ScheduleMap">
+    SELECT 
+      s.shNum,s.empNum,
+      s.codeBid,s.startTime,
+      s.endTime,s.memo,
+      e.empName,cb.name AS codeBName,
+      m.memName
+    FROM SCHEDULE s
+      JOIN Employee e ON s.empNum = e.empNum
+      LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
+      LEFT JOIN Registration r ON s.shNum = r.shNum
+      LEFT JOIN Member m ON r.memNum = m.memNum
+    WHERE s.empNum = #{empNum}
+    ORDER BY s.startTime ASC
+  </select>
+
+  <!--  날짜 범위 조회 -->
+  <select id="selectByDateRange" resultMap="ScheduleMap">
+    SELECT 
+      s.shNum,s.empNum,
+      s.codeBid,s.startTime,
+      s.endTime,s.memo,
+      e.empName,cb.name AS codeBName,
+      m.memName
+    FROM SCHEDULE s
+      JOIN Employee e ON s.empNum = e.empNum
+      LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
+      LEFT JOIN Registration r ON s.shNum = r.shNum
+      LEFT JOIN Member m ON r.memNum = m.memNum
+    WHERE s.startTime BETWEEN #{startDate} AND #{endDate}
+    ORDER BY s.startTime ASC
+  </select>
+
+  <!--  일정 등록  -->
+  <insert id="insert" parameterType="com.example.gymerp.dto.ScheduleDto">
+    <selectKey keyProperty="shNum" resultType="int" order="BEFORE">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
+    INSERT INTO SCHEDULE (
+       SHNUM, EMPNUM, CODEBID, STARTTIME, ENDTIME, MEMO, REFTYPE
+    ) VALUES (
+    #{shNum},#{empNum},NVL(#{codeBid, jdbcType=VARCHAR}, 'SCHEDULE-PT'),
+    #{startTime},#{endTime},#{memo},'PT'
+    )
+  </insert>
+
+  <!--  일정 수정  -->
+  <update id="update" parameterType="com.example.gymerp.dto.ScheduleDto">
+    UPDATE SCHEDULE
+    SET
+      empNum = #{empNum},
+      codeBid = #{codeBid, jdbcType=VARCHAR},
+      startTime = #{startTime},
+      endTime = #{endTime},
+      memo = #{memo}
+    WHERE shNum = #{shNum}
+  </update>
+
+  <!-- 일정 삭제  -->
+  <delete id="delete" parameterType="int">
+    DELETE FROM SCHEDULE WHERE shNum = #{shNum}
+  </delete>
+
+</mapper>

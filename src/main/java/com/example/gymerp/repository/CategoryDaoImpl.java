@@ -28,4 +28,10 @@ public class CategoryDaoImpl implements CategoryDao{
 		session.insert("category.insert", dto);
 		
 	}
+	
+	// 일정 목록 
+	@Override
+	public List<CodeDto> getScheduleCodes() {
+		return session.selectList("category.getScheduleCodes");
+	}
 }
