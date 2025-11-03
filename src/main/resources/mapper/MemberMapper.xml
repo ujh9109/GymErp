@@ -71,18 +71,12 @@
         WHERE memNum = #{memNum}
     </delete>
     
-    
-    
-    
-    
-    
     <!-- 이용내역 DB 관련 내용입니다.  -->
     
      <!-- 회원 이름 단건 조회 (로그용) -->
 
 
     <!-- 회원 이름 조회 -->
-
     <select id="selectMemberNameById" parameterType="int" resultType="string">
         SELECT memName
         FROM MEMBER
@@ -104,7 +98,7 @@
         WHERE memNum = #{memNum}
     </update>
 
-    <!-- 검색 기능 -->
+    <!-- 회원 검색 -->
     <select id="search" resultType="MemberDto">
         SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
                memAddr, memCreated, memUpdated, memProfile, memNote

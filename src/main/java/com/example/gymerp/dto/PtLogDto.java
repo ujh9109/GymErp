@@ -24,17 +24,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class PtLogDto {
-
+	
     private Long usageId;            // 이용내역 고유번호 (PK)
     private Long memNum;             // 회원 번호 (FK)
     private Long empNum;             // 트레이너(직원) 번호 (FK)
-    private String trainerName;      // 트레이너 이름
-    private String memberName;       // 회원 이름
-
-    private String status;           // 상태 (충전 / 소비 / 변경 / 환불)
-    private Integer countChange;     // 이용횟수 변화량 (+ 충전, - 차감, - 환불)
-    private Integer totalAmount;     // 실적 금액 (판매/환불 기준)
-    private Integer consumeAmount;   // 소비 금액 (PT 이용 시 결제 차감)
-
+   
+    private String status;           // 상태 (충전 / 소비 / 환불)
+    private Long countChange;     	 // 이용횟수 변화량 (+ 충전, - 차감, - 환불)
     private LocalDateTime createdAt; // 생성일자 (로그 발생 시각)
+    private Long salesId;			 // 판매ID
+    private Long regId; 			 // PT등록 ID
 }

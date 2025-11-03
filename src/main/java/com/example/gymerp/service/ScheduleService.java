@@ -6,12 +6,24 @@ import java.util.List;
 import com.example.gymerp.dto.ScheduleDto;
 
 public interface ScheduleService {
-    Integer create(ScheduleDto dto);
-    void update(ScheduleDto dto);
-    void remove(Integer shNum);
-    ScheduleDto get(Integer shNum);
+    // 전체 일정 조회
+    List<ScheduleDto> getAllSchedules();
 
-    // ▼ LocalDateTime으로 맞춤
-    List<ScheduleDto> getRange(LocalDateTime from, LocalDateTime to, Integer empNum, String refType);
-    void updateTime(Integer shNum, LocalDateTime startTime, LocalDateTime endTime);
+    // 단건 조회 (상세보기)
+    ScheduleDto getScheduleById(int shNum);
+
+    // 직원별 일정 조회
+    List<ScheduleDto> getSchedulesByEmpNum(int empNum);
+
+    // 날짜 범위별 일정 조회
+    List<ScheduleDto> getSchedulesByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+
+    // 일정 등록
+    int createSchedule(ScheduleDto schedule);
+
+    // 일정 수정
+    int updateSchedule(ScheduleDto schedule);
+
+    // 일정 삭제
+    int deleteSchedule(int shNum);
 }

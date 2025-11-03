@@ -2,9 +2,10 @@
 package com.example.gymerp.controller;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,50 +19,59 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ScheduleController {
 
-    private final ScheduleService service;
+    private final ScheduleService scheduleService;
 
-    // ✅ 문자열(ISO_DATE_TIME) → LocalDateTime
-    private static LocalDateTime ldt(String s){
-        if (s == null || s.isBlank()) return null;
-        return LocalDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME);
+
+    // 전체일정 조회 
+    @GetMapping("/schedule/all")
+    public ResponseEntity<List<ScheduleDto>> getAllSchedules() {
+        List<ScheduleDto> list = scheduleService.getAllSchedules();
+        return ResponseEntity.ok(list);
     }
 
-    @PostMapping("/schedules")
-    public ResponseEntity<Integer> create(@RequestBody ScheduleDto dto) {
-        return ResponseEntity.ok(service.create(dto));
+    // 일정 상세 조회
+    @GetMapping("/schedule/{shNum}")
+    public ResponseEntity<ScheduleDto> getScheduleById(@PathVariable int shNum) {
+        ScheduleDto dto = scheduleService.getScheduleById(shNum);
+        return ResponseEntity.ok(dto);
     }
 
-    @GetMapping("/schedules/{shNum}")
-    public ScheduleDto get(@PathVariable Integer shNum) {
-        return service.get(shNum);
+    // 직원별 일정 조회
+    @GetMapping("/schedule/emp/{empNum}")
+    public ResponseEntity<List<ScheduleDto>> getSchedulesByEmp(@PathVariable int empNum) {
+        List<ScheduleDto> list = scheduleService.getSchedulesByEmpNum(empNum);
+        return ResponseEntity.ok(list);
     }
 
-    @PutMapping("/schedules/{shNum}")
-    public void update(@PathVariable Integer shNum, @RequestBody ScheduleDto dto) {
-        dto.setShNum(shNum);
-        service.update(dto);
+   	// 날짜 범위 조회 (달력)
+    @GetMapping("/schedule/range")
+    public ResponseEntity<List<ScheduleDto>> getSchedulesByDateRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
+    ) {
+        List<ScheduleDto> list = scheduleService.getSchedulesByDateRange(startDate, endDate);
+        return ResponseEntity.ok(list);
     }
 
-    @DeleteMapping("/schedules/{shNum}")
-    public void delete(@PathVariable Integer shNum) {
-        service.remove(shNum);
+    // 일정 등록 
+    @PostMapping("/schedule/add")
+    public ResponseEntity<String> createSchedule(@RequestBody ScheduleDto scheduleDto) {
+        scheduleService.createSchedule(scheduleDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body("일정이 등록되었습니다.");
     }
 
-    @GetMapping("/schedules")
-    public List<ScheduleDto> list(
-            @RequestParam(required=false) String from,
-            @RequestParam(required=false) String to,
-            @RequestParam(required=false) Integer empNum,
-            @RequestParam(required=false) String refType) {
-        // ✅ LocalDateTime 으로 변환해서 전달
-        return service.getRange(ldt(from), ldt(to), empNum, refType);
+    // 일정 수정 
+    @PutMapping("/schedule/update")
+    public ResponseEntity<String> updateSchedule(@RequestBody ScheduleDto scheduleDto) {
+        scheduleService.updateSchedule(scheduleDto);
+        return ResponseEntity.ok("일정이 수정되었습니다.");
     }
 
-    @PatchMapping("/schedules/{shNum}/time")
-    public void updateTime(@PathVariable Integer shNum,
-                           @RequestParam String startTime,
-                           @RequestParam String endTime) {
-        // ✅ LocalDateTime 으로 변환해서 전달
-        service.updateTime(shNum, ldt(startTime), ldt(endTime));
+    // 일정 삭제
+    @DeleteMapping("/schedule/delete/{shNum}")
+    public ResponseEntity<String> deleteSchedule(@PathVariable int shNum) {
+        scheduleService.deleteSchedule(shNum);
+        return ResponseEntity.ok("일정이 삭제되었습니다.");
     }
+
 }

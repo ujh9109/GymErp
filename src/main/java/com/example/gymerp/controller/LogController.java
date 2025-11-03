@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1") 
+@RequestMapping("/v1/log")
 @RequiredArgsConstructor
 public class LogController {
 
@@ -18,63 +18,95 @@ public class LogController {
        [회원권 관련]
     ================================ */
 
-    @GetMapping("/log/voucher/check")
+    // 회원권 유효 여부 확인
+    @GetMapping("/voucher/check")
     public Map<String, Object> checkVoucher(@RequestParam Long memNum) {
         boolean valid = logService.isVoucherValid(memNum);
         return Map.of("memNum", memNum, "isValid", valid);
     }
 
-    @PostMapping("/log/voucher")
-    public Map<String, Object> saveOrUpdateVoucher(@RequestBody VoucherLogDto dto) {
-        logService.saveOrUpdateVoucher(dto);
-        return Map.of("message", "회원권 로그가 등록 또는 갱신되었습니다.");
+    // 회원권 단건 조회
+    @GetMapping("/voucher/{memNum}")
+    public Map<String, Object> getVoucher(@PathVariable Long memNum) {
+        VoucherLogDto dto = logService.getVoucherByMember(memNum);
+        return Map.of("voucher", dto);
     }
 
-    @GetMapping("/log/voucher/{memNum}")
-    public Map<String, Object> getVoucherDetail(@PathVariable Long memNum) {
-        VoucherLogDto voucher = logService.getVoucherByMember(memNum);
-        return Map.of("voucher", voucher);
+    // 회원권 신규 등록
+    @PostMapping("/voucher")
+    public Map<String, Object> insertVoucher(@RequestBody VoucherLogDto dto) {
+        logService.insertVoucherLog(dto);
+        return Map.of("message", "회원권이 등록되었습니다.");
     }
 
-    @PutMapping("/log/voucher/{voucherId}")
-    public Map<String, Object> updateVoucherLogManual(@PathVariable Long voucherId, @RequestBody VoucherLogDto dto) {
-        dto.setVoucherId(voucherId);
-        logService.updateVoucherLogManual(dto);
-        return Map.of("message", "회원권 로그 수정이 완료되었습니다.");
+    // 회원권 기간 연장
+    @PutMapping("/voucher/extend/{memNum}")
+    public Map<String, Object> extendVoucher(@PathVariable Long memNum, @RequestBody VoucherLogDto dto) {
+        dto.setMemNum(memNum);
+        logService.extendVoucherLog(dto);
+        return Map.of("message", "회원권이 연장되었습니다.");
+    }
+
+    // 회원권 부분환불
+    @PutMapping("/voucher/refund/{memNum}")
+    public Map<String, Object> refundVoucher(@PathVariable Long memNum, @RequestBody VoucherLogDto dto) {
+        dto.setMemNum(memNum);
+        logService.partialRefundVoucherLog(dto);
+        return Map.of("message", "회원권이 부분환불되었습니다.");
+    }
+
+    // 회원권 전체환불 (회귀)
+    @PutMapping("/voucher/rollback/{memNum}")
+    public Map<String, Object> rollbackVoucher(@PathVariable Long memNum, @RequestBody VoucherLogDto dto) {
+        dto.setMemNum(memNum);
+        logService.rollbackVoucherLog(dto);
+        return Map.of("message", "회원권이 전체환불(회귀) 처리되었습니다.");
     }
 
     /* ================================
        [PT 관련]
     ================================ */
 
-    @PostMapping("/log/pt/charge")
-    public Map<String, Object> insertPtChargeLog(@RequestBody PtLogDto dto) {
+    // PT 충전 로그 등록
+    @PostMapping("/pt/charge")
+    public Map<String, Object> addPtCharge(@RequestBody PtLogDto dto) {
         logService.addPtChargeLog(dto);
         return Map.of("message", "PT 충전 로그가 등록되었습니다.");
     }
 
-    @PostMapping("/log/pt/consume")
-    public Map<String, Object> insertPtConsumeLog(@RequestBody PtLogDto dto) {
-        logService.addPtConsumeLog(dto);
-        return Map.of("message", "PT 소비 로그가 등록되었습니다.");
-    }
-
-    @PostMapping("/log/pt/change")
-    public Map<String, Object> insertPtChangeLog(@RequestBody PtLogDto dto) {
-        logService.addPtChangeLog(dto);
-        return Map.of("message", "PT 트레이너 변경 로그가 등록되었습니다.");
-    }
-
-    @PutMapping("/log/pt/{usageId}")
-    public Map<String, Object> updatePtLogManual(@PathVariable Long usageId, @RequestBody PtLogDto dto) {
+    // PT 연장 로그 등록
+    @PutMapping("/pt/extend/{usageId}")
+    public Map<String, Object> extendPt(@PathVariable Long usageId, @RequestBody PtLogDto dto) {
         dto.setUsageId(usageId);
-        logService.updatePtLogManual(dto);
-        return Map.of("message", "PT 로그 수정이 완료되었습니다.");
+        logService.extendPtLog(dto);
+        return Map.of("message", "PT 로그가 연장되었습니다.");
     }
 
-    @GetMapping("/log/pt/{memNum}")
-    public Map<String, Object> getRemainingPtCount(@PathVariable Long memNum) {
+    // PT 부분환불 로그 등록
+    @PostMapping("/pt/refund/partial")
+    public Map<String, Object> addPtPartialRefund(@RequestBody PtLogDto dto) {
+        logService.addPtPartialRefundLog(dto);
+        return Map.of("message", "PT 부분환불 로그가 등록되었습니다.");
+    }
+
+    // PT 전체환불 로그 등록
+    @PostMapping("/pt/refund/full")
+    public Map<String, Object> addPtFullRefund(@RequestBody PtLogDto dto) {
+        logService.addPtFullRefundLog(dto);
+        return Map.of("message", "PT 전체환불 로그가 등록되었습니다.");
+    }
+
+    // 남은 PT 횟수 조회
+    @GetMapping("/pt/{memNum}/remaining")
+    public Map<String, Object> getRemainingPt(@PathVariable Long memNum) {
         int remaining = logService.getRemainingPtCount(memNum);
         return Map.of("memNum", memNum, "remainingCount", remaining);
+    }
+
+    // 특정 환불 로그 조회 (refundId = usageId)
+    @GetMapping("/pt/refund/{refundId}")
+    public Map<String, Object> getRefundLog(@PathVariable Long refundId) {
+        PtLogDto dto = logService.getPtLogByRefundId(refundId);
+        return Map.of("refundLog", dto);
     }
 }

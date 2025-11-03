@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import com.example.gymerp.dto.EmpDto;
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ServiceDto;
-
 import lombok.RequiredArgsConstructor;
 
 @Primary
@@ -19,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 public class ModalDaoImpl implements ModalDao {
 
     private final SqlSession sqlSession;
-    
 
     /* ================================
        서비스 상품 선택 모달
@@ -27,15 +25,20 @@ public class ModalDaoImpl implements ModalDao {
 
     // 서비스 상품 목록 조회
     @Override
-    public List<ServiceDto> getServiceModalList(Map<String, Object> param) {
-        return sqlSession.selectList("ModalMapper.getServiceModalList", param);
+    public List<ServiceDto> getServiceModalList(ServiceDto dto) {
+        return sqlSession.selectList("ModalMapper.getServiceModalList", dto);
     }
 
     // 서비스 상품 전체 개수 조회
     @Override
-    public int getServiceModalCount(Map<String, Object> param) {
-        return sqlSession.selectOne("ModalMapper.getServiceModalCount", param);
+    public int getServiceModalCount(ServiceDto dto) {
+        return sqlSession.selectOne("ModalMapper.getServiceModalCount", dto);
     }
+
+    /* ================================
+       서비스 상품 선택 모달 끝
+    ================================= */
+    
     
     /* ================================
     실물 상품 선택 모달
@@ -69,5 +72,4 @@ public class ModalDaoImpl implements ModalDao {
 	/* =============================
 		 직원 모달 끝
 	===============================*/
-    
 }

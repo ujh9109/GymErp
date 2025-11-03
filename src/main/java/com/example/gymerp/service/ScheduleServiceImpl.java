@@ -16,39 +16,56 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class ScheduleServiceImpl implements ScheduleService {
+    private final ScheduleDao scheduleDao;
 
-    private final ScheduleDao dao;
-
+    // 전체 일정 조회 
     @Override
-    public Integer create(ScheduleDto dto) {
-        dao.insert(dto);                 // selectKey로 dto.shNum 채워짐
-        return dto.getShNum();
+    public List<ScheduleDto> getAllSchedules() {
+        return scheduleDao.selectAll();
     }
 
+    //단건 조회 
     @Override
-    public void update(ScheduleDto dto) {
-        dao.update(dto);
+    public ScheduleDto getScheduleById(int shNum) {
+        return scheduleDao.selectByShNum(shNum);
     }
 
+    //직원별 일정 조회 
     @Override
-    public void remove(Integer shNum) {
-        dao.delete(shNum);
+    public List<ScheduleDto> getSchedulesByEmpNum(int empNum) {
+        return scheduleDao.selectByEmpNum(empNum);
     }
 
+    // 날짜 범위 조회
     @Override
-    @Transactional(readOnly = true)
-    public ScheduleDto get(Integer shNum) {
-        return dao.selectOne(shNum);
+    public List<ScheduleDto> getSchedulesByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        return scheduleDao.selectByDateRange(startDate, endDate);
     }
 
+    //일정 등록
     @Override
-    @Transactional(readOnly = true)
-    public List<ScheduleDto> getRange(LocalDateTime from, LocalDateTime to, Integer empNum, String refType) {
-        return dao.selectRange(from, to, empNum, refType); // ✔ 인터페이스와 동일 시그니처
+    public int createSchedule(ScheduleDto schedule) {
+        if (schedule.getEmpNum() <= 0) {
+            throw new IllegalArgumentException("직원번호가 유효하지 않음");
+        }
+        return scheduleDao.insert(schedule);
     }
 
+    //일정 수정 
     @Override
-    public void updateTime(Integer shNum, LocalDateTime startTime, LocalDateTime endTime) {
-        dao.updateTime(shNum, startTime, endTime);         // ✔ 인터페이스와 동일 시그니처
+    public int updateSchedule(ScheduleDto schedule) {
+        if (schedule.getShNum() <= 0) {
+            throw new IllegalArgumentException("수정할 일정 번호가 유효하지 않음");
+        }
+        return scheduleDao.update(schedule);
+    }
+
+    //일정 삭제
+    @Override
+    public int deleteSchedule(int shNum) {
+        if (shNum <= 0) {
+            throw new IllegalArgumentException("삭제할 일정 번호가 유효하지 않음");
+        }
+        return scheduleDao.delete(shNum);
     }
 }
