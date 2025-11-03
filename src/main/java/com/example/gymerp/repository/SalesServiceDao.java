@@ -35,4 +35,23 @@ public interface SalesServiceDao {
 
     // PT_LOG 생성 후 refundId 연동
     int updateRefundIdBySalesId(Map<String, Object> param);
+
+
+    // ===============================
+    // [판매 내역 조회 - 필터 + 스크롤]
+    // ===============================
+
+    // 조건에 따른 전체 개수 조회
+    int selectSalesServiceCount(Map<String, Object> params);
+
+    // 조건 + 페이징(스크롤) 기반 판매 내역 조회
+    List<SalesService> selectPagedSalesServices(Map<String, Object> params);
+
+
+    // ===============================
+    // [서비스 매출 통계 조회]
+    // ===============================
+
+    // 기간 / 품목명 / 회원 / 직원 기준 서비스 매출 합계 조회
+    List<Map<String, Object>> selectServiceSalesAnalytics(Map<String, Object> params);
 }
