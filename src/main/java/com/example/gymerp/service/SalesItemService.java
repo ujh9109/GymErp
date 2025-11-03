@@ -23,9 +23,9 @@ public interface SalesItemService {
 	List<Map<String, Object>> getItemSalesAnalytics(String startDate, String endDate, List<Integer> itemIds, Integer memNum,
 			Integer empNum);
 
-<<<<<<< HEAD
-=======
+
+
 	Map<String, List<Map<String, Object>>> getItemSalesGraphData(String startDate, String endDate, String groupByUnit);
->>>>>>> b71d6839ccde6b621044ec21a6d349700b5b6ac9
+
 	
 }
