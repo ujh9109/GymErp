@@ -73,14 +73,6 @@
 
     
     
-    <select id="selectAll" resultType="MemberDto">
-	    SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
-	           memAddr, memCreated, memUpdated, memProfile, memNote
-	    FROM MEMBER
-	    ORDER BY memCreated DESC
-	</select>
-    
-    
     
     
     
@@ -113,7 +105,7 @@
         WHERE memNum = #{memNum}
     </update>
 
-    <!-- 검색 기능 -->
+    <!-- 회원 검색 -->
     <select id="search" resultType="MemberDto">
         SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
                memAddr, memCreated, memUpdated, memProfile, memNote
