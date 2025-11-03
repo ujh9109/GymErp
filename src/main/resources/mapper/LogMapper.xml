@@ -5,24 +5,8 @@
 <mapper namespace="LogMapper">
 
     <!-- ===============================
-         [회원권 관련]
+         [회원권 LOG - 단일 Row 관리]
     =============================== -->
-
-    <!-- 회원권 유효성 확인 -->
-    <select id="checkVoucherValid" parameterType="long" resultType="int">
-        SELECT COUNT(*)
-        FROM voucher_log
-        WHERE memNum = #{memNum}
-          AND endDate >= SYSDATE
-    </select>
-
-    <!-- 회원권 만료 여부 확인 -->
-    <select id="checkVoucherExpired" parameterType="long" resultType="int">
-        SELECT COUNT(*)
-        FROM voucher_log
-        WHERE memNum = #{memNum}
-          AND endDate &lt; SYSDATE
-    </select>
 
     <!-- 회원권 단건 조회 -->
     <select id="selectVoucherByMember" parameterType="long" resultType="VoucherLogDto">
@@ -31,153 +15,99 @@
         WHERE memNum = #{memNum}
     </select>
 
+    <!-- 회원권 유효 여부 확인 -->
+    <select id="checkVoucherValid" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM voucher_log
+        WHERE memNum = #{memNum}
+          AND endDate &gt;= SYSDATE
+    </select>
+
     <!-- 회원권 신규 등록 -->
     <insert id="insertVoucherLog" parameterType="VoucherLogDto">
         <selectKey keyProperty="voucherId" resultType="long" order="BEFORE">
             SELECT voucher_log_seq.NEXTVAL FROM DUAL
         </selectKey>
-        INSERT INTO voucher_log (
-            voucherId, memNum, memberName, startDate, endDate
-        ) VALUES (
-            #{voucherId}, #{memNum}, #{memberName}, SYSDATE, SYSDATE + #{period}
-        )
+        INSERT INTO voucher_log (voucherId, memNum, memberName, startDate, endDate)
+        VALUES (#{voucherId}, #{memNum}, #{memberName}, #{startDate}, #{endDate})
     </insert>
 
     <!-- 회원권 기간 연장 -->
-    <update id="updateVoucherLog" parameterType="VoucherLogDto">
+    <update id="extendVoucherLog" parameterType="VoucherLogDto">
         UPDATE voucher_log
-        SET 
-            startDate = CASE WHEN endDate &lt; SYSDATE THEN SYSDATE ELSE startDate END,
-            endDate   = CASE WHEN endDate &lt; SYSDATE THEN SYSDATE + #{period} ELSE endDate + #{period} END
+        SET endDate = #{endDate}
         WHERE memNum = #{memNum}
     </update>
 
-    <!-- 회원권 로그 직접 수정 -->
-    <update id="updateVoucherLogManual" parameterType="VoucherLogDto">
+    <!-- 회원권 만료 후 재시작 -->
+    <update id="renewVoucherLog" parameterType="VoucherLogDto">
         UPDATE voucher_log
-        SET 
-            memberName = #{memberName},
-            startDate  = #{startDate},
-            endDate    = #{endDate}
+        SET startDate = SYSDATE,
+            endDate = #{endDate}
         WHERE memNum = #{memNum}
     </update>
 
-    <!-- 회원권 삭제 또는 회귀 처리 -->
-    <!-- 
-      ① 신규 회원권만 존재할 때: 완전 삭제
-      ② 기존 회원권 이력 존재 시: 가장 최근 endDate를 이전 endDate로 복귀
-      ③ 이용 중(startDate < SYSDATE): 아무 처리 안 함 (Service 단에서 예외 처리)
-    -->
-    <delete id="rollbackOrDeleteVoucherLog" parameterType="long">
-        <!-- ① 신규 회원 (row 1개) → 삭제 -->
-        DELETE FROM voucher_log
-        WHERE memNum = #{memNum}
-          AND (SELECT COUNT(*) FROM voucher_log WHERE memNum = #{memNum}) = 1
-          AND startDate >= SYSDATE;
-
-        <!-- ② 기존 회원 (여러 row) → rollback -->
+    <!-- 회원권 부분환불 (endDate 단축) -->
+    <update id="partialRefundVoucherLog" parameterType="VoucherLogDto">
         UPDATE voucher_log
-        SET endDate = (
-            SELECT MAX(endDate)
-            FROM voucher_log
-            WHERE memNum = #{memNum}
-              AND endDate &lt; (
-                  SELECT MAX(endDate)
-                  FROM voucher_log
-                  WHERE memNum = #{memNum}
-              )
-        )
+        SET endDate = #{endDate}
         WHERE memNum = #{memNum}
-          AND voucherId = (
-              SELECT MAX(voucherId)
-              FROM voucher_log
-              WHERE memNum = #{memNum}
-          );
-    </delete>
+    </update>
 
+    <!-- 회원권 전체환불 (이전 상태로 복구) -->
+    <update id="rollbackVoucherLog" parameterType="VoucherLogDto">
+        UPDATE voucher_log
+        SET endDate = #{endDate}
+        WHERE memNum = #{memNum}
+    </update>
 
     <!-- ===============================
-         [PT 로그 관련]
+         [PT LOG - 누적 로그 관리]
     =============================== -->
 
-    <!-- PT 충전 로그 등록 -->
+    <!-- PT 신규 충전 로그 등록 -->
     <insert id="insertPtChargeLog" parameterType="PtLogDto">
         <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
             SELECT pt_log_seq.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO pt_log (
-            usageId, memNum, empNum, trainerName, memberName,
-            status, countChange, totalAmount, consumeAmount, createdAt
+            usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
         ) VALUES (
-            #{usageId}, #{memNum}, #{empNum}, #{trainerName}, #{memberName},
-            '충전', #{countChange}, #{totalAmount}, 0, SYSDATE
+            #{usageId}, #{memNum}, #{empNum}, '충전', #{countChange}, SYSDATE, #{salesId}, #{regId}
         )
     </insert>
 
-    <!-- PT 소비 로그 등록 -->
-    <insert id="insertPtConsumeLog" parameterType="PtLogDto">
+    <!-- PT 연장 로그 (기존 row 수정) -->
+    <update id="updatePtLogExtension" parameterType="PtLogDto">
+        UPDATE pt_log
+        SET countChange = #{countChange},
+            createdAt = SYSDATE
+        WHERE usageId = #{usageId}
+    </update>
+
+    <!-- PT 부분환불 로그 추가 -->
+    <insert id="insertPtPartialRefundLog" parameterType="PtLogDto">
         <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
             SELECT pt_log_seq.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO pt_log (
-            usageId, memNum, empNum, trainerName, memberName,
-            status, countChange, totalAmount, consumeAmount, createdAt
+            usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
         ) VALUES (
-            #{usageId}, #{memNum}, #{empNum}, #{trainerName}, #{memberName},
-            '소비', -1, 0, #{consumeAmount}, SYSDATE
+            #{usageId}, #{memNum}, #{empNum}, '부분환불', -#{countChange}, SYSDATE, #{salesId}, #{regId}
         )
     </insert>
 
-    <!-- PT 변경 로그 등록 -->
-    <insert id="insertPtChangeLog" parameterType="PtLogDto">
-        <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
-            SELECT pt_log_seq.NEXTVAL FROM DUAL
-        </selectKey>
-        INSERT INTO pt_log (
-            usageId, memNum, empNum, trainerName, memberName,
-            status, countChange, totalAmount, consumeAmount, createdAt
-        ) VALUES (
-            #{usageId}, #{memNum}, #{empNum}, #{trainerName}, #{memberName},
-            '변경', #{countChange}, #{totalAmount}, 0, SYSDATE
-        )
-    </insert>
-
-    <!-- PT 전체 환불 로그 등록 -->
+    <!-- PT 전체환불 로그 추가 -->
     <insert id="insertPtFullRefundLog" parameterType="PtLogDto">
         <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
             SELECT pt_log_seq.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO pt_log (
-            usageId, memNum, empNum, trainerName, memberName,
-            status, countChange, totalAmount, consumeAmount, createdAt
+            usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
         ) VALUES (
-            #{usageId}, #{memNum}, #{empNum}, #{trainerName}, #{memberName},
-            '환불', -#{countChange}, -#{totalAmount}, 0, SYSDATE
+            #{usageId}, #{memNum}, #{empNum}, '전체환불', -#{countChange}, SYSDATE, #{salesId}, #{regId}
         )
     </insert>
-
-    <!-- PT 로그 직접 수정 -->
-    <!-- 복합키(memNum + totalAmount + createdAt) 기반 -->
-    <update id="updatePtLogManual" parameterType="PtLogDto">
-        UPDATE pt_log
-        SET 
-            countChange   = #{countChange},
-            totalAmount   = #{totalAmount},
-            consumeAmount = #{consumeAmount}
-        WHERE memNum      = #{memNum}
-          AND totalAmount = #{totalAmount}
-          AND createdAt   = #{createdAt}
-          AND status      = '충전'
-    </update>
-
-    <!-- PT 로그 삭제 (예외적 정리용) -->
-    <delete id="deletePtLogBySaleInfo" parameterType="map">
-        DELETE FROM pt_log
-        WHERE memNum      = #{memNum}
-          AND totalAmount = #{totalAmount}
-          AND createdAt   = #{createdAt}
-          AND status      = '충전'
-    </delete>
 
     <!-- 남은 PT 횟수 조회 -->
     <select id="selectRemainingPtCount" parameterType="long" resultType="int">
@@ -186,34 +116,47 @@
         WHERE memNum = #{memNum}
     </select>
 
-    <!-- 최근 트레이너 번호 조회 -->
-    <select id="selectOldTrainerEmpNum" parameterType="long" resultType="long">
-        SELECT empNum
+    <!-- 특정 환불ID로 PT 로그 조회 -->
+    <select id="selectPtLogByUsageId" parameterType="long" resultType="PtLogDto">
+        SELECT usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
         FROM pt_log
-        WHERE memNum = #{memNum}
-          AND usageId = (SELECT MAX(usageId) FROM pt_log WHERE memNum = #{memNum})
+        WHERE usageId = #{refundId}
     </select>
-
-    <!-- 최근 트레이너 이름 조회 -->
-    <select id="selectOldTrainerName" parameterType="long" resultType="string">
-        SELECT trainerName
-        FROM pt_log
-        WHERE memNum = #{memNum}
-          AND usageId = (SELECT MAX(usageId) FROM pt_log WHERE memNum = #{memNum})
-    </select>
-
-    <!-- 총 판매 횟수 (PT) - pt_log 기준 -->
-    <select id="selectTotalPtCount" parameterType="long" resultType="int">
-        SELECT NVL(SUM(CASE WHEN status IN ('충전', '환불', '변경') THEN countChange ELSE 0 END), 0)
-        FROM pt_log
-        WHERE memNum = #{memNum}
-    </select>
-
-    <!-- 총 판매 금액 (PT) - pt_log 기준 -->
-    <select id="selectTotalPtAmount" parameterType="long" resultType="int">
-        SELECT NVL(SUM(CASE WHEN status IN ('충전', '환불', '변경') THEN totalAmount ELSE 0 END), 0)
-        FROM pt_log
-        WHERE memNum = #{memNum}
-    </select>
+    
+    <!-- =============================== -->
+	<!-- [PT 예약 / 취소 관련] -->
+	<!-- =============================== -->
+	
+	<!-- PT 예약 로그 등록 (소비) -->
+	<insert id="insertPtConsumeLog" parameterType="PtLogDto">
+	    <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
+	        SELECT pt_log_seq.NEXTVAL FROM DUAL
+	    </selectKey>
+	    INSERT INTO pt_log (
+	        usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
+	    ) VALUES (
+	        #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL, #{regId}
+	    )
+	</insert>
+	
+	<!-- PT 예약 취소 로그 등록 (복구) -->
+	<insert id="insertPtCancelLog" parameterType="PtLogDto">
+	    <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
+	        SELECT pt_log_seq.NEXTVAL FROM DUAL
+	    </selectKey>
+	    INSERT INTO pt_log (
+	        usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
+	    ) VALUES (
+	        #{usageId}, #{memNum}, #{empNum}, '예약취소', 1, SYSDATE, NULL, NULL
+	    )
+	</insert>
+	
+	<!-- PT 등록번호 기준으로 기존 소비 로그 조회 -->
+	<select id="selectPtLogByRegId" parameterType="long" resultType="PtLogDto">
+	    SELECT usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
+	    FROM pt_log
+	    WHERE regId = #{regId}
+	      AND status = '소비'
+	</select>
 
 </mapper>

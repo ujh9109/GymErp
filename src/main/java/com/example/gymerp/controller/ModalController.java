@@ -31,13 +31,26 @@ public class ModalController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit) {
 
-        List<ServiceDto> list = modalService.getServiceModalList(keyword, page, limit);
-        int totalCount = modalService.getServiceModalCount(keyword);
+        // DTO 객체 생성 및 세팅
+        ServiceDto dto = new ServiceDto();
+        dto.setKeyword(keyword);
 
+        // 🔹 페이지 계산 (Oracle ROWNUM 기준)
+        int startRow = (page - 1) * limit + 1;
+        int endRow = page * limit;
+        dto.setStartRowNum(startRow);
+        dto.setEndRowNum(endRow);
+
+        // 서비스 호출
+        List<ServiceDto> list = modalService.getServiceModalList(dto);
+        int totalCount = modalService.getServiceModalCount(dto);
+
+        // 결과 구성
         Map<String, Object> result = new HashMap<>();
         result.put("list", list);
         result.put("totalCount", totalCount);
         result.put("currentPage", page);
+        result.put("limit", limit);
 
         return result;
     }

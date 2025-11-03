@@ -8,72 +8,129 @@
 	  SELECT
 	    COALESCE( (SELECT SUM(quantity) FROM Purchase        WHERE productId = #{productId}), 0 )
 	  - COALESCE( (SELECT SUM(quantity) FROM StockAdjustment WHERE productId = #{productId}), 0 )
-	  - COALESCE( (SELECT SUM(quantity) FROM Sales_Item       WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM SalesItem       WHERE productId = #{productId}), 0 )
 	  AS availableQty
 	  FROM DUAL
 	</select>
 
 	<!-- 2-1. 입고 내역 조회 -->
-	<select id="getPurchaseList" parameterType="int" resultType="PurchaseDto">
+	<select id="getPurchaseList" parameterType="map" resultType="PurchaseDto">
 		SELECT
-			p.purchaseId,
-			p.productId,
-			p.codeBId,
-			p.createdAt,
-			p.quantity,
-			p.notes
-		FROM PURCHASE p
-		WHERE p.productId = #{productId}
-		ORDER BY p.createdAt DESC
+	        purchaseId,
+	        productId,
+	        codeBId,
+	        createdAt,
+	        quantity,
+	        notes
+	    FROM (
+	        SELECT
+	            p.purchaseId  AS purchaseId,
+	            p.productId   AS productId,
+	            p.codeBId     AS codeBId,
+	            p.createdAt   AS createdAt,
+	            p.quantity    AS quantity,
+	            p.notes       AS notes,
+	            ROW_NUMBER() OVER (ORDER BY p.createdAt DESC, p.purchaseId DESC) AS rn
+	        FROM PURCHASE p
+	        WHERE p.productId = #{productId}
+	    )
+	    WHERE rn > #{offset}
+	      AND rn &lt;= #{offset} + #{size}
+	    ORDER BY createdAt DESC, purchaseId DESC
 	</select>
 	
 	<!-- 2-2. 출고 + 판매 내역 조회 -->
 	<!-- 재고출고 테이블과, 판매 테이블 데이터 합쳐서 select 판매 테이블에 없는 칼럼은 임시 칼럼으로 생성 -->
-	<select id="getAdjustStockAndSalesList" parameterType="int" resultType="StockAdjustmentDto">
-		SELECT *
-		  FROM (
-		    SELECT
-		      sa.adjustmentId AS adjustmentId,
-		      sa.productId    AS productId,
-		      sa.codeBId      AS codeBId,
-		      sa.createdAt    AS createdAt,
-		      sa.quantity     AS quantity,
-		      sa.notes        AS notes
-		    FROM STOCKADJUSTMENT sa
-		    WHERE sa.productId = #{productId}
-		
-		    UNION ALL
-		
-		    SELECT
-		      si.itemSalesId  AS adjustmentId,
-		      si.productId    AS productId,
-		      'SALES'         AS codeBId,
-		      si.createdAt    AS createdAt,
-		      si.quantity     AS quantity,
-		      '상품 판매'      AS notes
-		    FROM SALESITEM si
-		    WHERE si.productId = #{productId}
-		  ) t
-		  ORDER BY t.createdAt DESC
+	<select id="getAdjustStockAndSalesList" parameterType="map" resultType="StockAdjustmentDto">
+		SELECT
+	        adjustmentId,
+	        productId,
+	        codeBId,
+	        createdAt,
+	        quantity,
+	        notes
+	    FROM (
+	        SELECT
+	            t.adjustmentId AS adjustmentId,
+	            t.productId    AS productId,
+	            t.codeBId      AS codeBId,
+	            t.createdAt    AS createdAt,
+	            t.quantity     AS quantity,
+	            t.notes        AS notes,
+	            ROW_NUMBER() OVER (ORDER BY t.createdAt DESC, t.adjustmentId DESC) AS rn
+	        FROM (
+	            SELECT
+	                sa.adjustmentId AS adjustmentId,
+	                sa.productId    AS productId,
+	                sa.codeBId      AS codeBId,
+	                sa.createdAt    AS createdAt,
+	                sa.quantity     AS quantity,
+	                sa.notes        AS notes
+	            FROM STOCKADJUSTMENT sa
+	            WHERE sa.productId = #{productId}
+
+	            UNION ALL
+
+	            SELECT
+	                si.itemSalesId  AS adjustmentId,
+	                si.productId    AS productId,
+	                'SALES'         AS codeBId,
+	                si.createdAt    AS createdAt,
+	                si.quantity     AS quantity,
+	                '상품 판매'      AS notes
+	            FROM SALESITEM si
+	            WHERE si.productId = #{productId}
+	        ) t
+	    )
+	    WHERE rn > #{offset}
+	      AND rn &lt;= #{offset} + #{size}
+	    ORDER BY createdAt DESC, adjustmentId DESC
 	</select>
 
-	<!-- 2-3. 현재 재고 현황 조회 -->
-	<select id="getCurrentStockList" resultType="CurrentStockDto">
+	<!-- 2-3. 현재 재고 현황 조회 (페이지) -->
+	<select id="getCurrentStockListPaged" parameterType="map" resultType="CurrentStockDto">
 		SELECT
-			pr.productId AS productId,
-			pr.name AS productName,
-			NVL(SUM(pi.quantity), 0) AS totalInbound,
-			NVL(SUM(sa.quantity), 0) AS totalOutbound,
-			NVL(SUM(si.quantity), 0) AS totalSales,
-			NVL(SUM(pi.quantity), 0)
-				- NVL(SUM(sa.quantity), 0)
-				- NVL(SUM(si.quantity), 0) AS currentStock
-		FROM PRODUCT pr
-		LEFT JOIN Purchase pi ON pr.productId = pi.productId
-		LEFT JOIN StockAdjustment sa ON pr.productId = sa.productId
-		LEFT JOIN SalesItem si ON pr.productId = si.productId
-		GROUP BY pr.productId, pr.name
-		ORDER BY pr.name ASC
+		      base.productId,
+		      base.productName,
+		      base.totalInbound,
+		      base.totalOutbound,
+		      base.totalSales,
+		      base.currentStock
+		  FROM (
+		      SELECT
+		          p.productId            AS productId,
+		          p.name                 AS productName,
+		          NVL(pi.total_in,    0) AS totalInbound,
+		          NVL(sa.total_out,   0) AS totalOutbound,
+		          NVL(si.total_sales, 0) AS totalSales,
+		          NVL(pi.total_in,0) - NVL(sa.total_out,0) - NVL(si.total_sales,0) AS currentStock,
+		          ROW_NUMBER() OVER (ORDER BY p.name ASC) AS rn
+		      FROM PRODUCT p
+		      LEFT JOIN (
+		          SELECT productId, SUM(quantity) AS total_in
+		          FROM PURCHASE
+		          GROUP BY productId
+		      ) pi ON pi.productId = p.productId
+		      LEFT JOIN (
+		          SELECT productId, SUM(quantity) AS total_out
+		          FROM STOCKADJUSTMENT
+		          GROUP BY productId
+		      ) sa ON sa.productId = p.productId
+		      LEFT JOIN (
+		          SELECT productId, SUM(quantity) AS total_sales
+		          FROM SALESITEM
+		          GROUP BY productId
+		      ) si ON si.productId = p.productId
+		      <where>
+		          <if test="keyword != null and keyword != ''">
+		              (LOWER(p.name) LIKE '%' || LOWER(#{keyword}) || '%'
+		               OR LOWER(p.codeBId) LIKE '%' || LOWER(#{keyword}) || '%')
+		          </if>
+		      </where>
+		  ) base
+		  WHERE base.rn > #{offset}
+		    AND base.rn &lt;= #{offset} + #{size}
+		  ORDER BY base.productName ASC
 	</select>
 	
 	<!-- 3-1. 입고시 Purchase Table에 row 추가 -->
