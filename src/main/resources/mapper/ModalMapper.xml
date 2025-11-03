@@ -3,45 +3,77 @@
 
 <mapper namespace="ModalMapper">
 
-    <!-- ================================
-         서비스 상품 선택 모달
-    ================================= -->
-
-    <!-- 서비스 상품 목록 조회 -->
-    <select id="getServiceModalList" resultType="ServiceDto">
-        SELECT *
-        FROM (
-            SELECT
-                ROWNUM AS rn,
-                s.serviceId,
-                s.codeBId,
-                s.name,
-                s.price,
-                s.isActive,
-                s.serviceValue,
-                s.createdAt,
-                s.updatedAt
-            FROM service s
-            WHERE s.isActive = 1
-            <if test="keyword != null and keyword != ''">
-                AND s.name LIKE '%' || #{keyword} || '%'
-            </if>
-            ORDER BY
-                CASE WHEN s.codeBId LIKE '%PT%' THEN 0 ELSE 1 END,
-                s.name DESC
-        )
-        WHERE rn BETWEEN #{startRowNum} AND #{endRowNum}
-    </select>
-
-    <!-- 서비스 상품 전체 개수 조회 -->
-    <select id="getServiceModalCount" resultType="int">
-        SELECT COUNT(*)
-        FROM service s
-        WHERE s.isActive = 1
-        <if test="keyword != null and keyword != ''">
-            AND s.name LIKE '%' || #{keyword} || '%'
-        </if>
-    </select>
+    <!-- =========================================================
+	     [서비스 상품 선택 모달]
+	     - 테이블: SERVICE
+	     - DTO: ServiceDto
+	     - 조건:
+	         · ISACTIVE = 1 (활성 상품만)
+	         · keyword 입력 시 NAME LIKE 검색
+	         · categoryCodes 존재 시 CODEBID IN 조건 필터
+	     - 정렬:
+	         · CODEBID LIKE '%PT%' → 최상위
+	         · NAME 내림차순
+	     - 페이징:
+	         · ROWNUM BETWEEN startRowNum AND endRowNum
+	========================================================= -->
+	<select id="getServiceModalList" resultType="ServiceDto">
+	    SELECT *
+	    FROM (
+	        SELECT
+	            ROWNUM AS rn,
+	            s.SERVICEID    AS serviceId,
+	            s.CODEBID      AS codeBId,
+	            s.NAME         AS name,
+	            s.PRICE        AS price,
+	            s.ISACTIVE     AS isActive,
+	            s.SERVICEVALUE AS serviceValue,
+	            s.CREATEDAT    AS createdAt,
+	            s.UPDATEDAT    AS updatedAt,
+	            s.NOTE         AS note
+	        FROM SERVICE s
+	        WHERE s.ISACTIVE = 1
+	
+	        <!-- 검색어 필터 -->
+	        <if test="keyword != null and keyword != ''">
+	            AND LOWER(s.NAME) LIKE '%' || LOWER(#{keyword}) || '%'
+	        </if>
+	
+	        <!-- 카테고리 코드 필터 -->
+	        <if test="categoryCodes != null and categoryCodes.size() > 0">
+	            AND s.CODEBID IN
+	            <foreach collection="categoryCodes" item="code" open="(" separator="," close=")">
+	                #{code}
+	            </foreach>
+	        </if>
+	
+	        ORDER BY
+	            CASE WHEN s.CODEBID LIKE '%PT%' THEN 0 ELSE 1 END,
+	            s.NAME DESC
+	    )
+	    WHERE rn BETWEEN #{startRowNum} AND #{endRowNum}
+	</select>
+	
+	<!-- =========================================================
+	     [서비스 상품 총 개수 조회]
+	     - 동일 조건 COUNT(*)
+	========================================================= -->
+	<select id="getServiceModalCount" resultType="int">
+	    SELECT COUNT(*)
+	    FROM SERVICE s
+	    WHERE s.ISACTIVE = 1
+	
+	    <if test="keyword != null and keyword != ''">
+	        AND LOWER(s.NAME) LIKE '%' || LOWER(#{keyword}) || '%'
+	    </if>
+	
+	    <if test="categoryCodes != null and categoryCodes.size() > 0">
+	        AND s.CODEBID IN
+	        <foreach collection="categoryCodes" item="code" open="(" separator="," close=")">
+	            #{code}
+	        </foreach>
+	    </if>
+	</select>
 
     <!-- ================================
          서비스 상품 선택 모달 끝

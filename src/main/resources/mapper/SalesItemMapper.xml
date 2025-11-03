@@ -178,6 +178,9 @@
         ORDER BY totalSalesAmount DESC
     </select>
 
+
+    
+
 	<select id="selectItemSalesGraphData" parameterType="map" resultType="map">
 	    SELECT 
 	        <choose>
@@ -212,5 +215,6 @@
 	        
 	    ORDER BY groupDate ASC
 	</select>
+
 
 </mapper>

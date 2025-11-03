@@ -81,9 +81,5 @@ public class SalesItemDaoImpl implements SalesItemDao {
         return session.selectList(NAMESPACE + ".selectItemSalesAnalytics", params);
     }
 
-    // 8. 상품 매출 그래프 데이터 조회
-    @Override
-    public List<Map<String, Object>> selectItemSalesGraphData(Map<String, Object> params) {
-        return session.selectList(NAMESPACE + ".selectItemSalesGraphData", params);
-    }
+    
 }

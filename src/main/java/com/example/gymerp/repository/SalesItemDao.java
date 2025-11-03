@@ -43,6 +43,5 @@ public interface SalesItemDao {
     // 상품 매출 통계 조회
     List<Map<String, Object>> selectItemSalesAnalytics(Map<String, Object> params);
 
-    // 상품 매출 그래프 데이터 조회
-    List<Map<String, Object>> selectItemSalesGraphData(Map<String, Object> params);
+    
 }
