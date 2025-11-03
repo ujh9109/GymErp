@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.gymerp.repository.PostDao">
+
+  <!-- 목록 -->
+  <select id="selectAll" resultType="PostDto">
+    SELECT
+      postId,
+      postTitle,
+      postContent,
+      postWriter,
+      postPinned,
+      postViewCnt,
+      postCreatedAt,
+      postUpdatedAt
+    FROM POST
+    ORDER BY postPinned DESC, postId DESC
+  </select>
+
+  <!-- 상세 -->
+  <select id="get" parameterType="int" resultType="PostDto">
+    SELECT
+      postId,
+      postTitle,
+      postContent,
+      postWriter,
+      postPinned,
+      postViewCnt,
+      postCreatedAt,
+      postUpdatedAt
+    FROM POST
+    WHERE postId = #{postId}
+  </select>
+
+  <!-- 등록 -->
+  <insert id="insert" parameterType="PostDto">
+    <selectKey keyProperty="postId" resultType="int" order="BEFORE">
+      SELECT POST_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
+    INSERT INTO POST (
+      postId, postTitle, postContent, postWriter, postPinned,
+      postViewCnt, postCreatedAt, postUpdatedAt
+    ) VALUES (
+      #{postId},
+      #{postTitle,   jdbcType=VARCHAR},
+      #{postContent, jdbcType=CLOB},
+      #{postWriter,  jdbcType=VARCHAR},
+      NVL(#{postPinned, jdbcType=CHAR}, 'N'),
+      0,
+      SYSDATE,
+      SYSDATE
+    )
+  </insert>
+
+  <!-- 수정 -->
+  <update id="update" parameterType="PostDto">
+    UPDATE POST
+       SET postTitle     = #{postTitle,   jdbcType=VARCHAR},
+           postContent   = #{postContent, jdbcType=CLOB},
+           postWriter    = #{postWriter,  jdbcType=VARCHAR},
+           postPinned    = #{postPinned,  jdbcType=CHAR},
+           postUpdatedAt = SYSDATE
+     WHERE postId        = #{postId}
+  </update>
+
+  <!-- 삭제 -->
+  <delete id="delete" parameterType="int">
+    DELETE FROM POST WHERE postId = #{postId}
+  </delete>
+
+  <!-- 조회수 증가 -->
+  <update id="incView" parameterType="int">
+    UPDATE POST SET postViewCnt = postViewCnt + 1 WHERE postId = #{postId}
+  </update>
+
+</mapper>
