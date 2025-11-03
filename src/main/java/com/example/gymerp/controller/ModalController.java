@@ -86,9 +86,11 @@ public class ModalController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit
     ) {
+        // 1. Service를 통해 실물 상품 목록과 전체 개수 조회
         List<ProductDto> list = modalService.getProductModalList(keyword, page, limit);
         int totalCount = modalService.getProductModalCount(keyword);
 
+        // 2. 결과를 Map에 담아 반환
         Map<String, Object> result = new HashMap<>();
         result.put("list", list);
         result.put("totalCount", totalCount);
@@ -116,9 +118,9 @@ public class ModalController {
     ========================================================= */
     @GetMapping("/modals/employees")
     public Map<String, Object> getEmployeeModalList(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "limit", defaultValue = "20") int limit
     ) {
         List<EmpDto> list = modalService.getEmployeeModalList(keyword, page, limit);
         int totalCount = modalService.getEmployeeModalCount(keyword);
@@ -135,4 +137,5 @@ public class ModalController {
     /* =========================================================
        [직원 선택 모달 끝]
     ========================================================= */
+
 }

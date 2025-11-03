@@ -26,4 +26,10 @@ public class CategoryServiceImpl implements CategoryService{
 		categoryDao.insert(dto);
 		
 	}
+	
+	// 일정목록
+	@Override
+	public List<CodeDto> getScheduleCodes() {
+	   return categoryDao.getScheduleCodes(); 
+	}
 }

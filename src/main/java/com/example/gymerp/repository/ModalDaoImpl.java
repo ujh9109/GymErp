@@ -20,7 +20,6 @@ public class ModalDaoImpl implements ModalDao {
 
     private final SqlSession sqlSession;
 
-
     /* =========================================================
        [서비스 상품 선택 모달]
        - Mapper ID: getServiceModalList / getServiceModalCount
@@ -56,7 +55,7 @@ public class ModalDaoImpl implements ModalDao {
            · ISACTIVE = 1 (활성 상품만)
            · keyword 입력 시 NAME LIKE 검색
        - 페이징:
-           · OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+           · ROWNUM BETWEEN startRow AND endRow (11g 호환)
     ========================================================= */
     @Override
     public List<ProductDto> getProductModalList(Map<String, Object> param) {
@@ -80,7 +79,7 @@ public class ModalDaoImpl implements ModalDao {
            · EMP_STATUS = 'ACTIVE'
            · keyword 입력 시 이름 또는 이메일 LIKE 검색
        - 페이징:
-           · OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+           · ROWNUM BETWEEN startRow AND endRow
     ========================================================= */
     @Override
     public List<EmpDto> getEmployeeModalList(Map<String, Object> param) {
@@ -95,4 +94,5 @@ public class ModalDaoImpl implements ModalDao {
     /* =========================================================
        [직원 선택 모달 끝]
     ========================================================= */
+
 }

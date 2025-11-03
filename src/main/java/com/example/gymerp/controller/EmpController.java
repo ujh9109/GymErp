@@ -90,9 +90,10 @@ public class EmpController {
     // 로그인
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody EmpDto dto, HttpServletRequest request){
+    	String loginId = dto.getEmpEmail();
     	// AuthenticationManager 로 인증 시도 (Security 내부에서 UserDetailService 호출)
 		Authentication auth = authManager.authenticate(
-    			new UsernamePasswordAuthenticationToken(dto.getEmpEmail(), dto.getPassword()));
+    			new UsernamePasswordAuthenticationToken(loginId, dto.getPassword()));
     	
 		// 인증 결과를 SecurityContext 에 저장 (세션에도 연동)
 		SecurityContext context = SecurityContextHolder.createEmptyContext();
