@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.example.gymerp.dto.EmpDto;
+import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ServiceDto;
 import com.example.gymerp.repository.ModalDao;
 
@@ -62,4 +64,68 @@ public class ModalServiceImpl implements ModalService {
     /* ================================
        서비스 상품 선택 모달 끝
     ================================= */
+    
+    
+    
+    /* ================================
+	   실물 상품 선택 모달 (추가)
+	================================ */
+	
+	// 실물 상품 목록 조회
+	@Override
+	public List<ProductDto> getProductModalList(String keyword, int page, int limit) {
+     
+     // 1. 페이징 시작 지점 (offset) 계산
+     int offset = (page - 1) * limit;
+
+     // 2. DAO에 전달할 파라미터 Map 생성 및 값 할당
+     Map<String, Object> param = new HashMap<>();
+     param.put("keyword", keyword);
+     param.put("limit", limit);
+     param.put("offset", offset);
+
+     // 3. DAO 호출
+	    return dao.getProductModalList(param);
+	}
+	
+	// 실물 상품 전체 개수 조회
+	@Override
+	public int getProductModalCount(String keyword) {
+     // 1. DAO에 전달할 파라미터 Map 생성 및 값 할당 (검색 조건만 전달)
+     Map<String, Object> param = new HashMap<>();
+     param.put("keyword", keyword);
+     
+     // 2. DAO 호출
+	    return dao.getProductModalCount(param);
+	}
+	
+	
+	/* ================================
+	   실물 상품 선택 모달 끝
+	================================ */
+	
+	
+	/* ================================
+	   [직원 선택 모달]
+	================================ */
+	
+	@Override
+	public List<EmpDto> getEmployeeModalList(String keyword, int page, int limit) {
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("keyword", keyword);
+	    params.put("offset", (page - 1) * limit);
+	    params.put("limit", limit);
+	    return dao.getEmployeeModalList(params); // 'dao'는 ModalDao 객체입니다.
+	}
+
+	@Override
+	public int getEmployeeModalCount(String keyword) {
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("keyword", keyword);
+	    return dao.getEmployeeModalCount(params);
+	}
+	
+	/* ================================
+	   [직원 선택 모달] 끝 
+	================================ */	
 }

@@ -3,6 +3,7 @@ package com.example.gymerp.repository;
 import java.util.List;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.ProductDto;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Repository
+@Primary
 public class ProductDaoImpl implements ProductDao{
 	
 	//의존 객체

@@ -1,8 +1,11 @@
 package com.example.gymerp.repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.CurrentStockDto;
@@ -16,10 +19,21 @@ import lombok.RequiredArgsConstructor;
  *	Mapper: StockMapper
  */
 @Repository
+@Primary
 @RequiredArgsConstructor
 public class StockDaoImpl implements StockDao {
 
 	private final SqlSession session;
+	
+	/*
+	 * 	1-1.
+	 * 	가용 재고 조회
+	 */
+	@Override
+	public int getAvailableQty(int productId) {
+		
+		return session.selectOne("StockMapper.getAvailableQty", productId);
+	}
 	
 	/*
 	 *  2-1.
@@ -28,9 +42,12 @@ public class StockDaoImpl implements StockDao {
 	 *  Result: PurchaseDto 
 	 */
 	@Override
-	public List<PurchaseDto> getPurchaseList(int productId) {
-		
-		return session.selectList("StockMapper.getPurchaseList", productId);
+    public List<PurchaseDto> getPurchaseList(int productId, int offset, int size) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("productId", productId);
+        params.put("offset", offset);
+        params.put("size", size);
+        return session.selectList("StockMapper.getPurchaseList", params);
 	}
 
 	/*
@@ -41,21 +58,27 @@ public class StockDaoImpl implements StockDao {
 	 *  재고 출고 테이블, 판매 테이블 데이터 합쳐서 select 
 	 */
 	@Override
-	public List<StockAdjustmentDto> getAdjustStockAndSalesList(int productId) {
-		
-		return session.selectList("StockMapper.getAdjustStockAndSalesList", productId);
+    public List<StockAdjustmentDto> getAdjustStockAndSalesList(int productId, int offset, int size) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("productId", productId);
+        params.put("offset", offset);
+        params.put("size", size);
+        return session.selectList("StockMapper.getAdjustStockAndSalesList", params);
 	}
 
 	/*
 	 *  2-3.
-	 *  현재 재고현황 리스트 조회
+	 *  현재 재고현황 리스트 조회 (페이지로 조회)
 	 *  Parameter: -
 	 *  Result: CurrentStockDto (재고 현황)
 	 */
 	@Override
-	public List<CurrentStockDto> getCurrentStockList() {
-		
-		return session.selectList("StockMapper.getCurrentStockList");
+	public List<CurrentStockDto> getCurrentStockListPaged(int offset, int size, String keyword) {
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("offset", offset);
+	    params.put("size", size);
+	    params.put("keyword", keyword);
+	    return session.selectList("StockMapper.getCurrentStockListPaged", params);
 	}
 
 	/*
@@ -81,5 +104,6 @@ public class StockDaoImpl implements StockDao {
 		
 		return session.insert("StockMapper.insertStockAdjustment", dto);
 	}
+
 
 }

@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CodeDto {
 
-	private String codeA;
-	private String codeB;
+	private String codeAId;
+	private String codeBId;
 	private String codeAName;
 	private String codeBName;
 }

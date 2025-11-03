@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.gymerp.dto.CurrentStockDto;
@@ -16,46 +17,64 @@ import com.example.gymerp.dto.StockAdjustRequestDto;
 import com.example.gymerp.dto.StockAdjustmentDto;
 import com.example.gymerp.service.StockService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 
 
 @RequestMapping("/v1")
 @RestController
 @RequiredArgsConstructor
+@Validated
 public class StockController {
 	
 	private final StockService stockService;
 	
-	// 상품 재고 조회. 상품테이블에서 구분 코드와 상품명 가져오기, 입출고 테이블에서 입고수량-출고수량 표시
-	@GetMapping("/stock")
-    public List<CurrentStockDto> getProductStockList() {
-        // 테스트 가정: 기본 offset=0, limit=50, type=null
-        return stockService.getProductStockList();
+	//개별 상품 재고 조회
+	@GetMapping("/stock/{productId}")
+	public int getProductStock(@PathVariable int productId) {
+		
+		return stockService.getStockOne(productId);
 	}
+	
+	// 2-3. 상품 재고 조회. 상품테이블에서 구분 코드와 상품명 가져오기, 입출고 테이블에서 입고수량-출고수량 표시
+	@GetMapping("/stock")
+	public List<CurrentStockDto> getProductStockList(
+	    @RequestParam(defaultValue = "1") 
+	    int page,
+	    @RequestParam(defaultValue = "20") 
+	    int size,
+	    @RequestParam(required = false) String 
+	    keyword
+	) {
+	    return stockService.getProductStockList(page, size, keyword);
+	}
+	
 	// 상품 입고 내역 조회
 	@GetMapping("/stock/{productId}/inbound")
-	public List<PurchaseDto> getProductInboundDetail(@PathVariable int productId) {
-	    return stockService.getProductInboundDetail(productId);
+	public List<PurchaseDto> getProductInboundDetail(
+	        @PathVariable int productId,
+	        @RequestParam(defaultValue = "1") int page,
+	        @RequestParam(defaultValue = "20") int size) {
+	    return stockService.getProductInboundDetail(productId, page, size);
 	}
 	
 	// 상품 출고 내역 조회
 	@GetMapping("/stock/{productId}/outbound")
-	public List<StockAdjustmentDto> getProductOutboundDetail(@PathVariable int productId) {
-	    return stockService.getProductOutboundDetail(productId);
+	public List<StockAdjustmentDto> getProductOutboundDetail(
+	        @PathVariable int productId,
+	        @RequestParam(defaultValue = "1") int page,
+	        @RequestParam(defaultValue = "20") int size) {
+	    return stockService.getProductOutboundDetail(productId, page, size);
 	}
 	
 	// 상품의 재고를 추가 및 차감 
 	@PostMapping("/stock/{productId}/adjust")
 	public ResponseEntity<Void> adjustProduct(
 	        @PathVariable int productId,
-	        @RequestBody StockAdjustRequestDto request
+	        @RequestBody @Valid StockAdjustRequestDto request
 	) {
-	    try {
-	        stockService.adjustProduct(productId, request);
-	        return ResponseEntity.ok().build();
-	    } catch (IllegalArgumentException e) {
-	    	System.out.println("⚠️ caught exception: " + e.getMessage());
-	        return ResponseEntity.badRequest().build();
+		stockService.adjustProduct(productId, request);
+		  return ResponseEntity.noContent().build(); // 204
 	    }
-	}
 }

@@ -1,6 +1,8 @@
 package com.example.gymerp.repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
@@ -35,7 +37,7 @@ public class MemberDaoImpl implements MemberDao {
 		session.insert("MemberMapper.insertMember", dto);
 	}
 
-	// 회원 삭제 (소프트 삭제로 동작 가능)
+	// 회원 삭제 
 	@Override
 	public int delete(int memNum) {
 		return session.update("MemberMapper.deleteMember", memNum);
@@ -47,26 +49,25 @@ public class MemberDaoImpl implements MemberDao {
 		return session.update("MemberMapper.updateMember", dto);
 	}
 
-	
-	
-	
-	
-	
-
-
-
 	// ▼ 추가: 프로필 이미지 수정
 	@Override
 	public int updateProfile(int memNum, String memProfile) {
 	    MemberDto dto = new MemberDto();
 	    dto.setMemNum(memNum);
 	    dto.setMemProfile(memProfile);
-	    return session.update("MemberMapper.updateMemberProfile", dto);
+	    
+	    return session.update("MemberMapper.updateProfile", dto);
 	}
-	
 	
 	/** 이용내역 DB 관련 내용입니다.*/
 
+
+	@Override
+	public List<MemberDto> search(String keyword) {
+	    Map<String, Object> param = new HashMap<>();
+	    param.put("keyword", keyword);
+	    return session.selectList("MemberMapper.searchMembers", param);
+	}
     // 회원 이름 단건 조회 (로그용)
     @Override
     public String selectMemberNameById(int memNum) {
@@ -79,33 +80,4 @@ public class MemberDaoImpl implements MemberDao {
         return session.selectOne("MemberMapper.checkMemberExists", memNum);
     }
 
-	@Override
-	public int createMember(MemberDto dto) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public List<MemberDto> getMemberList() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public MemberDto getMemberById(int memNum) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int deleteMember(int memNum) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int updateMember(MemberDto dto) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 }
