@@ -62,7 +62,6 @@ public class ScheduleServiceImpl implements ScheduleService {
 		}
 		return scheduleDao.update(schedule);
 	}
-
 	// 일정 삭제 (PT 취소 로그 포함)
 	@Override
 	public int deleteSchedule(int shNum) {
@@ -108,7 +107,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 		        }
 		    }
 
-		    // 3️⃣ 일정 삭제
+		    //  일정 삭제
 		    return scheduleDao.delete(shNum);
 	}
 }
