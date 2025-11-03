@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.gymerp.repository.SalesAnalyticsDao">
+
+    <!-- =======================================================
+         [START] 서비스 매출 그래프
+         - 필터: 기간, 품목, 회원, 직원
+         - 품목 미선택 시 serviceType 기준 그룹화
+         - 필터 간 AND 조건, 품목 내부는 OR
+         - 기본 출력: 원형 그래프용 (항목별 총 매출)
+    ======================================================== -->
+    <select id="selectServiceSalesChart" parameterType="map" resultType="map">
+        SELECT
+            <choose>
+                <when test="serviceTypes != null and serviceTypes.size() > 0">
+                    s.service_name AS label
+                </when>
+                <otherwise>
+                    s.service_type AS label
+                </otherwise>
+            </choose>,
+            SUM(s.price * s.quantity) AS total_sales
+        FROM sales_service s
+        WHERE 1=1
+
+        <!-- 기간 필터 -->
+        <if test="startDate != null and endDate != null">
+            AND s.sale_date BETWEEN #{startDate} AND #{endDate}
+        </if>
+
+        <!-- 품목 필터 (최대 3개까지 OR 조건) -->
+        <if test="serviceTypes != null and serviceTypes.size() > 0">
+            AND (
+                <foreach collection="serviceTypes" item="type" separator=" OR ">
+                    s.service_type = #{type}
+                </foreach>
+            )
+        </if>
+
+        <!-- 회원 필터 -->
+        <if test="memberId != null">
+            AND s.mem_id = #{memberId}
+        </if>
+
+        <!-- 직원 필터 -->
+        <if test="empId != null">
+            AND s.emp_id = #{empId}
+        </if>
+
+        <choose>
+            <when test="serviceTypes != null and serviceTypes.size() > 0">
+                GROUP BY s.service_name
+                ORDER BY total_sales DESC
+            </when>
+            <otherwise>
+                GROUP BY s.service_type
+                ORDER BY total_sales DESC
+            </otherwise>
+        </choose>
+    </select>
+    <!-- =======================================================
+         [END] 서비스 매출 그래프
+    ======================================================== -->
+
+
+    <!-- =======================================================
+         [START] 실물 상품 매출 그래프
+         - 필터: 기간, 품목, 직원
+         - 품목 미선택 시 productType 기준 그룹화
+         - 필터 간 AND 조건, 품목 내부는 OR
+         - 기본 출력: 원형 그래프용 (항목별 총 매출)
+    ======================================================== -->
+    <select id="selectItemSalesChart" parameterType="map" resultType="map">
+        SELECT
+            <choose>
+                <when test="productTypes != null and productTypes.size() > 0">
+                    i.product_name AS label
+                </when>
+                <otherwise>
+                    i.product_type AS label
+                </otherwise>
+            </choose>,
+            SUM(i.price * i.quantity) AS total_sales
+        FROM sales_item i
+        WHERE 1=1
+
+        <!-- 기간 필터 -->
+        <if test="startDate != null and endDate != null">
+            AND i.sale_date BETWEEN #{startDate} AND #{endDate}
+        </if>
+
+        <!-- 품목 필터 (최대 3개까지 OR 조건) -->
+        <if test="productTypes != null and productTypes.size() > 0">
+            AND (
+                <foreach collection="productTypes" item="type" separator=" OR ">
+                    i.product_type = #{type}
+                </foreach>
+            )
+        </if>
+
+        <!-- 직원 필터 -->
+        <if test="empId != null">
+            AND i.emp_id = #{empId}
+        </if>
+
+        <choose>
+            <when test="productTypes != null and productTypes.size() > 0">
+                GROUP BY i.product_name
+                ORDER BY total_sales DESC
+            </when>
+            <otherwise>
+                GROUP BY i.product_type
+                ORDER BY total_sales DESC
+            </otherwise>
+        </choose>
+    </select>
+    <!-- =======================================================
+         [END] 실물 상품 매출 그래프
+    ======================================================== -->
+
+</mapper>
