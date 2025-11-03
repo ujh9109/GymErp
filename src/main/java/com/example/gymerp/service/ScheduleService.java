@@ -1,29 +1,17 @@
+// src/main/java/com/example/gymerp/service/ScheduleService.java
 package com.example.gymerp.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
-
 import com.example.gymerp.dto.ScheduleDto;
 
 public interface ScheduleService {
-	
-	//전체 스케줄 조회
-	List<ScheduleDto> getAllSchedules();
-	
-	//특정 날짜 스케줄 조회
-	List<ScheduleDto> getSchedulesByDate(String date);
-	
-	//특정 직원 스케줄 조회
-	List<ScheduleDto> getSchedulesByEmp(int empNum);
-	
-	//단건 스케줄 조회
-	ScheduleDto getSchedule(int shNum);
+    Integer create(ScheduleDto dto);
+    void update(ScheduleDto dto);
+    void remove(Integer shNum);
+    ScheduleDto get(Integer shNum);
 
-	//스케줄 등록
-	int addSchedule(ScheduleDto schedule);
-	
-	//스케줄 수정
-	int updateSchedule(ScheduleDto schedule);
-	
-	//스케줄 삭제
-	int deleteSchedule(int shNum);
+    // ▼ LocalDateTime으로 맞춤
+    List<ScheduleDto> getRange(LocalDateTime from, LocalDateTime to, Integer empNum, String refType);
+    void updateTime(Integer shNum, LocalDateTime startTime, LocalDateTime endTime);
 }

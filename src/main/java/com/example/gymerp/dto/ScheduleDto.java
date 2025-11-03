@@ -2,30 +2,20 @@ package com.example.gymerp.dto;
 
 import java.time.LocalDateTime;
 
-import org.apache.ibatis.type.Alias;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
-@Alias("ScheduleDto")
-@Builder 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Builder
 public class ScheduleDto {
-	private int shNum;  					// 스케술 고유 번호
-	private int empNum; 					// 직원 고유 번호(PK -> FK)
-	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-	private LocalDateTime startTime; 		// 시작 시간
-	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-	private LocalDateTime endTime; 			// 끝나는 시간
-	private String memo; 					// 메모
-	private String color; 					// 캘린더 표시 색상
-
-	
+	private Integer shNum; // PK
+	private Integer empNum; // FK → Employee.empNum
+	private LocalDateTime startTime; // ← Timestamp → LocalDateTime
+    private LocalDateTime endTime;   // ← Timestamp → LocalDateTime
+	private String memo; // VARCHAR2(200)
+	private String refType; // PT | VACATION | ETC ...
 }

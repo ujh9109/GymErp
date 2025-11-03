@@ -1,7 +1,11 @@
+// src/main/java/com/example/gymerp/controller/ScheduleController.java
 package com.example.gymerp.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.gymerp.dto.ScheduleDto;
@@ -10,52 +14,54 @@ import com.example.gymerp.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/Schedule")
+@RequestMapping("/v1")
 @RequiredArgsConstructor
 public class ScheduleController {
 
-    private final ScheduleService scheduleService;
+    private final ScheduleService service;
 
-    // 전체 스케줄 조회
-    @GetMapping
-    public List<ScheduleDto> getAllSchedules() {
-        return scheduleService.getAllSchedules();
+    // ✅ 문자열(ISO_DATE_TIME) → LocalDateTime
+    private static LocalDateTime ldt(String s){
+        if (s == null || s.isBlank()) return null;
+        return LocalDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME);
     }
 
-    // 특정 날짜 스케줄 조회
-    @GetMapping("/date/{date}")
-    public List<ScheduleDto> getSchedulesByDate(@PathVariable String date) {
-        return scheduleService.getSchedulesByDate(date);
+    @PostMapping("/schedules")
+    public ResponseEntity<Integer> create(@RequestBody ScheduleDto dto) {
+        return ResponseEntity.ok(service.create(dto));
     }
 
-    // 특정 직원 스케줄 조회
-    @GetMapping("/emp/{empNum}")
-    public List<ScheduleDto> getSchedulesByEmpNum(@PathVariable int empNum) {
-        return scheduleService.getSchedulesByEmp(empNum);
+    @GetMapping("/schedules/{shNum}")
+    public ScheduleDto get(@PathVariable Integer shNum) {
+        return service.get(shNum);
     }
 
-    // 단건 조회
-    @GetMapping("/{shNum}")
-    public ScheduleDto getSchedule(@PathVariable int shNum) {
-        return scheduleService.getSchedule(shNum);
+    @PutMapping("/schedules/{shNum}")
+    public void update(@PathVariable Integer shNum, @RequestBody ScheduleDto dto) {
+        dto.setShNum(shNum);
+        service.update(dto);
     }
 
-    // 스케줄 등록
-    @PostMapping
-    public int addSchedule(@RequestBody ScheduleDto schedule) {
-        return scheduleService.addSchedule(schedule);
+    @DeleteMapping("/schedules/{shNum}")
+    public void delete(@PathVariable Integer shNum) {
+        service.remove(shNum);
     }
 
-    // 스케줄 수정
-    @PutMapping("/{shNum}")
-    public int updateSchedule(@PathVariable int shNum, @RequestBody ScheduleDto schedule) {
-        schedule.setShNum(shNum); // path 변수로 들어온 shNum 적용
-        return scheduleService.updateSchedule(schedule);
+    @GetMapping("/schedules")
+    public List<ScheduleDto> list(
+            @RequestParam(required=false) String from,
+            @RequestParam(required=false) String to,
+            @RequestParam(required=false) Integer empNum,
+            @RequestParam(required=false) String refType) {
+        // ✅ LocalDateTime 으로 변환해서 전달
+        return service.getRange(ldt(from), ldt(to), empNum, refType);
     }
 
-    // 스케줄 삭제
-    @DeleteMapping("/{shNum}")
-    public int deleteSchedule(@PathVariable int shNum) {
-        return scheduleService.deleteSchedule(shNum);
+    @PatchMapping("/schedules/{shNum}/time")
+    public void updateTime(@PathVariable Integer shNum,
+                           @RequestParam String startTime,
+                           @RequestParam String endTime) {
+        // ✅ LocalDateTime 으로 변환해서 전달
+        service.updateTime(shNum, ldt(startTime), ldt(endTime));
     }
 }

@@ -1,62 +1,73 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="ScheduleMapper">
+<!-- src/main/resources/mappers/ScheduleMapper.xml -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
+<mapper namespace="ScheduleMapper"> <!-- DaoImpl의 NS와 반드시 동일 -->
 
-	<!-- 전체 스케줄 조회 -->
-    <select id="selectAllSchedules" resultType="ScheduleDto">
-        SELECT shNum, empNum, startTime, endTime, memo, color
-        FROM SCHEDULE
-        ORDER BY startTime
-    </select>
+  <resultMap id="ScheduleMap" type="com.example.gymerp.dto.ScheduleDto">
+    <id     property="shNum"     column="SHNUM"/>
+    <result property="empNum"    column="EMPNUM"/>
+    <!-- LocalDateTime ↔ TIMESTAMP 매핑 -->
+    <result property="startTime" column="STARTTIME" jdbcType="TIMESTAMP"/>
+    <result property="endTime"   column="ENDTIME"   jdbcType="TIMESTAMP"/>
+    <result property="memo"      column="MEMO"/>
+    <result property="refType"   column="REFTYPE"/>
+  </resultMap>
 
-    <!-- 특정 날짜 스케줄 조회 -->
-    <select id="findByDate" parameterType="String" resultType="ScheduleDto">
-        SELECT shNum, empNum, startTime, endTime, memo, color
-        FROM SCHEDULE
-        WHERE TRUNC(startTime) = TO_DATE(#{date}, 'YYYY-MM-DD')
-        ORDER BY startTime
-    </select>
+  <!-- INSERT: LocalDateTime은 그냥 #{... ,jdbcType=TIMESTAMP}로 넣으면 됨 -->
+  <insert id="insert" parameterType="com.example.gymerp.dto.ScheduleDto">
+    <selectKey keyProperty="shNum" order="BEFORE" resultType="int">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
+    INSERT INTO SCHEDULE (SHNUM, EMPNUM, STARTTIME, ENDTIME, MEMO, REFTYPE)
+    VALUES (
+      #{shNum},
+      #{empNum},
+      #{startTime, jdbcType=TIMESTAMP},
+      #{endTime,   jdbcType=TIMESTAMP},
+      #{memo},
+      #{refType}
+    )
+  </insert>
 
-    <!-- 단건 조회 -->
-    <select id="findByShNum" parameterType="int" resultType="ScheduleDto">
-        SELECT shNum, empNum, startTime, endTime, memo, color
-        FROM SCHEDULE
-        WHERE shNum = #{shNum}
-    </select>
+  <update id="update" parameterType="com.example.gymerp.dto.ScheduleDto">
+    UPDATE SCHEDULE
+       SET EMPNUM    = #{empNum},
+           STARTTIME = #{startTime, jdbcType=TIMESTAMP},
+           ENDTIME   = #{endTime,   jdbcType=TIMESTAMP},
+           MEMO      = #{memo},
+           REFTYPE   = #{refType}
+     WHERE SHNUM     = #{shNum}
+  </update>
 
-    <!-- 스케줄 등록 -->
-    <insert id="insert" parameterType="ScheduleDto">
-        <selectKey keyProperty="shNum" resultType="int" order="BEFORE">
-            SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
-        </selectKey>
-        INSERT INTO SCHEDULE (
-            shNum, empNum, startTime, endTime, memo, color
-        )
-        VALUES (
-            #{shNum}, #{empNum}, #{startTime}, #{endTime}, #{memo}, #{color}
-        )
-    </insert>
+  <delete id="delete" parameterType="int">
+    DELETE FROM SCHEDULE WHERE SHNUM = #{shNum}
+  </delete>
 
-    <!-- 스케줄 수정 -->
-    <update id="update" parameterType="ScheduleDto">
-        UPDATE SCHEDULE
-        SET
-            empNum = #{empNum},
-            startTime = #{startTime},
-            endTime = #{endTime},
-            memo = #{memo},
-            color = #{color}
-        WHERE shNum = #{shNum}
-    </update>
+  <select id="selectOne" parameterType="int" resultMap="ScheduleMap">
+    SELECT SHNUM, EMPNUM, STARTTIME, ENDTIME, MEMO, REFTYPE
+      FROM SCHEDULE
+     WHERE SHNUM = #{shNum}
+  </select>
 
-    <!-- 스케줄 삭제 -->
-    <delete id="delete" parameterType="int">
-        DELETE FROM SCHEDULE
-        WHERE shNum = #{shNum}
-    </delete>
+  <!-- Map 파라미터 사용: DaoImpl에서 put한 from/to/empNum/refType 키 그대로 사용 -->
+  <select id="selectRange" resultMap="ScheduleMap" parameterType="map">
+    SELECT SHNUM, EMPNUM, STARTTIME, ENDTIME, MEMO, REFTYPE
+      FROM SCHEDULE
+     WHERE 1=1
+       <!-- 기간 겹침 -->
+       <if test="from != null"> AND ENDTIME   &gt;= #{from, jdbcType=TIMESTAMP} </if>
+       <if test="to   != null"> AND STARTTIME &lt;= #{to,   jdbcType=TIMESTAMP} </if>
+       <if test="empNum != null"> AND EMPNUM = #{empNum} </if>
+       <if test="refType != null and refType != ''"> AND REFTYPE = #{refType} </if>
+     ORDER BY STARTTIME ASC, SHNUM ASC
+  </select>
 
-
-
+  <update id="updateTime" parameterType="map">
+    UPDATE SCHEDULE
+       SET STARTTIME = #{startTime, jdbcType=TIMESTAMP},
+           ENDTIME   = #{endTime,   jdbcType=TIMESTAMP}
+     WHERE SHNUM     = #{shNum}
+  </update>
 </mapper>
-

@@ -1,72 +1,54 @@
+// src/main/java/com/example/gymerp/service/impl/ScheduleServiceImpl.java
 package com.example.gymerp.service;
-
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.gymerp.dto.ScheduleDto;
-import com.example.gymerp.repository.ScheduleDao;
+import com.example.gymerp.repository.ScheduleDao;   // DAO는 repository 패키지에 있는 걸로 보임
+import com.example.gymerp.service.ScheduleService; // ← 인터페이스 임포트
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ScheduleServiceImpl implements ScheduleService {
 
-	// DAO 주입
-	private final ScheduleDao scheduleDao;
+    private final ScheduleDao dao;
 
-	// 전체 스케줄 조회
-	@Override
-	public List<ScheduleDto> getAllSchedules() {
+    @Override
+    public Integer create(ScheduleDto dto) {
+        dao.insert(dto);                 // selectKey로 dto.shNum 채워짐
+        return dto.getShNum();
+    }
 
-		return scheduleDao.selectAllSchedules();
-	}
+    @Override
+    public void update(ScheduleDto dto) {
+        dao.update(dto);
+    }
 
-	// 특정 날짜 스케줄 조회
-	@Override
-	public List<ScheduleDto> getSchedulesByDate(String date) {
+    @Override
+    public void remove(Integer shNum) {
+        dao.delete(shNum);
+    }
 
-		return scheduleDao.findByDate(date);
-	}
+    @Override
+    @Transactional(readOnly = true)
+    public ScheduleDto get(Integer shNum) {
+        return dao.selectOne(shNum);
+    }
 
-	// 특정 직원 스케줄 조회
-	@Override
-	public List<ScheduleDto> getSchedulesByEmp(int empNum) {
+    @Override
+    @Transactional(readOnly = true)
+    public List<ScheduleDto> getRange(LocalDateTime from, LocalDateTime to, Integer empNum, String refType) {
+        return dao.selectRange(from, to, empNum, refType); // ✔ 인터페이스와 동일 시그니처
+    }
 
-		return scheduleDao.findByEmpNum(empNum);
-	}
-
-	// 단건 스케줄 조회
-	@Override
-	public ScheduleDto getSchedule(int shNum) {
-
-		return scheduleDao.findByShNum(shNum);
-	}
-
-	// 스케줄 등록
-	@Override
-	@Transactional
-	public int addSchedule(ScheduleDto schedule) {
-
-		return scheduleDao.insert(schedule);
-	}
-
-	// 스케줄 수정
-	@Override
-	@Transactional
-	public int updateSchedule(ScheduleDto schedule) {
-
-		 return scheduleDao.update(schedule);
-	}
-
-	// 스케줄 삭제
-	@Override
-	@Transactional
-	public int deleteSchedule(int shNum) {
-
-		return scheduleDao.delete(shNum);
-	}
-
+    @Override
+    public void updateTime(Integer shNum, LocalDateTime startTime, LocalDateTime endTime) {
+        dao.updateTime(shNum, startTime, endTime);         // ✔ 인터페이스와 동일 시그니처
+    }
 }
