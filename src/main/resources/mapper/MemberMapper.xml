@@ -73,13 +73,7 @@
 
     
     
-    <select id="selectAll" resultType="MemberDto">
-	    SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
-	           memAddr, memCreated, memUpdated, memProfile, memNote
-	    FROM MEMBER
-	    ORDER BY memCreated DESC
-	</select>
-    
+   
     
     
     
