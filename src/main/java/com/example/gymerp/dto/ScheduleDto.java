@@ -26,6 +26,7 @@ public class ScheduleDto {
     private LocalDateTime startTime;   // 시작시간
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+
     private LocalDateTime endTime;     // 종료시간
 
     private String memo;               // 메모
@@ -36,4 +37,5 @@ public class ScheduleDto {
     private String memName;            // 회원 이름 (PT 전용)
     private String refType;            // 개인일정/공통일정 구분
     private Long memNum;               // 회원 번호
+
 }
