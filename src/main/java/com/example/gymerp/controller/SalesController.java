@@ -2,7 +2,11 @@ package com.example.gymerp.controller;
 
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.example.gymerp.service.SalesItemService;
 import com.example.gymerp.service.SalesServiceService;
 import lombok.RequiredArgsConstructor;
 
@@ -12,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 public class SalesController {
 
     private final SalesServiceService salesServiceService;
+    private final SalesItemService salesItemService;
 
     /* ================================
        [서비스 판매 내역 조회]
@@ -81,4 +86,24 @@ public class SalesController {
                 startDate, endDate, empNums, periodType
         );
     }
+    
+    /* ================================
+    [상품 매출 그래프 조회]
+ ================================ */
+
+	 @GetMapping("/sales/products/graph")
+	 public ResponseEntity<Map<String, List<Map<String, Object>>>> getItemSalesGraph(
+	         @RequestParam(required = false) String startDate,
+	         @RequestParam(required = false) String endDate,
+	         @RequestParam(defaultValue = "DAY") String groupByUnit) {
+	     try {
+	         Map<String, List<Map<String, Object>>> graphData =
+	                 salesItemService.getItemSalesGraphData(startDate, endDate, groupByUnit);
+	         return ResponseEntity.ok(graphData);
+	     } catch (Exception e) {
+	         e.printStackTrace();
+	         
+	         return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	     }
+	 }    
 }

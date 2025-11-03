@@ -107,8 +107,6 @@ public class ModalServiceImpl implements ModalService {
 	   [직원 선택 모달]
 	================================ */
 	
-	// ModalServiceImpl.java
-
     @Override
     @Transactional(readOnly = true)
     public List<EmpDto> getEmployeeModalList(String keyword, int page, int limit) {
