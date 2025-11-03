@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.MemberDto;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 //주석
 @Repository
+@Primary
 @RequiredArgsConstructor
 public class MemberDaoImpl implements MemberDao {
 	
@@ -22,31 +24,31 @@ public class MemberDaoImpl implements MemberDao {
 	// 회원 상세 조회
 	@Override
 	public MemberDto getByNum(int memNum) {
-		return session.selectOne("MemberMapper.selectMemberById", memNum);
+		return session.selectOne("MemberMapper.getByNum", memNum);
 	}
 
 	// 전체 회원 조회
 	@Override
 	public List<MemberDto> selectAll() {
-		return session.selectList("MemberMapper.selectAllMembers");
+		return session.selectList("MemberMapper.selectAll");
 	}
 
 	// 회원 등록
 	@Override
 	public void insert(MemberDto dto) {
-		session.insert("MemberMapper.insertMember", dto);
+		session.insert("MemberMapper.insert", dto);
 	}
 
 	// 회원 삭제 
 	@Override
 	public int delete(int memNum) {
-		return session.update("MemberMapper.deleteMember", memNum);
+		return session.update("MemberMapper.delete", memNum);
 	}
 
 	// 회원 전체 수정
 	@Override
 	public int update(MemberDto dto) {
-		return session.update("MemberMapper.updateMember", dto);
+		return session.update("MemberMapper.update", dto);
 	}
 
 	// ▼ 추가: 프로필 이미지 수정
@@ -66,7 +68,7 @@ public class MemberDaoImpl implements MemberDao {
 	public List<MemberDto> search(String keyword) {
 	    Map<String, Object> param = new HashMap<>();
 	    param.put("keyword", keyword);
-	    return session.selectList("MemberMapper.searchMembers", param);
+	    return session.selectList("MemberMapper.search", param);
 	}
     // 회원 이름 단건 조회 (로그용)
     @Override
