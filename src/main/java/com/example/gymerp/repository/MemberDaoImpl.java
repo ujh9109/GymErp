@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.MemberDto;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 //주석
 @Repository
+@Primary
 @RequiredArgsConstructor
 public class MemberDaoImpl implements MemberDao {
 	
@@ -28,7 +30,7 @@ public class MemberDaoImpl implements MemberDao {
 	// 전체 회원 조회
 	@Override
 	public List<MemberDto> selectAll() {
-		return session.selectList("MemberMapper.selectAllMembers");
+		return session.selectList("MemberMapper.selectAll");
 	}
 
 	// 회원 등록

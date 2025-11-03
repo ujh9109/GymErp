@@ -1,6 +1,8 @@
 package com.example.gymerp.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -43,7 +45,7 @@ public class ModalServiceImpl implements ModalService {
         // 🔹 페이징 계산 (Oracle ROWNUM 기준)
         // Controller에서 startRowNum, endRowNum을 세팅하지 않은 경우만 자동 계산
         if (dto.getStartRowNum() <= 0 || dto.getEndRowNum() <= 0) {
-            int page = dto.getPrevNum() > 0 ? dto.getPrevNum() : 1;
+            int page = dto.getEmpNum() > 0 ? dto.getEmpNum() : 1;
             int startRow = (page - 1) * limit + 1;
             int endRow = page * limit;
             dto.setStartRowNum(startRow);
@@ -87,7 +89,7 @@ public class ModalServiceImpl implements ModalService {
      // 3. DAO 호출
 	    return dao.getProductModalList(param);
 	}
-	
+	                                        
 	// 실물 상품 전체 개수 조회
 	@Override
 	public int getProductModalCount(String keyword) {

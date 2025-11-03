@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.gymerp.dto.PtRegistrationDto;
 import com.example.gymerp.dto.ScheduleDto;
+import com.example.gymerp.repository.PtRegistrationMapper;
 import com.example.gymerp.repository.ScheduleDao;
 
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class ScheduleServiceImpl implements ScheduleService {
 
     private final ScheduleDao scheduleDao;
-
+    private final PtRegistrationMapper ptRegistrationMapper;
     // 전체 일정 조회 
     @Override
     public List<ScheduleDto> getAllSchedules() {
@@ -44,12 +46,32 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     //일정 등록
     @Override
+    @Transactional
     public int createSchedule(ScheduleDto schedule) {
-        if (schedule.getEmpNum() <= 0) {
+        if (schedule.getEmpNum() == null || schedule.getEmpNum() <= 0) {
             throw new IllegalArgumentException("직원번호가 유효하지 않음");
         }
-        return scheduleDao.insert(schedule);
+
+        // SCHEDULE 테이블에 일정 등록
+        int result = scheduleDao.insert(schedule); // shNum이 selectKey로 채워짐
+
+        // PT 일정이면서 회원 정보도 있을 때만 REGISTRATION 생성
+        if (("PT".equalsIgnoreCase(schedule.getRefType()) ||
+             "SCHEDULE-PT".equalsIgnoreCase(schedule.getCodeBid()))
+            && schedule.getMemNum() != null) {
+
+            PtRegistrationDto regDto = new PtRegistrationDto();
+            regDto.setEmpNum(schedule.getEmpNum());
+            regDto.setShNum(schedule.getShNum());
+            regDto.setRegNote(schedule.getMemo());
+            regDto.setMemNum(schedule.getMemNum());
+
+            ptRegistrationMapper.insertPtRegistration(regDto);
+        }
+
+        return result; // insert 한 번만 호출
     }
+
 
     //일정 수정 
     @Override

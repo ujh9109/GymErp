@@ -38,7 +38,7 @@ public class PtController {
     public PtRegistrationDto getPtById(@PathVariable int regNum) {
         return ptService.getPtRegistrationById(regNum);
     }
-
+    
     // PT 예약 등록
     @PostMapping
     public String insertPt(@RequestBody PtRegistrationDto dto) {
@@ -49,7 +49,7 @@ public class PtController {
     // PT 예약 수정
     @PutMapping("/{regNum}")
     public String updatePt(@PathVariable int regNum, @RequestBody PtRegistrationDto dto) {
-        dto.setRegNum(regNum);
+    	dto.setRegNum((long) regNum); // int → long 변환
         ptService.updatePtRegistration(dto);
         return "success";
     }
