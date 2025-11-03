@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ProductListResponse;
@@ -34,7 +36,7 @@ public class ProductController {
 		
 	//실물 상품 등록
 	@PostMapping("/product")
-	public void createProduct(@RequestBody ProductDto dto) {
+	public void createProduct(ProductDto dto) {
 		new StockAdjustRequestDto();
 		StockAdjustRequestDto request = StockAdjustRequestDto.builder()
 				.action("ADD")
