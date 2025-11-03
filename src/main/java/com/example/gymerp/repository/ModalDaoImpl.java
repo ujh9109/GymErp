@@ -37,11 +37,12 @@ public class ModalDaoImpl implements ModalDao {
         return sqlSession.selectOne("ModalMapper.getServiceModalCount", param);
     }
     
-    /* ================================
-    실물 상품 선택 모달
- 	================================= */
-
-    // 아이템 상품 목록 조회
+    
+    
+    
+    /* ================================ 실물 상품 선택 모달 ================================= */
+    
+    
     @Override
     public List<ProductDto> getProductModalList(Map<String, Object> param) {
         return sqlSession.selectList("ModalMapper.getProductModalList", param);
@@ -51,10 +52,13 @@ public class ModalDaoImpl implements ModalDao {
     public int getProductModalCount(Map<String, Object> param) {
         return sqlSession.selectOne("ModalMapper.getProductModalCount", param);
     }
+
+    /* ================================ 실물 상품 선택 모달 ================================= */
     
-	/* =============================
-		 직원 모달 시작
-	===============================*/
+    
+    
+    /* ================================ 직원 선택 모달 ================================= */
+
 	
 	@Override
 	public List<EmpDto> getEmployeeModalList(Map<String, Object> param) {
@@ -66,8 +70,6 @@ public class ModalDaoImpl implements ModalDao {
 	return sqlSession.selectOne("ModalMapper.getEmployeeModalCount", param);
 	}
 	
-	/* =============================
-		 직원 모달 끝
-	===============================*/
+    /* ================================ 직원 선택 모달 끝 ================================= */
     
 }

@@ -17,8 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class SalesItemDaoImpl implements SalesItemDao {
 
     private final SqlSession session;
-    // 🚨 MyBatis Mapper XML의 namespace와 일치하는 변수를 "SalesItemMapper"로 수정했습니다.
-    // 이는 XML 파일의 <mapper namespace="SalesItemMapper">와 일치해야 합니다.
+    
     private static final String NAMESPACE = "SalesItemMapper";
 
     // 1. 전체 상품 판매 내역 조회 (페이징/필터 포함)
@@ -41,25 +40,22 @@ public class SalesItemDaoImpl implements SalesItemDao {
     
     // ========== [재고/수정 관련 추가 구현] ==========
     
-    /**
-     * 판매 내역 수정 및 삭제 시, 기존 수량(oldQuantity)과 상품 정보(productId, codeBId)를 조회합니다.
-     */
+
+    // 판매 내역 수정 및 삭제 시, 기존 수량(oldQuantity)과 상품 정보(productId, codeBId)를 조회합니다.
+
     @Override
     public Map<String, Object> selectSalesItemForAdjustment(Long itemSalesId) {
         return session.selectOne(NAMESPACE + ".selectSalesItemForAdjustment", itemSalesId);
     }
 
-    /**
-     * 재고 환원 (입고) 내역을 Purchase 테이블에 기록합니다. (판매 취소/수량 감소 시 사용)
-     */
+
+    // 재고 환원 (입고) 내역을 Purchase 테이블에 기록합니다. (판매 취소/수량 감소 시 사용)
+
     @Override
     public void insertPurchaseForRefund(Map<String, Object> params) {
         session.insert(NAMESPACE + ".insertPurchaseForRefund", params);
     }
     
-    // ============================================
-
-
     // 4. 상품 판매 내역 등록
     @Override
     public int insertSalesItem(SalesItemDto salesItem) {

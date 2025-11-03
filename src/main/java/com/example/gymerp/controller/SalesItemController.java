@@ -1,7 +1,6 @@
 package com.example.gymerp.controller;
 
 import java.util.Map;
-import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +26,7 @@ public class SalesItemController {
 
     private final SalesItemService salesItemService;
 
-    // 1. 상품. 판매 등록 (CREATE) - 명세: POST /sales/products
+    // 상품 판매 등록
     @PostMapping("/products") 
     public ResponseEntity<String> addSalesItem(@RequestBody SalesItemDto salesItem) {
         
@@ -40,13 +39,13 @@ public class SalesItemController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("판매 내역 등록에 실패했습니다.");
             }
         } catch (Exception e) {
-            // 로깅 처리 (e.getMessage())
-            e.printStackTrace(); // 🚨 디버깅을 위해 스택 트레이스 추가
+            
+            e.printStackTrace(); 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("판매 내역 등록 중 서버 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
-    // 2. 상품 판매 전체 목록 조회 (READ ALL) - 명세: GET /sales/products
+    // 상품 판매 전체 목록 조회
     @GetMapping("/products") 
     public ResponseEntity<Map<String, Object>> getAllSalesItems(
             @RequestParam(required = false) String startDate,
@@ -56,13 +55,12 @@ public class SalesItemController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         
-        // (수정 2) Service 메소드 호출 시 변경된 파라미터 (productNameKeyword) 사용
         Map<String, Object> result = salesItemService.getAllSalesItems(startDate, endDate, productNameKeyword, empNum, page, size);
         
         return ResponseEntity.ok(result);
     }
 
-    // 3. 상품 판매 단일 조회 (READ ONE) - 명세: GET /sales/products/{saleId}
+    // 상품 판매 단일 조회
     @GetMapping("/products/{itemSalesId}") 
     public ResponseEntity<SalesItemDto> getSalesItemById(@PathVariable Long itemSalesId) {
     	SalesItemDto salesItem = salesItemService.getSalesItemById(itemSalesId);
@@ -73,18 +71,16 @@ public class SalesItemController {
         }
     }
 
-    // 4. 상품 판매 수정 (UPDATE) - 명세: PUT /sales/products/{saleId}
+    // 상품 판매 수정
     @PutMapping("/products/{itemSalesId}") 
     public ResponseEntity<String> updateSalesItem(
             @PathVariable Long itemSalesId, 
             @RequestBody SalesItemDto salesItem) {
         
-        // DTO에 PathVariable로 받은 ID를 설정해야 Service에서 사용 가능
-        // (SalesItem DTO에 setItemSalesId(Long) 메서드가 있다고 가정)
         salesItem.setItemSalesId(itemSalesId); 
         
         try {
-            int result = salesItemService.updateSalesItem(salesItem); // Service에서는 DTO의 ID를 사용해야 함
+            int result = salesItemService.updateSalesItem(salesItem); 
             if (result > 0) {
                 return ResponseEntity.ok("판매 내역이 성공적으로 수정되었습니다.");
             } else {
@@ -95,7 +91,7 @@ public class SalesItemController {
         }
     }
 
-    // 5. 상품 판매 삭제 (DELETE - 소프트 삭제) - 명세: DELETE /sales/products/{saleId}
+    // 상품 판매 삭제
     @DeleteMapping("/products/{itemSalesId}") 
     public ResponseEntity<String> deleteSalesItem(@PathVariable Long itemSalesId) {
         try {
