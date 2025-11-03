@@ -39,4 +39,7 @@ public class ScheduleDto {
     private String empName;              // 트레이너 이름
     private String memName;              // 회원 이름 (PT 전용)
     
+    //  PT 전용 필드 추가
+    private int memNum; // 회원 고유번호 (PT 전용)
+    
 }
