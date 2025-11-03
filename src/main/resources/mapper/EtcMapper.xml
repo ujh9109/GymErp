@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.gymerp.repository.EtcDao">
+
+    <!-- ========================================= -->
+    <!-- ETC 일정 등록 -->
+    <!-- ========================================= -->
+    <insert id="insertEtc" parameterType="EtcDto">
+        <selectKey keyProperty="etcNum" resultType="int" order="BEFORE">
+            SELECT etc_schedule_seq.NEXTVAL FROM dual
+        </selectKey>
+
+        INSERT INTO Etc (
+            etcNum,
+            empNum,
+            etcCreated,
+            startTime,
+            endTime,
+            etcMemo,
+            etcType
+        ) VALUES (
+            #{etcNum},
+            #{empNum},
+            SYSTIMESTAMP,
+            #{startTime},
+            #{endTime},
+            #{etcMemo},
+            #{etcType}
+        )
+    </insert>
+
+    <!-- ========================================= -->
+    <!-- ETC 일정 조회 -->
+    <!-- ========================================= -->
+    <select id="selectEtcByNum" parameterType="int" resultType="EtcDto">
+        SELECT *
+        FROM Etc
+        WHERE etcNum = #{etcNum}
+    </select>
+
+    <!-- ========================================= -->
+    <!-- ETC 일정 수정 -->
+    <!-- ========================================= -->
+    <update id="updateEtc" parameterType="EtcDto">
+        UPDATE Etc
+        SET
+            startTime = #{startTime},
+            endTime = #{endTime},
+            etcMemo = #{etcMemo},
+            etcType = #{etcType},
+            etcUpdatedAt = SYSTIMESTAMP
+        WHERE etcNum = #{etcNum}
+    </update>
+
+    <!-- ========================================= -->
+    <!-- ETC 일정 삭제 -->
+    <!-- ========================================= -->
+    <delete id="deleteEtc" parameterType="int">
+        DELETE FROM Etc
+        WHERE etcNum = #{etcNum}
+    </delete>
+
+</mapper>

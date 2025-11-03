@@ -1,62 +1,93 @@
 package com.example.gymerp.repository;
 
-import java.time.LocalDate;
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.EmpScheduleDto;
+import com.example.gymerp.dto.EmpVacationDto;
+import com.example.gymerp.dto.EtcDto;
+import com.example.gymerp.dto.PtRegistrationDto;
 
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class EmpScheduleDaoImpl implements EmpScheduleDao{
+public class EmpScheduleDaoImpl implements EmpScheduleDao {
+
+    private final SqlSession sqlSession;
+
+    /** ============================= 일정 조회 ============================= */
+
+    @Override
+    public List<EmpScheduleDto> scheduleSelectAll() {
+    	return sqlSession.selectList("EmpScheduleDao.scheduleSelectAll");
+        
+    }
+
+    @Override
+    public EmpScheduleDto selectByCalNum(int calNum) {
+        return sqlSession.selectOne("EmpScheduleDao.selectByCalNum", calNum);
+    }
+
+    @Override
+    public List<EmpScheduleDto> selectByEmpAndDate(int empNum, LocalDateTime startDate, LocalDateTime endDate) {
+        return sqlSession.selectList(
+            "EmpScheduleDao.selectByEmpAndDate",
+            Map.of("empNum", empNum, "startDate", startDate, "endDate", endDate)
+        );
+    }
+
+    /** ============================= 일정 등록 ============================= */
+
+    @Override
+    public int insertEtc(EtcDto dto) {
+        return sqlSession.insert("EtcMapper.insertEtc", dto);
+    }
+    
+    @Override
+    public int createEmpEtc(EmpScheduleDto dto) {
+        return sqlSession.insert("EmpScheduleDao.createEmpEtc", dto);
+    }
+
+    @Override
+    public int insertEmpVacation(EmpVacationDto dto) {
+        return sqlSession.insert("EmpVacationMapper.insertEmpVacation", dto);
+    }
+    
+    @Override
+	public int createEmpVacation(EmpScheduleDto dto) {
+    	
+    	return sqlSession.insert("EmpScheduleDao.createEmpVacation", dto);
+	}
+
+
+    @Override
+    public int insertPtRegistration(PtRegistrationDto dto) {
+        return sqlSession.insert("PtRegistrationMapper.insertPtRegistration", dto);
+    }
+    
+    @Override
+	public int createEmpRegistration(EmpScheduleDto dto) {
+    	return sqlSession.insert("EmpScheduleDao.createEmpRegistration", dto);
+	}
+
+    /** ============================= 일정 수정 및 삭제 ============================= */
+
+    @Override
+    public int update(EmpScheduleDto empSchedule) {
+        return sqlSession.update("EmpScheduleDao.update", empSchedule);
+    }
+
+    @Override
+    public int delete(int calNum) {
+        return sqlSession.delete("EmpScheduleDao.delete", calNum);
+    }
+
 	
-	private final SqlSession sqlSession;
 
-	//전체 일정 조회 (PT / Vacation / Etc 상세 포함)
-	@Override
-	public List<EmpScheduleDto> selectAll() {
-		
-		return sqlSession.selectList("EmpScheduleMapper.selectAll");
-	}
-
-	//단건 조회 (PK 기준)
-	@Override
-	public EmpScheduleDto selectByCalNum(int calNum) {
-		
-		return sqlSession.selectOne("EmpScheduleMapper.selectByCalNum", calNum);
-	}
-
-	//직원 + 날짜 범위로 일정 조회
-	@Override
-	public List<EmpScheduleDto> selectByEmpAndDate(int empNum, LocalDate startDate, LocalDate endDate) {
-		        HashMap<String, Object> params = new HashMap<>();
-		        params.put("empNum", empNum);
-		        params.put("startDate", startDate);
-		        params.put("endDate", endDate);
-		        return sqlSession.selectList("EmpScheduleMapper.selectByEmpAndDate", params);
-	}
-
-	//일정 수정 
-	@Override
-	public int update(EmpScheduleDto empSchedule) {
-		 return sqlSession.update("EmpScheduleMapper.update", empSchedule);
-	}
-
-	//일정 삭제
-	@Override
-	public int delete(int calNum) {
-		return sqlSession.delete("EmpScheduleMapper.delete", calNum);
-	}
 	
-	 @Override
-	    public int insert(EmpScheduleDto dto) {
-	        return sqlSession.insert("EmpScheduleMapper.insert", dto);
-	    }
-
-
 }
