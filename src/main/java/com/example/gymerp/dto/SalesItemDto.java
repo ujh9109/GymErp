@@ -31,5 +31,6 @@ public class SalesItemDto {
     private String status;           // 상태 (기본값 'ACTIVE')       
 
     private LocalDateTime createdAt; // 등록일                   
-    private LocalDateTime updatedAt; // 수정일                        
+    private LocalDateTime updatedAt; // 수정일         
+    
 }

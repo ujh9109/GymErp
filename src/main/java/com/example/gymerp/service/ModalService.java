@@ -43,11 +43,14 @@ public interface ModalService {
 	   3. 직원 선택 모달
 	================================ */
 
-	// 직원 목록 조회
-	List<EmpDto> getEmployeeModalList(String keyword, int page, int limit);
-	
-	// 직원 전체 개수 조회
-	int getEmployeeModalCount(String keyword);
+    // 기본 메소드 (그대로)
+    List<EmpDto> getEmployeeModalList(String keyword, int page, int limit);
+    int getEmployeeModalCount(String keyword);
+
+    // 옵션: 기본값(1페이지, 10개)
+    default List<EmpDto> getEmployeeModalList(String keyword) {
+        return getEmployeeModalList(keyword, 1, 10);
+    }
 	
 	/* ================================
 	   직원 선택 모달 끝
