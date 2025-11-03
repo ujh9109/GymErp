@@ -8,7 +8,7 @@
 
 <!-- 인터페이스 매퍼용: MemberDao의 FQCN을 namespace로 -->
 
-<mapper namespace="com.example.gymerp.repository.MemberDao">
+<mapper namespace="MemberMapper">
 
     <!-- 전체 회원 조회 -->
     <select id="selectAll" resultType="MemberDto">

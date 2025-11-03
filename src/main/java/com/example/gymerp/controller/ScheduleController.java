@@ -1,4 +1,3 @@
-// src/main/java/com/example/gymerp/controller/ScheduleController.java
 package com.example.gymerp.controller;
 
 import java.time.LocalDateTime;
@@ -20,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
-
 
     // 전체일정 조회 
     @GetMapping("/schedule/all")

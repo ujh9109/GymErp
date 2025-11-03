@@ -64,6 +64,5 @@ public class ScheduleDaoImpl implements ScheduleDao {
     public int delete(int shNum) {
         return session.delete("ScheduleMapper.delete", shNum);
     }
-
     
 }

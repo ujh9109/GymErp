@@ -112,10 +112,4 @@
     DELETE FROM SCHEDULE WHERE shNum = #{shNum}
   </delete>
 
-  <update id="updateTime" parameterType="map">
-    UPDATE SCHEDULE
-       SET STARTTIME = #{startTime, jdbcType=TIMESTAMP},
-           ENDTIME   = #{endTime,   jdbcType=TIMESTAMP}
-     WHERE SHNUM     = #{shNum}
-  </update>
 </mapper>

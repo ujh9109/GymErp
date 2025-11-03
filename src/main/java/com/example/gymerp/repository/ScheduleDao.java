@@ -3,11 +3,14 @@ package com.example.gymerp.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.example.gymerp.dto.ScheduleDto;
 
+@Mapper
 public interface ScheduleDao {
+
     /* 전체 일정 조회 (관리자용) */
     public List<ScheduleDto> selectAll();
 

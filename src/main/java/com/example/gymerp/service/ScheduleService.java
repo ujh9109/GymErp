@@ -1,11 +1,12 @@
-// src/main/java/com/example/gymerp/service/ScheduleService.java
 package com.example.gymerp.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 import com.example.gymerp.dto.ScheduleDto;
 
 public interface ScheduleService {
+
     // 전체 일정 조회
     List<ScheduleDto> getAllSchedules();
 

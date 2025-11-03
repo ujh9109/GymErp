@@ -28,7 +28,7 @@ public class MemberDaoImpl implements MemberDao {
 	// 전체 회원 조회
 	@Override
 	public List<MemberDto> selectAll() {
-		return session.selectList("MemberMapper.selectAllMembers");
+		return session.selectList("MemberMapper.selectAll");
 	}
 
 	// 회원 등록

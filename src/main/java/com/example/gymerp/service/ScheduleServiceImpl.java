@@ -1,5 +1,5 @@
-// src/main/java/com/example/gymerp/service/impl/ScheduleServiceImpl.java
 package com.example.gymerp.service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -7,8 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.gymerp.dto.ScheduleDto;
-import com.example.gymerp.repository.ScheduleDao;   // DAO는 repository 패키지에 있는 걸로 보임
-import com.example.gymerp.service.ScheduleService; // ← 인터페이스 임포트
+import com.example.gymerp.repository.ScheduleDao;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class ScheduleServiceImpl implements ScheduleService {
+
     private final ScheduleDao scheduleDao;
 
     // 전체 일정 조회 
