@@ -1,9 +1,12 @@
 package com.example.gymerp.repository;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.example.gymerp.dto.ScheduleDto;
@@ -11,52 +14,55 @@ import com.example.gymerp.dto.ScheduleDto;
 import lombok.RequiredArgsConstructor;
 
 @Repository
+@Primary
 @RequiredArgsConstructor
-public class ScheduleDaoImpl implements ScheduleDao{
+public class ScheduleDaoImpl implements ScheduleDao {
 
+    private final SqlSession session;
+
+    /* 전체 일정 조회 */
+    @Override
+    public List<ScheduleDto> selectAll() {
+        return session.selectList("ScheduleMapper.selectAll");
+    }
+    
+    /* 특정 일정 상세조회 */
+	@Override
+	public ScheduleDto selectByShNum(int shNum) {
+		return session.selectOne( "ScheduleMapper.selectByShNum", shNum);
+	}
 	
-	@Autowired
-	private final SqlSession session;
-	
-	//전체 스케줄 조회
+    /* 직원별 일정 조회 */
     @Override
-    public List<ScheduleDto> selectAllSchedules() {
-        return session.selectList("ScheduleMapper.selectAllSchedules");
+    public List<ScheduleDto> selectByEmpNum(int empNum) {
+        return session.selectList("ScheduleMapper.selectByEmpNum", empNum);
     }
 
-    //특정 날짜 스케줄 조회
+    /* 날짜 범위 조회 */
     @Override
-    public List<ScheduleDto> findByDate(String date) {
-        return session.selectList("ScheduleMapper.findByDate", date);
+    public List<ScheduleDto> selectByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("startDate", startDate);
+        param.put("endDate", endDate);
+        return session.selectList("ScheduleMapper.selectByDateRange", param);
     }
 
-    //특정 직원 스케줄 조회
-    @Override
-    public List<ScheduleDto> findByEmpNum(int empNum) {
-        return session.selectList("ScheduleMapper.findByEmpNum", empNum);
-    }
-
-    //단건 스케줄 조회
-    @Override
-    public ScheduleDto findByShNum(int shNum) {
-        return session.selectOne("ScheduleMapper.findByShNum", shNum);
-    }
-
-    //스케줄 등록
+    /* 일정 등록 */
     @Override
     public int insert(ScheduleDto schedule) {
         return session.insert("ScheduleMapper.insert", schedule);
     }
 
-    //스케줄 수정
+    /* 일정 수정 */
     @Override
     public int update(ScheduleDto schedule) {
         return session.update("ScheduleMapper.update", schedule);
     }
 
-    //스케줄 삭제
+    /* 일정 삭제 */
     @Override
     public int delete(int shNum) {
         return session.delete("ScheduleMapper.delete", shNum);
     }
+    
 }

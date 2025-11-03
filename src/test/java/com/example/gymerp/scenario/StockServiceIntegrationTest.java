@@ -124,7 +124,7 @@ class StockServiceIntegrationTest {
         stockService.adjustProduct(productId, req);
 
         // then
-        var purchaseList = stockDao.getPurchaseList(productId);
+        var purchaseList = stockDao.getPurchaseList(productId, 0, 20);
         assertThat(purchaseList).isNotEmpty();
         System.out.println("✅ Purchase insert 성공! size=" + purchaseList.size());
         
@@ -144,7 +144,7 @@ class StockServiceIntegrationTest {
 
         stockService.adjustProduct(productId, req);
 
-        var adjList = stockDao.getAdjustStockAndSalesList(productId);
+        var adjList = stockDao.getAdjustStockAndSalesList(productId, 0, 20);
         assertThat(adjList).isNotEmpty();
         System.out.println("✅ StockAdjustment insert 성공! size=" + adjList.size());
     }

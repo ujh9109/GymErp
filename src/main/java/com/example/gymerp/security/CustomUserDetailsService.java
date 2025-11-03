@@ -18,6 +18,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+		
+		// 1) admin으로 들어오면 고정 이메일로 치환
+        if ("admin".equalsIgnoreCase(email)) {
+            email = "admin@gym.local";   // ← DB에 넣어둔 관리자 이메일
+        }
+        
 		// 로그인용 DAO 메소드 (비밀번호 포함)
 		EmpDto emp = empDao.selectAuthByEmail(email);
 		if(emp == null) {
