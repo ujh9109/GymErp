@@ -3,11 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-
-
-
-
-
 <!-- 인터페이스 매퍼용: MemberDao의 FQCN을 namespace로 -->
 <mapper namespace="MemberMapper">
 
