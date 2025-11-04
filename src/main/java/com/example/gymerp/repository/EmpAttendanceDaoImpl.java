@@ -18,24 +18,28 @@ import lombok.RequiredArgsConstructor;
 public class EmpAttendanceDaoImpl implements EmpAttendanceDao {
     private final SqlSessionTemplate session;
 
+    public List<EmpAttendanceDto> selectAllByDate(Date date) {
+        return session.selectList("EmpAttendanceMapper.selectAllByDate", date);
+    }
+    
     @Override
     public List<EmpAttendanceDto> selectEmpAttendancesByEmpNum(int empNum) {
-        return session.selectList("EmpAttendance.mapper.selectEmpAttendancesByEmpNum", empNum); // ✅
+        return session.selectList("EmpAttendanceMapper.selectEmpAttendancesByEmpNum", empNum); // ✅
     }
 
     @Override
     public EmpAttendanceDto selectEmpAttendanceById(int attNum) {
-        return session.selectOne("EmpAttendance.mapper.selectEmpAttendanceById", attNum); // ✅
+        return session.selectOne("EmpAttendanceMapper.selectEmpAttendanceById", attNum); // ✅
     }
 
     @Override
     public List<EmpAttendanceDto> selectAllEmpAttendances() {
-        return session.selectList("EmpAttendance.mapper.selectAllEmpAttendances"); // ✅
+        return session.selectList("EmpAttendanceMapper.selectAllEmpAttendances");
     }
 
     @Override
     public int insertEmpAttendance(EmpAttendanceDto dto) {
-        return session.insert("EmpAttendance.mapper.insertEmpAttendance", dto); // ✅
+        return session.insert("EmpAttendanceMapper.insertEmpAttendance", dto); // ✅
     }
 
     @Override
@@ -43,22 +47,22 @@ public class EmpAttendanceDaoImpl implements EmpAttendanceDao {
         Map<String,Object> p = new HashMap<>();
         p.put("attNum", attNum);
         p.put("checkOut", checkOut);
-        return session.update("EmpAttendance.mapper.updateEmpAttendanceCheckOut", p); // ✅
+        return session.update("EmpAttendanceMapper.updateEmpAttendanceCheckOut", p); // ✅
     }
 
     @Override
     public int updateEmpAttendance(EmpAttendanceDto dto) {
-        return session.update("EmpAttendance.mapper.updateEmpAttendance", dto); // ✅
+        return session.update("EmpAttendanceMapper.updateEmpAttendance", dto); // ✅
     }
 
     @Override
     public int deleteEmpAttendance(int attNum) {
-        return session.delete("EmpAttendance.mapper.deleteEmpAttendance", attNum); // ✅
+        return session.delete("EmpAttendanceMapper.deleteEmpAttendance", attNum); // ✅
     }
 
     @Override
     public List<EmpAttendanceDto> selectEmpAttendancesByRange(int empNum, Date from, Date to) {
         Map<String,Object> p = Map.of("empNum", empNum, "from", from, "to", to);
-        return session.selectList("EmpAttendance.mapper.selectEmpAttendancesByRange", p); // ✅
+        return session.selectList("EmpAttendanceMapper.selectEmpAttendancesByRange", p); // ✅
     }
 }
