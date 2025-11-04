@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +20,7 @@ public class ProductDto {
 	private int productId;
 	private String codeAId;
 	private String codeBId;
+	private String codeBName;
 	private String name;
 	private BigDecimal price;
 	private Boolean isActive;
@@ -35,4 +38,7 @@ public class ProductDto {
 	private String keyword;
 	//검색 조건을 담기 위한 필드
 	private List<String> categoryCodes;
+	
+	// <input type="file" name="profileFile" > 을 처리하기 위한 필드
+	private MultipartFile profileFile;
 }

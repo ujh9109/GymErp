@@ -21,9 +21,9 @@ import lombok.NoArgsConstructor;
 public class ServiceDto {
 	
 	private int serviceId;
-	private int empNum;
 	private String codeAId;
 	private String codeBId;
+	private String codeBName;
 	private String name;
 	private BigDecimal price;
 	private Boolean isActive;

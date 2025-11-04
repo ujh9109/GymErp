@@ -1,31 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.gymerp.repository.EmpAttendanceDao">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmpAttendance.mapper"> <!-- ✅ 네임스페이스 통일 -->
 
   <!-- 전체 목록 -->
-  <select id="selectAllEmpAttendances" resultType="com.example.gymerp.dto.EmpAttendanceDto">
+  <select id="selectAllEmpAttendances"
+          resultType="com.example.gymerp.dto.EmpAttendanceDto">
     SELECT attNum, empNum, attDate, checkIn, checkOut, workHours, attState
     FROM attendance
     ORDER BY attNum DESC
   </select>
 
-  <!-- 단건 조회 -->
-  <select id="selectEmpAttendanceById" parameterType="int" resultType="com.example.gymerp.dto.EmpAttendanceDto">
+  <!-- 단건 조회 (단일 파라미터 int → #{value}) -->
+  <select id="selectEmpAttendanceById"
+          parameterType="int"
+          resultType="com.example.gymerp.dto.EmpAttendanceDto">
     SELECT attNum, empNum, attDate, checkIn, checkOut, workHours, attState
     FROM attendance
-    WHERE attNum = #{attNum}
+    WHERE attNum = #{value}
   </select>
 
-  <!-- 직원별 목록 -->
-  <select id="selectEmpAttendancesByEmpNum" parameterType="int" resultType="com.example.gymerp.dto.EmpAttendanceDto">
+  <!-- 직원별 목록 (단일 파라미터 int → #{value}) -->
+  <select id="selectEmpAttendancesByEmpNum"
+          parameterType="int"
+          resultType="com.example.gymerp.dto.EmpAttendanceDto">
     SELECT attNum, empNum, attDate, checkIn, checkOut, workHours, attState
     FROM attendance
-    WHERE empNum = #{empNum}
+    WHERE empNum = #{value}
     ORDER BY attDate DESC, attNum DESC
   </select>
 
-  <!-- 출근(등록): DB 기본값 사용 -->
-  <insert id="insertEmpAttendance" parameterType="com.example.gymerp.dto.EmpAttendanceDto">
+  <!-- 출근(등록) -->
+  <insert id="insertEmpAttendance"
+          parameterType="com.example.gymerp.dto.EmpAttendanceDto">
     <selectKey keyProperty="attNum" resultType="int" order="BEFORE">
       SELECT ATTENDANCE_SEQ.NEXTVAL FROM DUAL
     </selectKey>
@@ -41,7 +48,7 @@
        NVL(#{attState,jdbcType=VARCHAR}, 'WORKING'))
   </insert>
 
-  <!-- 퇴근: 전달 없으면 SYSTIMESTAMP, 근무시간 계산 -->
+  <!-- 퇴근(체크아웃) : map(attNum, checkOut) -->
   <update id="updateEmpAttendanceCheckOut" parameterType="map">
     UPDATE attendance
        SET checkOut = NVL(#{checkOut,jdbcType=TIMESTAMP}, SYSTIMESTAMP),
@@ -58,7 +65,8 @@
   </update>
 
   <!-- 전체 수정 -->
-  <update id="updateEmpAttendance" parameterType="com.example.gymerp.dto.EmpAttendanceDto">
+  <update id="updateEmpAttendance"
+          parameterType="com.example.gymerp.dto.EmpAttendanceDto">
     UPDATE attendance
        SET empNum    = #{empNum},
            attDate   = #{attDate,jdbcType=DATE},
@@ -69,14 +77,16 @@
      WHERE attNum    = #{attNum}
   </update>
 
-  <!-- 삭제 -->
+  <!-- 삭제 (단일 파라미터 int → #{value}) -->
   <delete id="deleteEmpAttendance" parameterType="int">
     DELETE FROM attendance
-    WHERE attNum = #{attNum}
+    WHERE attNum = #{value}
   </delete>
 
-  <!-- 기간 조회 -->
-  <select id="selectEmpAttendancesByRange" parameterType="map" resultType="com.example.gymerp.dto.EmpAttendanceDto">
+  <!-- 기간 조회 : map(empNum, from, to) -->
+  <select id="selectEmpAttendancesByRange"
+          parameterType="map"
+          resultType="com.example.gymerp.dto.EmpAttendanceDto">
     SELECT attNum, empNum, attDate, checkIn, checkOut, workHours, attState
     FROM attendance
     WHERE empNum = #{empNum}

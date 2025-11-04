@@ -68,7 +68,7 @@ public class MemberDaoImpl implements MemberDao {
 	public List<MemberDto> search(String keyword) {
 	    Map<String, Object> param = new HashMap<>();
 	    param.put("keyword", keyword);
-	    return session.selectList("MemberMapper.searchMembers", param);
+	    return session.selectList("MemberMapper.search", param);
 	}
     // 회원 이름 단건 조회 (로그용)
     @Override

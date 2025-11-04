@@ -15,15 +15,14 @@
     <result property="codeBName" column="codeBName" />
     <result property="empName" column="empName" />
     <result property="memName" column="memName" />
+    <result property="memNum" column="memNum"/>
   </resultMap>
 
-  <!-- 전체 일정 조회  -->
+  <!-- ====================== 전체 일정 조회 ====================== -->
   <select id="selectAll" resultMap="ScheduleMap">
     SELECT 
-      s.shNum,s.empNum,
-      s.codeBid,s.startTime,
-      s.endTime,s.memo,
-      e.empName,cb.name AS codeBName,m.memName
+      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
+      e.empName, cb.name AS codeBName, m.memName AS memName
     FROM SCHEDULE s
       JOIN Employee e ON s.empNum = e.empNum
       LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
@@ -32,14 +31,11 @@
     ORDER BY s.startTime ASC
   </select>
 
-  <!--  단건 조회 -->
+  <!-- ====================== 단건 조회 ====================== -->
   <select id="selectByShNum" parameterType="int" resultMap="ScheduleMap">
     SELECT 
-      s.shNum,s.empNum,
-      s.codeBid,s.startTime,
-      s.endTime,s.memo,
-      e.empName,cb.name AS codeBName,
-      m.memName
+      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
+      e.empName, cb.name AS codeBName, m.memName
     FROM SCHEDULE s
       JOIN Employee e ON s.empNum = e.empNum
       LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
@@ -48,14 +44,11 @@
     WHERE s.shNum = #{shNum}
   </select>
 
-  <!--  직원별 일정 조회  -->
+  <!-- ====================== 직원별 일정 조회 ====================== -->
   <select id="selectByEmpNum" parameterType="int" resultMap="ScheduleMap">
     SELECT 
-      s.shNum,s.empNum,
-      s.codeBid,s.startTime,
-      s.endTime,s.memo,
-      e.empName,cb.name AS codeBName,
-      m.memName
+      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
+      e.empName, cb.name AS codeBName, m.memName
     FROM SCHEDULE s
       JOIN Employee e ON s.empNum = e.empNum
       LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
@@ -65,14 +58,11 @@
     ORDER BY s.startTime ASC
   </select>
 
-  <!--  날짜 범위 조회 -->
+  <!-- ====================== 날짜 범위 조회 ====================== -->
   <select id="selectByDateRange" resultMap="ScheduleMap">
     SELECT 
-      s.shNum,s.empNum,
-      s.codeBid,s.startTime,
-      s.endTime,s.memo,
-      e.empName,cb.name AS codeBName,
-      m.memName
+      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
+      e.empName, cb.name AS codeBName, m.memName
     FROM SCHEDULE s
       JOIN Employee e ON s.empNum = e.empNum
       LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
@@ -82,20 +72,24 @@
     ORDER BY s.startTime ASC
   </select>
 
-  <!--  일정 등록  -->
+  <!-- ====================== 일정 등록 ====================== -->
   <insert id="insert" parameterType="com.example.gymerp.dto.ScheduleDto">
-    <selectKey keyProperty="shNum" resultType="int" order="BEFORE">
+    <selectKey keyProperty="shNum" resultType="long" order="BEFORE">
       SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
     </selectKey>
     INSERT INTO SCHEDULE (
-       SHNUM, EMPNUM, CODEBID, STARTTIME, ENDTIME, MEMO, REFTYPE
+      SHNUM, EMPNUM, CODEBID, STARTTIME, ENDTIME, MEMO
     ) VALUES (
-    #{shNum},#{empNum},NVL(#{codeBid, jdbcType=VARCHAR}, 'SCHEDULE-PT'),
-    #{startTime},#{endTime},#{memo},'PT'
+      #{shNum},
+      #{empNum},
+      #{codeBid, jdbcType=VARCHAR},
+      #{startTime, jdbcType=TIMESTAMP},
+      #{endTime, jdbcType=TIMESTAMP},
+      #{memo, jdbcType=VARCHAR}
     )
   </insert>
 
-  <!--  일정 수정  -->
+  <!-- ====================== 일정 수정 ====================== -->
   <update id="update" parameterType="com.example.gymerp.dto.ScheduleDto">
     UPDATE SCHEDULE
     SET
@@ -107,7 +101,7 @@
     WHERE shNum = #{shNum}
   </update>
 
-  <!-- 일정 삭제  -->
+  <!-- ====================== 일정 삭제 ====================== -->
   <delete id="delete" parameterType="int">
     DELETE FROM SCHEDULE WHERE shNum = #{shNum}
   </delete>

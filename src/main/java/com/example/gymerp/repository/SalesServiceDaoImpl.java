@@ -62,4 +62,31 @@ public class SalesServiceDaoImpl implements SalesServiceDao {
     public int updateRefundIdBySalesId(Map<String, Object> param) {
         return sqlSession.update("SalesServiceMapper.updateRefundIdBySalesId", param);
     }
+
+
+    // ===============================
+    // [판매 내역 조회 - 필터 + 스크롤]
+    // ===============================
+
+    // 조건에 따른 전체 개수 조회
+    @Override
+    public int selectSalesServiceCount(Map<String, Object> params) {
+        return sqlSession.selectOne("SalesServiceMapper.selectSalesServiceCount", params);
+    }
+
+    // 조건 + 페이징(스크롤) 기반 판매 내역 조회
+    @Override
+    public List<SalesService> selectPagedSalesServices(Map<String, Object> params) {
+        return sqlSession.selectList("SalesServiceMapper.selectPagedSalesServices", params);
+    }
+
+
+    // ===============================
+    // [서비스 매출 통계 조회]
+    // ===============================
+
+    @Override
+    public List<Map<String, Object>> selectServiceSalesAnalytics(Map<String, Object> params) {
+        return sqlSession.selectList("SalesServiceMapper.selectServiceSalesAnalytics", params);
+    }
 }

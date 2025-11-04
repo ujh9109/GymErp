@@ -1,9 +1,13 @@
 package com.example.gymerp.service;
 
+import java.io.File;
 import java.util.List;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.ProductListResponse;
@@ -19,6 +23,10 @@ public class ProductServiceImpl implements ProductService{
 	
 	private final ProductDao productDao;
 	private final StockService stockService;
+	
+	//업로드된 이미지를 저장할 위치 얻어내기
+	@Value("${file.location}")
+	private String fileLocation;
 
 	@Override
 	public ProductListResponse getProducts(int pageNum, ProductDto dto) {
@@ -52,8 +60,14 @@ public class ProductServiceImpl implements ProductService{
 		dto.setStartRowNum(startRowNum);
 		dto.setEndRowNum(endRowNum);
 		
-		//글 목록 얻어오기 (검색 키워드가 있다면 조건에 맞는 목록만 얻어낸다)
+		//상품 목록 얻어오기 (검색 키워드가 있다면 조건에 맞는 목록만 얻어낸다)
 		List<ProductDto> list = productDao.selectPage(dto);
+		
+		// 각 상품에 대한 재고 수량 설정
+		for (ProductDto product : list) {
+			int qunatity = stockService.getStockOne(product.getProductId());
+			product.setQuantity(qunatity);
+		}
 
 		return ProductListResponse.builder()
 				.list(list)
@@ -68,7 +82,31 @@ public class ProductServiceImpl implements ProductService{
 	@Override
 	@Transactional
 	public void save(ProductDto dto, StockAdjustRequestDto request) {
+		
+		//업로드된 이미지가 있는지 읽어와본다
+		MultipartFile image = dto.getProfileFile();
+		
+		//만일 업로드된 이미지가 있다면
+		if(!image.isEmpty()) {
+			//원본 파일명
+			String orgFileName = image.getOriginalFilename();
+			//이미지의 확장자를 유지하기 위해 뒤에 원본 파일명을 추가한다
+			String saveFileName = UUID.randomUUID().toString()+orgFileName;
+			//저장할 파일의 전체 경로 구성하기
+			String filePath=fileLocation + File.separator + saveFileName;
+			try {
+				//업로드된 파일을 저장할 파일 객체 생성
+				File saveFile=new File(filePath);
+				image.transferTo(saveFile);
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+			//UserDto 에 저장된 이미지의 이름을 넣어준다
+			dto.setProfileImage(saveFileName);
+		}
+		
 		productDao.insert(dto);
+		
 		//리액트에 등록 시 수량 기본값 0 넣기
 		if(dto.getQuantity() != 0) {
 			stockService.adjustProduct(dto.getProductId(), request);
