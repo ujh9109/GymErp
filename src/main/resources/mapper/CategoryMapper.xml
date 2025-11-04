@@ -17,8 +17,7 @@
 	</insert>	
 	
 	<!-- 일정 코드 목록  -->
-	<select id="getScheduleCodes" parameterType="com.example.gymerp.dto.CodeDto"
-	        resultType="com.example.gymerp.dto.CodeDto">
+	<select id="getScheduleCodes" parameterType="CodeDto" resultType="CodeDto">
 	  SELECT 
 	    a.codeaId,
 	    b.codebId,

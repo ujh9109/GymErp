@@ -3,15 +3,11 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-
-
-
 <!-- 인터페이스 매퍼용: MemberDao의 FQCN을 namespace로 -->
-
-<mapper namespace="com.example.gymerp.repository.MemberDao">
+<mapper namespace="MemberMapper">
 
     <!-- 전체 회원 조회 -->
-    <select id="selectAll" resultType="MemberDto">
+    <select id="selectAllMembers" resultType="MemberDto">
         SELECT memNum, memName, memGender, memBirthday, memPhone, memEmail,
                memAddr, memCreated, memUpdated, memProfile, memNote
         FROM MEMBER
@@ -70,10 +66,14 @@
         DELETE FROM MEMBER
         WHERE memNum = #{memNum}
     </delete>
+
     
+
     <!-- 이용내역 DB 관련 내용입니다.  -->
     
+    
      <!-- 회원 이름 단건 조회 (로그용) -->
+
 
 
     <!-- 회원 이름 조회 -->
