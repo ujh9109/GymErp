@@ -5,7 +5,7 @@
 <mapper namespace="SalesServiceMapper">
 
     <!-- ===============================
-         [1. 전체 / 단일 조회]
+         [1. 조회]
     =============================== -->
 
     <!-- 전체 서비스 판매 내역 조회 -->
@@ -33,36 +33,56 @@
         <selectKey keyProperty="serviceSalesId" resultType="long" order="BEFORE">
             SELECT sales_service_seq.NEXTVAL FROM DUAL
         </selectKey>
-
         INSERT INTO sales_service (
             serviceSalesId, serviceId, serviceName, empNum, memNum,
-            baseCount, actualCount, discount, baseAmount, actualAmount, avgPrice,
-            serviceType, status, createdAt
+            baseCount, actualCount, discount, baseAmount, actualAmount,
+            serviceType, refundId, status, createdAt, updatedAt
         ) VALUES (
-            #{serviceSalesId}, #{serviceId}, #{serviceName}, #{empNum}, #{memNum},
-            #{baseCount}, #{actualCount}, #{discount}, #{baseAmount}, #{actualAmount}, #{avgPrice},
-            #{serviceType}, 'ACTIVE', SYSDATE
+            #{serviceSalesId},
+            #{serviceId},
+            #{serviceName},
+            #{empNum},
+            #{memNum},
+            #{baseCount},
+            #{actualCount},
+            #{discount},
+            #{baseAmount},
+            #{actualAmount},
+            #{serviceType},
+            NULL,               -- refundId는 PT_LOG 생성 후 업데이트됨
+            'ACTIVE',
+            SYSDATE,
+            SYSDATE
         )
     </insert>
+
+    <!-- PT_LOG 생성 후 refundId 연동 -->
+    <update id="updateRefundIdBySalesId" parameterType="map">
+        UPDATE sales_service
+        SET refundId = #{refundId},
+            updatedAt = SYSDATE
+        WHERE serviceSalesId = #{serviceSalesId}
+          AND status = 'ACTIVE'
+    </update>
 
     <!-- 서비스 판매 수정 -->
     <update id="updateSalesService" parameterType="SalesService">
         UPDATE sales_service
-        SET 
-            empNum        = #{empNum},          <!-- 수정자(현재 로그인자) -->
+        SET
+            empNum        = #{empNum},
             serviceName   = #{serviceName},
             baseCount     = #{baseCount},
             actualCount   = #{actualCount},
             discount      = #{discount},
             baseAmount    = #{baseAmount},
             actualAmount  = #{actualAmount},
-            avgPrice      = #{avgPrice},
             updatedAt     = SYSDATE
         WHERE serviceSalesId = #{serviceSalesId}
+          AND serviceType = #{serviceType}
           AND status = 'ACTIVE'
     </update>
 
-    <!-- 서비스 판매 삭제 (논리 삭제 처리) -->
+    <!-- 서비스 판매 논리삭제 -->
     <update id="deleteSalesService" parameterType="long">
         UPDATE sales_service
         SET status = 'DELETED',
@@ -73,108 +93,76 @@
 
 
     <!-- ===============================
-         [3. 페이징 / 검색 필터]
+         [3. 서비스 판매 내역 조회 (필터 + 스크롤용)]
+         ※ 총 4개 필터: 기간 / 품목명 / 회원 / 직원
     =============================== -->
 
-    <!-- 서비스 판매 내역 조회 (페이지네이션 + 필터) -->
-    <select id="selectPagedServiceSales" parameterType="map" resultType="SalesService">
-        SELECT 
-            s.serviceSalesId,
-            s.createdAt,
-            s.serviceType,
-            s.serviceName,
-            s.memNum,
-            s.empNum,
-            s.actualCount,
-            s.actualAmount
-        FROM sales_service s
-        WHERE s.status = 'ACTIVE'
-        <if test="keyword != null and keyword != ''">
-            AND LOWER(s.serviceName) LIKE '%' || LOWER(#{keyword}) || '%'
-        </if>
-        <if test="empNum != null">
-            AND s.empNum = #{empNum}
-        </if>
-        <if test="memNum != null">
-            AND s.memNum = #{memNum}
-        </if>
-        <if test="serviceIds != null and serviceIds.size > 0">
-            AND s.serviceId IN
-            <foreach item="id" collection="serviceIds" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-        </if>
-        <if test="startDate != null and endDate != null">
-            AND s.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') 
-                               AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
-        </if>
-        ORDER BY s.createdAt DESC
-        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+    <sql id="baseWhereService">
+        <where>
+            <!-- ① 기간 -->
+            <if test="startDate != null and startDate != ''">
+                AND ss.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND ss.createdAt &lt;= TO_DATE(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+            </if>
+
+            <!-- ② 품목명 (검색창 입력 기반, 실시간 LIKE 검색 / 대소문자 무시) -->
+            <if test="serviceNameKeyword != null and serviceNameKeyword != ''">
+                AND UPPER(s.serviceName) LIKE '%' || UPPER(#{serviceNameKeyword}) || '%'
+            </if>
+
+            <!-- ③ 회원 -->
+            <if test="memNum != null">
+                AND ss.memNum = #{memNum}
+            </if>
+
+            <!-- ④ 직원 -->
+            <if test="empNum != null">
+                AND ss.empNum = #{empNum}
+            </if>
+
+            AND ss.status = 'ACTIVE'
+        </where>
+    </sql>
+
+    <!-- 총 개수 조회 -->
+    <select id="selectSalesServiceCount" parameterType="map" resultType="int">
+        SELECT COUNT(1)
+        FROM sales_service ss
+        JOIN service  s ON ss.serviceId = s.serviceId
+        JOIN employee e ON ss.empNum    = e.empNum
+        <include refid="baseWhereService"/>
     </select>
 
-    <!-- 전체 행 개수 조회 (페이지네이션용) -->
-    <select id="countPagedServiceSales" parameterType="map" resultType="int">
-        SELECT COUNT(*)
-        FROM sales_service s
-        WHERE s.status = 'ACTIVE'
-        <if test="keyword != null and keyword != ''">
-            AND LOWER(s.serviceName) LIKE '%' || LOWER(#{keyword}) || '%'
-        </if>
-        <if test="empNum != null">
-            AND s.empNum = #{empNum}
-        </if>
-        <if test="memNum != null">
-            AND s.memNum = #{memNum}
-        </if>
-        <if test="serviceIds != null and serviceIds.size > 0">
-            AND s.serviceId IN
-            <foreach item="id" collection="serviceIds" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-        </if>
-        <if test="startDate != null and endDate != null">
-            AND s.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') 
-                               AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
-        </if>
-    </select>
-
-
-    <!-- ===============================
-         [4. 그래프용 통계]
-    =============================== -->
-
-    <!-- 서비스 매출 그래프 조회 -->
-    <select id="selectServiceSalesGraph" parameterType="map" resultType="map">
-        SELECT
-            CASE 
-                WHEN #{serviceIds} IS NOT NULL THEN s.serviceName
-                ELSE s.serviceType
-            END AS label,
-            SUM(s.actualAmount) AS totalSalesAmount
-        FROM sales_service s
-        WHERE s.status = 'ACTIVE'
-        <if test="empNum != null">
-            AND s.empNum = #{empNum}
-        </if>
-        <if test="memNum != null">
-            AND s.memNum = #{memNum}
-        </if>
-        <if test="serviceIds != null and serviceIds.size > 0">
-            AND s.serviceId IN
-            <foreach item="id" collection="serviceIds" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-        </if>
-        <if test="startDate != null and endDate != null">
-            AND s.createdAt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') 
-                               AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
-        </if>
-        GROUP BY 
-            CASE 
-                WHEN #{serviceIds} IS NOT NULL THEN s.serviceName
-                ELSE s.serviceType
-            END
-        ORDER BY totalSalesAmount DESC
+    <!-- 서비스 판매 내역 조회 -->
+    <select id="selectPagedSalesServices" parameterType="map"
+            resultType="com.example.gymerp.dto.SalesService">
+        SELECT *
+        FROM (
+            SELECT
+                ss.serviceSalesId,
+                ss.serviceId,
+                s.serviceName AS serviceName,
+                ss.serviceType,
+                ss.empNum,
+                e.empEmail AS empEmail,
+                ss.memNum,
+                ss.baseCount,
+                ss.actualCount,
+                ss.discount,
+                ss.baseAmount,
+                ss.actualAmount,
+                ss.status,
+                ss.createdAt,
+                ss.updatedAt,
+                ROW_NUMBER() OVER(ORDER BY ss.serviceSalesId DESC) AS rn
+            FROM sales_service ss
+            JOIN service  s ON ss.serviceId = s.serviceId
+            JOIN employee e ON ss.empNum    = e.empNum
+            <include refid="baseWhereService"/>
+        )
+        WHERE rn BETWEEN #{startRow} AND #{endRow}
     </select>
 
 </mapper>

@@ -5,14 +5,14 @@
 	<sql id="search">
 		<where>
 	        <if test="categoryCodes != null and !categoryCodes.isEmpty()">
-	            AND codeBId IN 
+	            AND sv.codeBId IN 
 	            <foreach collection="categoryCodes" item="categoryCode" open="(" separator="," close=")">
 					#{categoryCode} 
 	            </foreach>
 			</if>
 	        
 	        <if test="keyword != null and keyword != ''">
-				AND name LIKE '%' || #{keyword} || '%'
+				AND sv.name LIKE '%' || #{keyword} || '%'
 	        </if>
 		</where>
 	</sql>
@@ -22,17 +22,18 @@
 		FROM
 			(SELECT result1.*, ROWNUM AS rnum
 			FROM
-				(SELECT serviceId, name, price, isActive, codeBId, serviceValue
-				FROM service
+				(SELECT sv.serviceId, sv.name, sv.price, sv.isActive, sv.codeBId, sv.serviceValue, cb.name AS codeBName
+				FROM service sv
+				LEFT JOIN codeB cb ON sv.codeBId = cb.codeBId
 				<include refid="search"/>
-				ORDER BY codeBId DESC
+				ORDER BY sv.codeBId DESC
 				) result1)
 		WHERE rnum BETWEEN #{startRowNum} AND #{endRowNum}
 	</select>
 	
 	<select id="getCount" parameterType="serviceDto" resultType="int">
 		SELECT NVL(MAX(ROWNUM), 0) AS count
-		FROM service
+		FROM service sv
 		<include refid="search"/>
 	</select>
 	

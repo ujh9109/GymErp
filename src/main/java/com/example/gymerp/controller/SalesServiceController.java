@@ -1,18 +1,27 @@
 package com.example.gymerp.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.web.bind.annotation.*;
+
 import com.example.gymerp.dto.SalesService;
 import com.example.gymerp.service.SalesServiceService;
+
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/v1")
 @RequiredArgsConstructor
 public class SalesServiceController {
 
     private final SalesServiceService salesServiceService;
+
+
+    /* ===============================
+       [1. 조회]
+    =============================== */
 
     // 전체 판매 내역 조회
     @GetMapping("/sales/services")
@@ -26,50 +35,104 @@ public class SalesServiceController {
         return salesServiceService.getSalesServiceById(id);
     }
 
-    // 판매 등록
+
+    /* ===============================
+       [2. 등록]
+    =============================== */
+
     @PostMapping("/sales/services")
     public Map<String, Object> createSalesService(@RequestBody SalesService salesService) {
         int result = salesServiceService.createSalesService(salesService);
-        return Map.of("result", result, "message", "판매 내역이 등록되었습니다.");
+        return Map.of(
+            "result", result,
+            "message", "판매 내역이 등록되었습니다."
+        );
     }
 
-    // 판매 수정
+
+    /* ===============================
+       [3. 수정]
+    =============================== */
+
     @PutMapping("/sales/services/{id}")
     public Map<String, Object> updateSalesService(@PathVariable Long id,
                                                   @RequestBody SalesService salesService) {
         salesService.setServiceSalesId(id);
         int result = salesServiceService.updateSalesService(salesService);
-        return Map.of("result", result, "message", "판매 내역이 수정되었습니다.");
+        return Map.of(
+            "result", result,
+            "message", "판매 내역이 수정되었습니다."
+        );
     }
 
-    // 판매 삭제
+
+    /* ===============================
+       [4. 삭제]
+    =============================== */
+
     @DeleteMapping("/sales/services/{id}")
     public Map<String, Object> deleteSalesService(@PathVariable Long id) {
         int result = salesServiceService.deleteSalesService(id);
-        return Map.of("result", result, "message", "판매 내역이 삭제되었습니다.");
+        return Map.of(
+            "result", result,
+            "message", "판매 내역이 삭제되었습니다."
+        );
     }
 
-    // 페이징 조회
+
+    /* ===============================
+       [5. 판매 내역 조회 (필터 + 검색 + 스크롤)]
+       - 필터: 기간 / 품목명 / 회원 / 직원
+       - 페이징: startRow, endRow
+    =============================== */
     @GetMapping("/sales/services/paged")
-    public Map<String, Object> getPagedSales(@RequestParam(required = false) String keyword,
-                                             @RequestParam(defaultValue = "1") int page,
-                                             @RequestParam(defaultValue = "10") int scrollStep,
-                                             @RequestParam(required = false) Long empNum,
-                                             @RequestParam(required = false) Long memNum,
-                                             @RequestParam(required = false) List<Long> serviceIds,
-                                             @RequestParam(required = false) String startDate,
-                                             @RequestParam(required = false) String endDate) {
-        return salesServiceService.getPagedServiceSales(keyword, page, scrollStep,
-                empNum, memNum, serviceIds, startDate, endDate);
+    public Map<String, Object> getPagedSalesServices(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String serviceNameKeyword,
+            @RequestParam(required = false) Integer memNum,
+            @RequestParam(required = false) Integer empNum) {
+
+        int startRow = (page - 1) * limit + 1;
+        int endRow = page * limit;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("startDate", startDate);
+        params.put("endDate", endDate);
+        params.put("serviceNameKeyword", serviceNameKeyword);
+        params.put("memNum", memNum);
+        params.put("empNum", empNum);
+        params.put("startRow", startRow);
+        params.put("endRow", endRow);
+
+        List<SalesService> list = salesServiceService.getPagedSalesServices(params);
+        int totalCount = salesServiceService.getSalesServiceCount(params);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", list);
+        result.put("totalCount", totalCount);
+        result.put("currentPage", page);
+        result.put("limit", limit);
+
+        return result;
     }
 
-    // 그래프 조회
-    @GetMapping("/sales/services/graph")
-    public List<Map<String, Object>> getSalesGraph(@RequestParam(required = false) String startDate,
-                                                   @RequestParam(required = false) String endDate,
-                                                   @RequestParam(required = false) List<Long> serviceIds,
-                                                   @RequestParam(required = false) Long memNum,
-                                                   @RequestParam(required = false) Long empNum) {
-        return salesServiceService.getServiceSalesGraph(startDate, endDate, serviceIds, memNum, empNum);
+
+    /* ===============================
+       [6. 서비스 매출 통계 조회]
+       - 필터: 기간 / 품목명 / 회원 / 직원
+    =============================== */
+    @GetMapping("/sales/services/analytics")
+    public List<Map<String, Object>> getServiceSalesAnalytics(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String serviceNameKeyword,
+            @RequestParam(required = false) Integer memNum,
+            @RequestParam(required = false) Integer empNum) {
+
+        return salesServiceService.getServiceSalesAnalytics(
+                startDate, endDate, serviceNameKeyword, memNum, empNum);
     }
 }

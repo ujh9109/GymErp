@@ -33,6 +33,7 @@ import com.example.gymerp.security.CustomUserDetails;
 import com.example.gymerp.service.EmpService;
 import com.example.gymerp.service.SalesItemServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
@@ -90,9 +91,10 @@ public class EmpController {
     // 로그인
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody EmpDto dto, HttpServletRequest request){
+    	String loginId = dto.getEmpEmail();
     	// AuthenticationManager 로 인증 시도 (Security 내부에서 UserDetailService 호출)
 		Authentication auth = authManager.authenticate(
-    			new UsernamePasswordAuthenticationToken(dto.getEmpEmail(), dto.getPassword()));
+    			new UsernamePasswordAuthenticationToken(loginId, dto.getPassword()));
     	
 		// 인증 결과를 SecurityContext 에 저장 (세션에도 연동)
 		SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -124,6 +126,34 @@ public class EmpController {
     	
     	return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
     }
+    
+    // 비밀번호 변경 + 즉시 로그아웃
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody EmpDto body,
+            Authentication authentication,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(Map.of("message", "인증 정보가 없습니다."));
+        }
+
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        empService.updatePassword(user.getEmpNum(), body.getCurrentPassword(), body.getNewPassword());
+
+        // ★ 세션 무효화 + 시큐리티 컨텍스트 클리어 + (remember-me 있으면 쿠키도 제거)
+        new org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler()
+                .logout(request, response, authentication);
+        // new org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler("remember-me")
+        //        .logout(request, response, authentication);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "비밀번호가 변경되어 재로그인이 필요합니다.",
+                "requireReLogin", true
+        ));
+    }
+
     
     // 직원 검색 + 페이징
     @GetMapping("/list/paging")

@@ -21,9 +21,9 @@ import lombok.NoArgsConstructor;
 public class ServiceDto {
 	
 	private int serviceId;
-	private int empNum;
 	private String codeAId;
 	private String codeBId;
+	private String codeBName;
 	private String name;
 	private BigDecimal price;
 	private Boolean isActive;
@@ -31,6 +31,8 @@ public class ServiceDto {
 	private int serviceValue;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	
+	private int prevNum;
 	
 	//페이징 처리를 위한 필드
 	private int startRowNum;
