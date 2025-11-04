@@ -37,7 +37,7 @@
 	</select>
 	
 	<insert id="insert" parameterType="serviceDto">
-		<selectKey keyProperty="num" resultType="int" order="BEFORE">
+		<selectKey keyProperty="serviceId" resultType="int" order="BEFORE">
 			SELECT service_seq.NEXTVAL FROM DUAL
 		</selectKey>
 		INSERT INTO service
@@ -50,7 +50,7 @@
 		SET codeBId=#{codeBId}, name=#{name}, price=#{price}, isActive=#{isActive},
 			updatedAt=SYSDATE, note=#{note}
 			
-			<if test="profileImage != null">, profileImage=#{profileImage}</if>
+			<!-- <if test="profileImage != null">, profileImage=#{profileImage}</if> -->
 			
 		WHERE serviceId=#{serviceId}
 	</update>
