@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/pt/**").permitAll()     // Swagger 테스트용 PT API 허용
                 .requestMatchers("/v1/schedule/**").permitAll() // 일정 관련 API Swagger 테스트 허용
 
+                .anyRequest().authenticated()
 
                 .anyRequest().permitAll()     // 전체 허용 (초기 개발용)
             )
