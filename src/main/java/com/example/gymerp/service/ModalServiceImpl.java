@@ -17,12 +17,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ModalServiceImpl implements ModalService {
-	private final ModalDao dao;
 
-	/*
-	 * ================================ 서비스 상품 선택 모달
-	 * =================================
-	 */
+    private final ModalDao dao;
 
     /* =========================================================
        [서비스 상품 선택 모달]
@@ -53,26 +49,17 @@ public class ModalServiceImpl implements ModalService {
             dto.setStartRowNum(startRow);
             dto.setEndRowNum(endRow);
         }
+
         return dao.getServiceModalList(dto);
     }
 
-	@Override
-	public int getServiceModalCount(ServiceDto dto) {
-		if (dto.getKeyword() != null && dto.getKeyword().trim().isEmpty()) {
-			dto.setKeyword(null);
-		}
-		return dao.getServiceModalCount(dto);
-	}
-
-	/*
-	 * ================================ 서비스 상품 선택 모달 끝
-	 * =================================
-	 */
-
-	/*
-	 * ================================ 실물 상품 선택 모달 (추가)
-	 * ================================
-	 */
+    @Override
+    public int getServiceModalCount(ServiceDto dto) {
+        if (dto.getKeyword() != null && dto.getKeyword().trim().isEmpty()) {
+            dto.setKeyword(null);
+        }
+        return dao.getServiceModalCount(dto);
+    }
 
     /* =========================================================
        [서비스 상품 선택 모달 끝]
