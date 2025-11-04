@@ -7,6 +7,7 @@
 
 
 
+
 <!-- 인터페이스 매퍼용: MemberDao의 FQCN을 namespace로 -->
 <mapper namespace="MemberMapper">
 
@@ -72,7 +73,12 @@
     </delete>
 
     
-  
+
+    <!-- 이용내역 DB 관련 내용입니다.  -->
+    
+    
+     <!-- 회원 이름 단건 조회 (로그용) -->
+
 
 
     <!-- 회원 이름 조회 -->

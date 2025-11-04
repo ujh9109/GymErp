@@ -80,7 +80,11 @@ public class ModalServiceImpl implements ModalService {
         // ✅ 기본 limit 계산 (startRowNum, endRowNum 없을 경우)
         int limit = 20;
         if (dto.getStartRowNum() <= 0 || dto.getEndRowNum() <= 0) {
+<<<<<<< HEAD
+            int page = dto.getEmpNum() > 0 ? dto.getEmpNum() : 1;
+=======
             int page = 1; // 기본 페이지 1
+>>>>>>> upstream/develop
             int startRow = (page - 1) * limit + 1;
             int endRow = page * limit;
             dto.setStartRowNum(startRow);
@@ -123,7 +127,11 @@ public class ModalServiceImpl implements ModalService {
 		// 3. DAO 호출
 		return dao.getProductModalList(param);
 	}
+<<<<<<< HEAD
+	                                        
+=======
 
+>>>>>>> upstream/develop
 	// 실물 상품 전체 개수 조회
 	@Override
 	public int getProductModalCount(String keyword) {

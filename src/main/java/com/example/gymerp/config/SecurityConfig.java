@@ -38,7 +38,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth // 요청 권한 제어
                 .requestMatchers(SWAGGER).permitAll() // Swagger 허용
                 .requestMatchers("/v1/emp/login", "/v1/emp/logout").permitAll() // 로그인 허용
-                .requestMatchers("/v1/schedule/**").permitAll() // ✅ 일정 관련 API Swagger 테스트 허용
+                .requestMatchers("/v1/pt/**").permitAll()     // Swagger 테스트용 PT API 허용
+                .requestMatchers("/v1/schedule/**").permitAll() // 일정 관련 API Swagger 테스트 허용
+
                 .anyRequest().authenticated()     // 전체 허용 (초기 개발용)
             )
             
@@ -73,8 +75,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // Vite 개발 서버
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        // Vite 개발 서버
+        // Swagger (Spring 내부)
+        config.setAllowedOrigins(List.of("http://localhost:5174","http://localhost:9000")); 
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
