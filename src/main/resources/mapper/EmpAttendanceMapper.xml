@@ -8,7 +8,7 @@
 		추가 컬럼을 무시하므로 동작엔 문제 없음 ========================================================== -->
 
 	<!-- ✅ 하루치(전직원) + 직원명 JOIN -->
-	<select id="selectAllByDate" parameterType="date"
+<select id="selectAllByDate" parameterType="date"
 		resultType="com.example.gymerp.dto.EmpAttendanceDto">
 		SELECT
 		a.attNum,
