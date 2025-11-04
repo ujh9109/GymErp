@@ -131,22 +131,8 @@ public class SalesItemServiceImpl implements SalesItemService {
 		
 		return salesItemDao.selectItemSalesAnalytics(params);
 	}
+
+	
 		
-	 // 상품 매출 그래프 데이터 조회
-	@Override
-	public Map<String, List<Map<String, Object>>> getItemSalesGraphData(String startDate, String endDate,
-			String groupByUnit) {
-		
-		Map<String, Object> params = new HashMap<>();
-		params.put("startDate", startDate);
-		params.put("endDate", endDate);
-		params.put("groupByUnit", groupByUnit);
-		
-		List<Map<String, Object>> rawData = salesItemDao.selectItemSalesGraphData(params);
-		
-		Map<String, List<Map<String, Object>>> resultMap = new HashMap<>();
-		resultMap.put("salesData", rawData);
-		
-		return resultMap;
-	}
+	 
 }
