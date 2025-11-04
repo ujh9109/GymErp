@@ -98,7 +98,7 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
     @Transactional
     @Override
     public int deletePtRegistration(int regNum) {
-        // 1️⃣ 삭제 대상 조회
+        // 1️ 삭제 대상 조회
         PtRegistrationDto target = session.selectOne("PtRegistrationMapper.getPtRegistrationById", regNum);
         if (target == null) {
             throw new IllegalArgumentException("존재하지 않는 PT 등록입니다.");
@@ -106,7 +106,7 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
 
         System.out.println("[PT 예약 삭제 시작] regNum=" + regNum);
 
-        // 2️⃣ PT 등록 데이터 삭제
+        // 2️ PT 등록 데이터 삭제
         int deleted = session.delete("PtRegistrationMapper.deletePtRegistration", regNum);
         System.out.println("[PT 예약 삭제 완료] deleted=" + deleted);
 
