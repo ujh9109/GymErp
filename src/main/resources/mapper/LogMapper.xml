@@ -133,30 +133,44 @@
 	        SELECT pt_log_seq.NEXTVAL FROM DUAL
 	    </selectKey>
 	    INSERT INTO pt_log (
-	        usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
+	        usageId, 
+	        memNum, 
+	        empNum, 
+	        status, 
+	        countChange, 
+	        createdAt, 
+	        salesId, 
+	        regId
 	    ) VALUES (
-	        #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL, #{regId}
+	        #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL,    #{regId, jdbcType=NULL}
 	    )
 	</insert>
 	
 	<!-- PT 예약 취소 로그 등록 (복구) -->
-	<insert id="insertPtCancelLog" parameterType="PtLogDto">
-	   <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
-        SELECT pt_log_seq.NEXTVAL FROM DUAL
-    </selectKey>
-    INSERT INTO pt_log (
-        usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
-    ) VALUES (
-        #{usageId, jdbcType=NUMERIC},
-        #{memNum, jdbcType=NUMERIC},
-        #{empNum, jdbcType=NUMERIC},
-        '예약취소',
-        1,
-        SYSDATE,
-        NULL,
-        NULL
-    )
-	</insert>
+  <insert id="insertPtCancelLog" parameterType="PtLogDto">
+   <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
+       SELECT pt_log_seq.NEXTVAL FROM DUAL
+   </selectKey>
+   INSERT INTO pt_log (
+       usageId, 
+       memNum, 
+       empNum, 
+       status, 
+       countChange, 
+       createdAt, 
+       salesId, 
+       regId
+   ) VALUES (
+       #{usageId, jdbcType=NUMERIC},
+       #{memNum, jdbcType=NUMERIC},
+       #{empNum, jdbcType=NUMERIC},
+       '예약취소',
+       1,
+       SYSDATE,
+       NULL,
+       #{regId, jdbcType=NULL}
+   )
+</insert>
 	
 	<!-- PT 등록번호 기준으로 기존 소비 로그 조회 -->
 	<select id="selectPtLogByRegId" parameterType="long" resultType="PtLogDto">

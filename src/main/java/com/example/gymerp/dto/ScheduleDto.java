@@ -22,7 +22,8 @@ public class ScheduleDto {
 	// 기본 일정 정보
     private int shNum;		// 스케줄 고유번호 (PK)
     private int empNum;		// 직원 고유번호 (FK)
-    private String codeBid;		// 일정유형(PT, VACATION, ETC)				
+    private String codeBid;		// 일정유형(PT, VACATION, ETC)	
+    
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
 	private LocalDateTime startTime;	// 시작시간
@@ -40,6 +41,7 @@ public class ScheduleDto {
     private String memName;              // 회원 이름 (PT 전용)
     
     //  PT 전용 필드 추가
-    private int memNum; // 회원 고유번호 (PT 전용)
+    private Long memNum; // 회원 고유번호 (PT 전용)
+    private Long regId;
     
 }

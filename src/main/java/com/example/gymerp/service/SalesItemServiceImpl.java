@@ -131,6 +131,13 @@ public class SalesItemServiceImpl implements SalesItemService {
 		
 		return salesItemDao.selectItemSalesAnalytics(params);
 	}
+
+	@Override
+	public Map<String, List<Map<String, Object>>> getItemSalesGraphData(String startDate, String endDate,
+			String groupByUnit) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 		
 	 
 }

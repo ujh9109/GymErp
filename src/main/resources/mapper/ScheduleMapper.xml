@@ -34,29 +34,29 @@
   </select>
 
   <!--  단건 조회 -->
+  
   <select id="selectByShNum" parameterType="int" resultMap="ScheduleMap">
- SELECT *
-  FROM (
-      SELECT
-          s.SHNUM,
-          s.EMPNUM,
-          s.CODEBID,
-          s.STARTTIME,
-          s.ENDTIME,
-          s.MEMO,
-          e.EMPNAME,
-          cb.NAME AS CODEBNAME,
-          m.MEMNAME,
-          r.MEMNUM
-      FROM SCHEDULE s
-      LEFT JOIN REGISTRATION r ON s.SHNUM = r.SHNUM
-      LEFT JOIN MEMBER m ON r.MEMNUM = m.MEMNUM
-      LEFT JOIN EMPLOYEE e ON s.EMPNUM = e.EMPNUM
-      LEFT JOIN CODEB cb ON s.CODEBID = cb.CODEBID
-      WHERE s.SHNUM = #{shNum}
-  )
-  WHERE ROWNUM = 1  </select>
-
+  SELECT 
+    s.shNum,
+    s.empNum,
+    s.codeBid,
+    s.startTime,
+    s.endTime,
+    s.memo,
+    e.empName,
+    cb.name AS codeBName,
+    r.memNum,        -- ✅ 회원번호 추가
+    r.regNum AS regId,   
+    m.memName
+  FROM SCHEDULE s
+    JOIN Employee e ON s.empNum = e.empNum
+    LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
+    LEFT JOIN Registration r ON s.shNum = r.shNum
+    LEFT JOIN Member m ON r.memNum = m.memNum
+  WHERE s.shNum = #{shNum}
+</select>
+  
+  
   <!--  직원별 일정 조회  -->
   <select id="selectByEmpNum" parameterType="int" resultMap="ScheduleMap">
     SELECT 
@@ -92,17 +92,17 @@
   </select>
 
   <!--  일정 등록  -->
-  <insert id="insert" parameterType="com.example.gymerp.dto.ScheduleDto">
-    <selectKey keyProperty="shNum" resultType="int" order="BEFORE">
-      SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
-    </selectKey>
-    INSERT INTO SCHEDULE (
-       SHNUM, EMPNUM, CODEBID, STARTTIME, ENDTIME, MEMO, REFTYPE
-    ) VALUES (
-    #{shNum},#{empNum},NVL(#{codeBid, jdbcType=VARCHAR}, 'SCHEDULE-PT'),
-    #{startTime},#{endTime},#{memo},'PT'
-    )
-  </insert>
+<insert id="insert" parameterType="com.example.gymerp.dto.ScheduleDto" useGeneratedKeys="true" keyProperty="shNum">
+  <selectKey keyProperty="shNum" resultType="int" order="BEFORE">
+    SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
+  </selectKey>
+  
+  INSERT INTO SCHEDULE (
+     SHNUM, EMPNUM, CODEBID, STARTTIME, ENDTIME, MEMO
+  ) VALUES (
+     #{shNum}, #{empNum}, #{codeBid}, #{startTime}, #{endTime}, #{memo}
+  )
+</insert>
 
   <!--  일정 수정  -->
   <update id="update" parameterType="com.example.gymerp.dto.ScheduleDto">

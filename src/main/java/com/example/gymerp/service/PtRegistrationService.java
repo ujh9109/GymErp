@@ -20,4 +20,6 @@ public interface PtRegistrationService {
 
     // 예약 삭제
     int deletePtRegistration(int regNum);
+    
+    Integer findRegNumByShNum(int shNum);
 }
