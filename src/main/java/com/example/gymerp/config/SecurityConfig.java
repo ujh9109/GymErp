@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/schedule/**").permitAll() // 일정 관련 API Swagger 테스트 허용
 
                 .anyRequest().authenticated()
+                // .anyRequest().permitAll()
             )
             
             // 로그인 폼 비활성화
