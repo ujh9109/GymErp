@@ -20,4 +20,7 @@ public class EmpAttendanceDto {
     private Timestamp checkOut; // 퇴근 시간
     private int workHours;   // 근무시간
     private String attState;    // 상태
+    
+    // 🔥 추가
+    private String empName;      // 직원명
 }

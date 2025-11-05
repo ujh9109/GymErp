@@ -24,7 +24,7 @@ public class CategoryController {
 	//상품 분류 목록 조회
 	@GetMapping("/categories/list/{codeAId}")
 	public List<CodeDto> getCategoryList(CodeDto dto, @PathVariable String codeAId) {
-		dto.setCodeAId(codeAId);
+		dto.setCodeAId(codeAId); 
 		return categoryService.getAllCodes(dto);
 	}
 	

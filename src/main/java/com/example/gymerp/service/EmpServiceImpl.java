@@ -89,11 +89,19 @@ public class EmpServiceImpl implements EmpService {
 	}
 
 	@Override
-	public int updatePassword(int empNum, String newPassword) {
+	public void updatePassword(int empNum, String currentPassword, String newPassword) {
+		String dbHash = empDao.selectPasswordHashByEmpNum(empNum);
+		if (dbHash == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+		
+		if(!passwordEncoder.matches(currentPassword, dbHash))
+			throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+		if (passwordEncoder.matches(newPassword, dbHash))
+            throw new IllegalArgumentException("이전과 동일한 비밀번호는 사용할 수 없습니다.");
+		
 		String hash = passwordEncoder.encode(newPassword);
+		int updated = empDao.updatePassword(empNum, hash);
 		
-		
-		return empDao.updatePassword(empNum, hash);
+		if(updated != 1) throw new IllegalArgumentException("비밀번호 변경에 실패했습니다");
 	}
 	
 	// 직원 검색 + 페이징
