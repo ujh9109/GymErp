@@ -24,10 +24,15 @@ import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
+import org.mybatis.spring.boot.autoconfigure.MybatisLanguageDriverAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.stereotype.Repository;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.gymerp.dto.ServiceDto;
@@ -35,13 +40,24 @@ import com.example.gymerp.dto.ServiceListResponse;
 import com.example.gymerp.service.ServiceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(ServiceController.class)
+@WebMvcTest(
+    controllers = ServiceController.class,
+    excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = Repository.class),
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = org.apache.ibatis.annotations.Mapper.class)
+    },
+    excludeAutoConfiguration = {
+        MybatisAutoConfiguration.class,
+        MybatisLanguageDriverAutoConfiguration.class
+    }
+)
+@AutoConfigureMockMvc(addFilters = false)
 class ServiceControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @MockBean
     private ServiceService serviceService;
 
     @Autowired

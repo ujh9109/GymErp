@@ -6,6 +6,10 @@ import com.example.gymerp.dto.PtRegistrationDto;
 
 public interface PtRegistrationService {
 
+    // ===============================
+    // [기존 CRUD 기능]
+    // ===============================
+
     // 전체 예약 목록 조회
     List<PtRegistrationDto> getAllPtRegistration(Integer empNum, String date);
 
@@ -19,10 +23,12 @@ public interface PtRegistrationService {
     int updatePtRegistration(PtRegistrationDto dto);
 
     // 예약 삭제
-    int deletePtRegistration(long regNum);
-    
+    int deletePtRegistration(int regNum);
+    // 스케줄번호로 예약번호 select 
+    Integer findRegNumByShNum(int shNum);
 
-    Long findRegNumByShNum(long shNum);
+
+  
 
     // ===============================
     // [PT LOG 관련 추가 기능]

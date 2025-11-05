@@ -104,6 +104,7 @@ public class ScheduleController {
 		return ResponseEntity.status(HttpStatus.CREATED).body("일정이 등록되었습니다.");
 	}
 
+
 	// 일정 수정
 	@PutMapping("/schedule/update")
 	public ResponseEntity<String> updateSchedule(@RequestBody ScheduleDto scheduleDto) {
@@ -117,5 +118,6 @@ public class ScheduleController {
 		scheduleService.deleteSchedule(shNum);
 		return ResponseEntity.ok("일정이 삭제되었습니다.");
 	}
+
 
 }

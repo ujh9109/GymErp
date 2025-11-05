@@ -29,6 +29,7 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
 
 	/* ============================= 📖 조회 관련 ============================= */
 
+
 	/**
 	 * 전체 PT 예약 조회 ------------------------------------------------------------ 현재는
 	 * empNum, date 파라미터를 사용하지 않지만, 향후 트레이너별 / 날짜별 필터 기능 추가를 고려한 구조이다.
@@ -108,7 +109,7 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
 
 	@Transactional
 	@Override
-	public int deletePtRegistration(long regNum) {
+	public int deletePtRegistration(int regNum) {
 		// 1️⃣ 삭제 대상 조회
 		PtRegistrationDto target = session.selectOne("PtRegistrationMapper.getPtRegistrationById", regNum);
 		if (target == null) {
@@ -134,10 +135,14 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
 	 * REGISTRATION의 regNum을 찾기 위해 사용. ex) 일정 삭제 시 → 해당 일정(shNum)에 연결된 REGISTRATION
 	 * 찾기
 	 */
-	@Override
-	public Long findRegNumByShNum(long shNum) {
-		System.out.println("[findRegNumByShNum 호출] shNum=" + shNum);
-		return sessionT.selectOne("PtRegistrationMapper.findRegNumByShNum", shNum);
-	}
+
+    //일정번호(shNum)로 PT 등록번호(regNum) 조회 
+    @Override
+    public Integer findRegNumByShNum(int shNum) {
+        System.out.println("[findRegNumByShNum 호출] shNum=" + shNum);
+    return sessionT.selectOne("PtRegistrationMapper.findRegNumByShNum", shNum);
+    }
+
+	
 
 }

@@ -188,41 +188,43 @@
 	
 	<!-- 3-1. 입고시 Purchase Table에 row 추가 -->
 	<insert id="insertPurchase" parameterType="PurchaseDto">
-    INSERT INTO Purchase (
-        purchaseId,
-        productId,
-        codeBId,
-        createdAt,
-        quantity,
-        notes
-    ) VALUES (
-        PURCHASE_SEQ.NEXTVAL,
-        #{productId},
-        #{codeBId},
-        #{createdAt},
-        #{quantity},
-        #{notes, jdbcType=VARCHAR}
-    )
-	</insert>
+      INSERT INTO Purchase (
+          purchaseId,
+          productId,
+          codeBId,
+          createdAt,
+          quantity,
+          notes
+      ) VALUES (
+          PURCHASE_SEQ.NEXTVAL,
+          #{productId},
+          #{codeBId},
+          COALESCE(#{createdAt}, CURRENT_TIMESTAMP),
+          #{quantity},
+          #{notes, jdbcType=VARCHAR}
+      )
+  	</insert>
+
 	
 	<!-- 3-2. 출고시 StockAdjustment Table에 row 추가 -->
 	<insert id="insertStockAdjustment" parameterType="StockAdjustmentDto">
-    INSERT INTO StockAdjustment (
-        adjustmentId,
-        productId,
-        codeBId,
-        createdAt,
-        quantity,
-        notes
-    ) VALUES (
-        STOCK_ADJUSTMENT_SEQ.NEXTVAL,
-        #{productId},
-        #{codeBId},
-        #{createdAt},
-        #{quantity},
-        #{notes}
-    )
-	</insert>
+      INSERT INTO StockAdjustment (
+          adjustmentId,
+          productId,
+          codeBId,
+          createdAt,
+          quantity,
+          notes
+      ) VALUES (
+          STOCK_ADJUSTMENT_SEQ.NEXTVAL,
+          #{productId},
+          #{codeBId},
+          COALESCE(#{createdAt}, CURRENT_TIMESTAMP),
+          #{quantity},
+          #{notes}
+      )
+  	</insert>
+
 	
 	
 
