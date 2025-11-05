@@ -29,7 +29,7 @@ public class ProductServiceImpl implements ProductService{
 	private String fileLocation;
 
 	@Override
-	public ProductListResponse getProducts(int pageNum, ProductDto dto) {
+	public ProductListResponse getProducts(int pageNum, ProductDto dto, String sortBy, String direction) {
 		
 		//한 페이지에 몇개씩 표시할 것인지
 		final int PAGE_ROW_COUNT=10;
@@ -59,15 +59,11 @@ public class ProductServiceImpl implements ProductService{
 		// startRowNum 과 endRowNum 을 ProductDto 객체에 담아서
 		dto.setStartRowNum(startRowNum);
 		dto.setEndRowNum(endRowNum);
+		dto.setSortBy(sortBy);
+		dto.setDirection(direction);
 		
 		//상품 목록 얻어오기 (검색 키워드가 있다면 조건에 맞는 목록만 얻어낸다)
 		List<ProductDto> list = productDao.selectPage(dto);
-		
-		// 각 상품에 대한 재고 수량 설정
-		for (ProductDto product : list) {
-			int qunatity = stockService.getStockOne(product.getProductId());
-			product.setQuantity(qunatity);
-		}
 
 		return ProductListResponse.builder()
 				.list(list)
