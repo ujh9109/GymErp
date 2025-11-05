@@ -83,7 +83,7 @@ public class ProductServiceImpl implements ProductService{
 		MultipartFile image = dto.getProfileFile();
 		
 		//만일 업로드된 이미지가 있다면
-		if(!image.isEmpty()) {
+		if(image != null && !image.isEmpty()) {
 			//원본 파일명
 			String orgFileName = image.getOriginalFilename();
 			//이미지의 확장자를 유지하기 위해 뒤에 원본 파일명을 추가한다
@@ -105,6 +105,7 @@ public class ProductServiceImpl implements ProductService{
 		
 		//리액트에 등록 시 수량 기본값 0 넣기
 		if(dto.getQuantity() != 0) {
+			request.setDate(dto.getCreatedAt());
 			stockService.adjustProduct(dto.getProductId(), request);
 		}
 		
