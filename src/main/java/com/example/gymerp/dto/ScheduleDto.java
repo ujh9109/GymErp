@@ -29,6 +29,7 @@ public class ScheduleDto {
 	private LocalDateTime startTime;	// 시작시간
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+
 	private LocalDateTime endTime;		// 종료시간
  
     private String memo;		// 메모
@@ -39,9 +40,11 @@ public class ScheduleDto {
     private String codeBName;      		 // 일정유형 이름 (CodeB 테이블 조인 결과)
     private String empName;              // 트레이너 이름
     private String memName;              // 회원 이름 (PT 전용)
+    private String refType;            // 개인일정/공통일정 구분
     
     //  PT 전용 필드 추가
     private Long memNum; // 회원 고유번호 (PT 전용)
     private Long regId;
     
 }
+

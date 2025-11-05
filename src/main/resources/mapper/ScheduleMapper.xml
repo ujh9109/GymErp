@@ -18,106 +18,101 @@
     <result property="memNum" column="memNum"/>
   </resultMap>
 
-  <!-- 전체 일정 조회  -->
+  <!-- ====================== 전체 일정 조회 ====================== -->
   <select id="selectAll" resultMap="ScheduleMap">
     SELECT 
-      s.shNum,s.empNum,
-      s.codeBid,s.startTime,
-      s.endTime,s.memo,
-      e.empName,cb.name AS codeBName,m.memName
+      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
+      e.empName, cb.name AS codeBName, m.memName
     FROM SCHEDULE s
       JOIN Employee e ON s.empNum = e.empNum
       LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
-      LEFT JOIN Registration r ON s.shNum = r.shNum
-      LEFT JOIN Member m ON r.memNum = m.memNum
+      LEFT JOIN Member m ON s.memNum = m.memNum
     ORDER BY s.startTime ASC
   </select>
 
-  <!--  단건 조회 -->
-  
+  <!-- ====================== 단건 조회 ====================== -->
   <select id="selectByShNum" parameterType="int" resultMap="ScheduleMap">
-  SELECT 
-    s.shNum,
-    s.empNum,
-    s.codeBid,
-    s.startTime,
-    s.endTime,
-    s.memo,
-    e.empName,
-    cb.name AS codeBName,
-    r.memNum,        -- ✅ 회원번호 추가
-    r.regNum AS regId,   
-    m.memName
-  FROM SCHEDULE s
-    JOIN Employee e ON s.empNum = e.empNum
-    LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
-    LEFT JOIN Registration r ON s.shNum = r.shNum
-    LEFT JOIN Member m ON r.memNum = m.memNum
-  WHERE s.shNum = #{shNum}
-</select>
-  
-  
-  <!--  직원별 일정 조회  -->
+	  SELECT 
+	    s.shNum,
+	    s.empNum,
+	    s.codeBid,
+	    s.startTime,
+	    s.endTime,
+	    s.memo,
+	    e.empName,
+	    cb.name AS codeBName,
+	    s.memNum,        -- ✅ 회원번호 추가
+	    r.regNum AS regId,   
+	    m.memName
+	  FROM SCHEDULE s
+	    JOIN Employee e ON s.empNum = e.empNum
+	    LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
+	    LEFT JOIN Registration r ON s.shNum = r.shNum
+	    LEFT JOIN Member m ON s.memNum = m.memNum
+	  WHERE s.shNum = #{shNum}
+	</select>
+	
+	  <!-- ====================== 직원별 일정 조회 ====================== -->
   <select id="selectByEmpNum" parameterType="int" resultMap="ScheduleMap">
     SELECT 
-      s.shNum,s.empNum,
-      s.codeBid,s.startTime,
-      s.endTime,s.memo,
-      e.empName,cb.name AS codeBName,
-      m.memName
+      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
+      e.empName, cb.name AS codeBName, m.memName
     FROM SCHEDULE s
       JOIN Employee e ON s.empNum = e.empNum
       LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
       LEFT JOIN Registration r ON s.shNum = r.shNum
-      LEFT JOIN Member m ON r.memNum = m.memNum
+      LEFT JOIN Member m ON s.memNum = m.memNum
     WHERE s.empNum = #{empNum}
     ORDER BY s.startTime ASC
   </select>
 
-  <!--  날짜 범위 조회 -->
+  <!-- ====================== 날짜 범위 조회 ====================== -->
   <select id="selectByDateRange" resultMap="ScheduleMap">
     SELECT 
-      s.shNum,s.empNum,
-      s.codeBid,s.startTime,
-      s.endTime,s.memo,
-      e.empName,cb.name AS codeBName,
-      m.memName
+      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
+      e.empName, cb.name AS codeBName, m.memName
     FROM SCHEDULE s
       JOIN Employee e ON s.empNum = e.empNum
       LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
       LEFT JOIN Registration r ON s.shNum = r.shNum
-      LEFT JOIN Member m ON r.memNum = m.memNum
+      LEFT JOIN Member m ON s.memNum = m.memNum
     WHERE s.startTime BETWEEN #{startDate} AND #{endDate}
     ORDER BY s.startTime ASC
   </select>
 
-  <!--  일정 등록  -->
-<insert id="insert" parameterType="com.example.gymerp.dto.ScheduleDto" useGeneratedKeys="true" keyProperty="shNum">
-  <selectKey keyProperty="shNum" resultType="int" order="BEFORE">
-    SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
-  </selectKey>
-  
-  INSERT INTO SCHEDULE (
-     SHNUM, EMPNUM, CODEBID, STARTTIME, ENDTIME, MEMO
-  ) VALUES (
-     #{shNum}, #{empNum}, #{codeBid}, #{startTime}, #{endTime}, #{memo}
-  )
-</insert>
+  <!-- ====================== 일정 등록 ====================== -->
+  <insert id="insert" parameterType="com.example.gymerp.dto.ScheduleDto" useGeneratedKeys="true" keyProperty="shNum">
+    <selectKey keyProperty="shNum" resultType="long" order="BEFORE">
+      SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
+    INSERT INTO SCHEDULE (
+      SHNUM, EMPNUM, MEMNUM, CODEBID, STARTTIME, ENDTIME, MEMO
+    ) VALUES (
+      #{shNum},
+      #{empNum},
+      #{memNum, jdbcType=NUMERIC},
+      #{codeBid},
+      #{startTime},
+      #{endTime},
+      #{memo}
+    )
+  </insert>
 
-  <!--  일정 수정  -->
+  <!-- ====================== 일정 수정 ====================== -->
   <update id="update" parameterType="com.example.gymerp.dto.ScheduleDto">
     UPDATE SCHEDULE
     SET
       empNum = #{empNum},
+      memNum = #{memNum, jdbcType=VARCHAR},
       codeBid = #{codeBid, jdbcType=VARCHAR},
       startTime = #{startTime},
       endTime = #{endTime},
       memo = #{memo}
-    WHERE shNum = #{shNum}
+    WHERE shNum = #{shNum, jdbcType=VARCHAR}
   </update>
 
-  <!-- 일정 삭제  -->
-  <delete id="delete" parameterType="int">
+  <!-- ====================== 일정 삭제 ====================== -->
+  <delete id="delete" parameterType="map">
     DELETE FROM SCHEDULE WHERE shNum = #{shNum}
   </delete>
 

@@ -21,5 +21,26 @@ public interface PtRegistrationService {
     // 예약 삭제
     int deletePtRegistration(int regNum);
     
+
     Integer findRegNumByShNum(int shNum);
+
+    // ===============================
+    // [PT LOG 관련 추가 기능]
+    // ===============================
+
+    /**
+     * PT 예약 시 처리:
+     *  - REGISTRATION 테이블에 예약 정보 저장
+     *  - PT_LOG 테이블에 소비 로그(-1) 기록
+     */
+    //void registerPtWithLog(PtRegistrationDto dto);
+
+    /**
+     * PT 예약 취소 시 처리:
+     *  - 기존 소비 로그 조회
+     *  - PT_LOG 테이블에 예약취소 로그(+1) 기록
+     *  - REGISTRATION 테이블에서 예약 삭제
+     */
+    //void cancelPtWithLog(long regNum);
 }
+

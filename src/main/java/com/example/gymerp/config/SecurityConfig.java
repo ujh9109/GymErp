@@ -35,9 +35,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(SWAGGER).permitAll() // Swagger 허용
                 .requestMatchers("/v1/emp/login", "/v1/emp/logout", "/v1/member/**", "/v1/sales/**").permitAll() // 로그인 허용
-                .requestMatchers("/v1/pt/**").permitAll() // PT API 허용
-                .requestMatchers("/v1/schedule/**").permitAll() // 일정 관련 허용
-                .anyRequest().permitAll() // ✅ 전체 허용 (초기 개발용)
+
+                .requestMatchers("/v1/pt/**").permitAll()     // Swagger 테스트용 PT API 허용
+                .requestMatchers("/v1/schedule/**").permitAll() // 일정 관련 API Swagger 테스트 허용
+                .anyRequest().authenticated()
             )
             .formLogin(login -> login.disable()) // 🔹 폼 로그인 비활성화
             .httpBasic(basic -> basic.disable()); // 🔹 기본 로그인 비활성화

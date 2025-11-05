@@ -1,11 +1,14 @@
 package com.example.gymerp.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.gymerp.dto.CurrentStockDto;
+import com.example.gymerp.dto.PaginatedResponse;
 import com.example.gymerp.dto.ProductDto;
 import com.example.gymerp.dto.PurchaseDto;
 import com.example.gymerp.dto.StockAdjustRequestDto;
@@ -41,27 +44,71 @@ public class StockServiceImpl implements StockService {
     // 2-1. 상품 하나의 입고(인바운드) 내역 조회
     @Override
     @Transactional(readOnly = true)
-    public List<PurchaseDto> getProductInboundDetail(int productId, int page, int size) {
+    public PaginatedResponse<PurchaseDto> getProductInboundDetail(int productId, int inboundPage, int size, String startDate, String endDate) {
         if (productId <= 0) {
             throw new IllegalArgumentException("유효하지 않은 productId 입니다.");
         }
-        int normalizedPage = normalizePage(page);
+        int normalizedPage = normalizePage(inboundPage);
         int normalizedSize = normalizeSize(size);
         int offset = (normalizedPage - 1) * normalizedSize;
-        return stockDao.getPurchaseList(productId, offset, normalizedSize);
+        
+        // DAO에 전달할 파라미터 맵 생성
+        Map<String, Object> params = new HashMap<>();
+        params.put("productId", productId);
+        params.put("offset", offset);
+        params.put("size", normalizedSize);
+        params.put("startDate", startDate);
+        params.put("endDate", endDate);
+        
+        // 1. 전체 아이템 개수 조회
+        int totalItemCount = stockDao.getPurchaseListCount(params);
+        
+        // 2. 전체 페이지 수 계산 (0개일 경우 1페이지로 처리)
+        int totalPageCount = (totalItemCount == 0) ? 1 : (int) Math.ceil((double) totalItemCount / normalizedSize);
+
+        // 3. 현재 페이지 목록 데이터 조회
+        List<PurchaseDto> list = stockDao.getPurchaseList(params);
+        
+        return PaginatedResponse.<PurchaseDto>builder()
+        		.list(list)
+        		.pageNum(normalizedPage)
+        		.totalPageCount(totalPageCount)
+        		.build();
     }
 
     // 2-2. 상품 하나의 출고 + 판매 내역 조회
     @Override
     @Transactional(readOnly = true)
-    public List<StockAdjustmentDto> getProductOutboundDetail(int productId, int page, int size) {
+    public PaginatedResponse<StockAdjustmentDto> getProductOutboundDetail(int productId, int outboundPage, int size, String startDate, String endDate) {
         if (productId <= 0) {
             throw new IllegalArgumentException("유효하지 않은 productId 입니다.");
         }
-        int normalizedPage = normalizePage(page);
+        int normalizedPage = normalizePage(outboundPage);
         int normalizedSize = normalizeSize(size);
         int offset = (normalizedPage - 1) * normalizedSize;
-        return stockDao.getAdjustStockAndSalesList(productId, offset, normalizedSize);
+        
+        // DAO에 전달할 파라미터 맵 생성
+        Map<String, Object> params = new HashMap<>();
+        params.put("productId", productId);
+        params.put("offset", offset);
+        params.put("size", normalizedSize);
+        params.put("startDate", startDate);
+        params.put("endDate", endDate);
+        
+        // 1. 전체 아이템 개수 조회
+        int totalItemCount = stockDao.getAdjustStockAndSalesListCount(params);
+        
+        // 2. 전체 페이지 수 계산 (0개일 경우 1페이지로 처리)
+        int totalPageCount = (totalItemCount == 0) ? 1 : (int) Math.ceil((double) totalItemCount / normalizedSize);
+
+        // 3. 현재 페이지 목록 데이터 조회
+        List<StockAdjustmentDto> list = stockDao.getAdjustStockAndSalesList(params);
+        
+        return PaginatedResponse.<StockAdjustmentDto>builder()
+        		.list(list)
+        		.pageNum(normalizedPage)
+        		.totalPageCount(totalPageCount)
+        		.build();
     }
     
     
@@ -120,6 +167,7 @@ public class StockServiceImpl implements StockService {
 	        		.codeBId(codeBId) 
 	        		.quantity(request.getQuantity())
 	        		.notes(request.getNotes())
+	        		.createdAt(request.getDate()) // 날짜 설정 추가
 	        		.build();
 	        int inserted = stockDao.insertPurchase(purchase); // call DaoImpl 3-1
 	        if (inserted != 1) {
@@ -131,6 +179,7 @@ public class StockServiceImpl implements StockService {
 	        		.codeBId(codeBId) 
 	        		.quantity(request.getQuantity())
 	        		.notes(request.getNotes())
+	        		.createdAt(request.getDate()) // 날짜 설정 추가
 	        		.build();
 	        int inserted = stockDao.insertStockAdjustment(adjust); // call DaoImpl 3-2
 	        if (inserted != 1) {

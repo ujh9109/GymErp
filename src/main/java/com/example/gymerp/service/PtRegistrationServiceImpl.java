@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PtRegistrationServiceImpl implements PtRegistrationService {
 
+
     /* ============================= 💾 의존성 주입 ============================= */
     private final SqlSession session;            // MyBatis 세션 (단건 / 간단 조회/수정용)
     private final SqlSessionTemplate sessionT;   // Spring 관리형 SqlSessionTemplate (Thread-safe)
@@ -44,15 +45,20 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
         return session.selectList("PtRegistrationMapper.getAllPtRegistration");
     }
 
+
     /**
      * PT 예약 단건 조회
      * ------------------------------------------------------------
      * regNum(등록번호)을 기준으로 단일 예약 정보를 반환한다.
      */
+
+    // 단일 예약 조회
+
     @Override
     public PtRegistrationDto getPtRegistrationById(int regNum) {
         return session.selectOne("PtRegistrationMapper.getPtRegistrationById", regNum);
     }
+
 
     /* ============================= 🟢 등록 ============================= */
 
@@ -63,10 +69,14 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
      * 2️⃣ regNum은 SEQUENCE(NEXTVAL)로 자동 생성됨
      * 3️⃣ 로그는 ScheduleServiceImpl에서 별도로 처리
      */
+
+    // 예약 등록 (+ PT_LOG 소비 -1)
     @Transactional
     @Override
     public int insertPtRegistration(PtRegistrationDto dto) {
+    	
         int rows = session.insert("PtRegistrationMapper.insertPtRegistration", dto);
+
         System.out.println("[PT 예약 등록 완료] regNum=" + dto.getRegNum());
         return rows;
     }
@@ -95,6 +105,10 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
      * 3️⃣ Mapper를 통해 REGISTRATION에서 데이터 삭제
      * 4️⃣ 로그 등록은 ScheduleServiceImpl에서 이미 수행하므로 생략
      */
+   
+
+    // 예약 삭제 (+ PT_LOG 복구 +1)
+
     @Transactional
     @Override
     public int deletePtRegistration(int regNum) {
@@ -113,6 +127,7 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
         return deleted;
     }
 
+
     /* ============================= 🔍 조회 (by 일정번호) ============================= */
 
     /**
@@ -127,3 +142,4 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
         return sessionT.selectOne("PtRegistrationMapper.findRegNumByShNum", shNum);
     }
 }
+

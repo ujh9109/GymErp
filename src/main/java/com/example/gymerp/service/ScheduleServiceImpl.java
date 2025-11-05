@@ -1,72 +1,60 @@
 package com.example.gymerp.service;
 
+
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import com.example.gymerp.dto.PtLogDto;
 import com.example.gymerp.dto.PtRegistrationDto;
 import com.example.gymerp.dto.ScheduleDto;
-import com.example.gymerp.repository.ScheduleDao;
 import com.example.gymerp.repository.LogDao;
-
+import com.example.gymerp.repository.ScheduleDao;
 import lombok.RequiredArgsConstructor;
 
-/**
- * 📦 ScheduleServiceImpl
- * ------------------------------------------------------------
- * Gym ERP의 핵심 서비스 중 하나.
- * "일정(SCHEDULE)" 데이터를 관리하면서,
- * PT 일정 등록/삭제 시에는 자동으로 PT 등록(REGISTRATION)과
- * PT 로그(PT_LOG)도 함께 처리하는 통합 로직을 담당한다.
- */
+
 @Service
 @RequiredArgsConstructor
 public class ScheduleServiceImpl implements ScheduleService {
 
-    /* ============================= 💾 의존성 주입 ============================= */
-    private final ScheduleDao scheduleDao;                  // 일정 테이블 접근 (SCHEDULE)
-    private final PtRegistrationService ptRegistrationService; // PT 등록 테이블 접근 (REGISTRATION)
-    private final LogDao logDao;                            // PT 로그 테이블 접근 (PT_LOG)
 
-    /* ============================= 📖 일정 조회 ============================= */
+    private final ScheduleDao scheduleDao; // 일정테이블 접근
+    private final PtRegistrationService ptRegistrationService; // PT 등록 테이블 접근
+	private final LogDao logDao; // PT 로그 테이블 접근
 
-    /** 전체 일정 목록 조회 */
+    // 전체 일정 조회 
     @Override
     public List<ScheduleDto> getAllSchedules() {
         return scheduleDao.selectAll();
     }
 
-    /** 단일 일정 조회 (shNum으로 조회) */
-    @Override
-    public ScheduleDto getScheduleById(int shNum) {
-        return scheduleDao.selectByShNum(shNum);
-    }
 
-    /** 특정 직원(empNum)의 일정 조회 */
-    @Override
-    public List<ScheduleDto> getSchedulesByEmpNum(int empNum) {
-        return scheduleDao.selectByEmpNum(empNum);
-    }
+	// 단건 조회
+	@Override
+	public ScheduleDto getScheduleById(int shNum) {
+		return scheduleDao.selectByShNum(shNum);
+	}
 
-    /** 기간별 일정 조회 */
+	// 직원별 일정 조회
+	@Override
+	public List<ScheduleDto> getSchedulesByEmpNum(int empNum) {
+		return scheduleDao.selectByEmpNum(empNum);
+	}
+
+	/** 기간별 일정 조회 */
     @Override
     public List<ScheduleDto> getSchedulesByDateRange(java.time.LocalDateTime startDate, java.time.LocalDateTime endDate) {
         return scheduleDao.selectByDateRange(startDate, endDate);
     }
 
-    /* ============================= 🟢 일정 등록 ============================= */
 
-    /**
-     * 일정 등록
-     * ------------------------------------------------------------
-     * 1️⃣ 일반 일정은 SCHEDULE 테이블에만 등록
-     * 2️⃣ PT 일정(SCHEDULE-PT)은 REGISTRATION + PT_LOG까지 함께 등록
-     */
-    @Transactional
+    //일정 등록
     @Override
+    @Transactional
     public int createSchedule(ScheduleDto schedule) {
-        // 1️⃣ 일정 기본 등록
+    	// 1️⃣ 일정 기본 등록
         int result = scheduleDao.insert(schedule);
         System.out.println("[일정 등록 완료] shNum=" + schedule.getShNum() + ", codeBid=" + schedule.getCodeBid());
 
@@ -106,9 +94,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         return result;
     }
 
-    /* ============================= 🔵 일정 수정 ============================= */
 
-    /** 일정 수정 */
+    //일정 수정 
     @Transactional
     @Override
     public int updateSchedule(ScheduleDto schedule) {
@@ -116,19 +103,11 @@ public class ScheduleServiceImpl implements ScheduleService {
         System.out.println("[일정 수정 완료] shNum=" + schedule.getShNum());
         return updated;
     }
-
-    /* ============================= 🔴 일정 삭제 ============================= */
-
-    /**
-     * 일정 삭제
-     * ------------------------------------------------------------
-     * 1️⃣ PT 일정(SCHEDULE-PT)일 경우:
-     *     - 관련 PT_LOG에 "예약취소" 로그 등록 (+1)
-     *     - REGISTRATION 테이블에서도 해당 PT 등록 삭제
-     * 2️⃣ 그 외 일정은 단순히 SCHEDULE에서 삭제
-     */
-    @Transactional
+    
+    
+    // 일정 삭제
     @Override
+    @Transactional
     public int deleteSchedule(int shNum) {
         // 1️⃣ 삭제 대상 조회
         ScheduleDto target = scheduleDao.selectByShNum(shNum);
@@ -138,28 +117,31 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         System.out.println("[일정 삭제 요청] shNum=" + shNum + ", type=" + target.getCodeBid());
 
-        // 2️ PT 일정인 경우
+        // 2️ PT 일정인 경우만 추가 로직 수행
         if ("SCHEDULE-PT".equalsIgnoreCase(target.getCodeBid())) {
             Integer regNum = ptRegistrationService.findRegNumByShNum(shNum);
 
             if (regNum != null) {
-                // 2-1️ PT_LOG에 예약취소 로그 추가 (+1)
-                PtLogDto cancelLog = PtLogDto.builder()
-                        .memNum(target.getMemNum() == null ? null : target.getMemNum().longValue())
-                        .empNum((long) target.getEmpNum())
-                        .regId(regNum == null ? null : regNum.longValue())
-                        .status("예약취소") // 예약취소 로그
-                        .countChange(1L)    // 회차 복원 (+1)
-                        .build();
+                // ✅ 회원이 존재할 때만 PT_LOG 기록
+                if (target.getMemNum() != null) {
+                    PtLogDto cancelLog = PtLogDto.builder()
+                            .memNum(target.getMemNum().longValue())
+                            .empNum((long) target.getEmpNum())
+                            .regId(regNum.longValue())
+                            .status("예약취소")
+                            .countChange(1L)
+                            .build();
 
-                logDao.insertPtCancelLog(cancelLog);
-                System.out.println("[PT 예약취소 로그 등록 완료] regNum=" + regNum);
+                    logDao.insertPtCancelLog(cancelLog);
+                    System.out.println("[PT 예약취소 로그 등록 완료] regNum=" + regNum);
+                } else {
+                    System.out.println("[회원 없는 일정 → PT 로그 생략]");
+                }
 
-                // 2-2️ REGISTRATION 테이블에서 PT 등록 삭제
+                // REGISTRATION 테이블에서 PT 등록 삭제
                 ptRegistrationService.deletePtRegistration(regNum);
                 System.out.println("[PT 등록 데이터 삭제 완료]");
             } else {
-                // REGISTRATION 테이블에 해당 PT 데이터가 없을 경우
                 System.out.println("[PT 등록번호 없음 → 로그 등록 생략]");
             }
         }
