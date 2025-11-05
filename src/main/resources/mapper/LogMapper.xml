@@ -129,16 +129,24 @@
 	<!-- =============================== -->
 	
 	<!-- PT 예약 로그 등록 (소비) -->
+	<!-- 잔여 PT가 1 이상일 때만 소비(-1) 삽입 -->
 	<insert id="insertPtConsumeLog" parameterType="PtLogDto">
-	    <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
-	        SELECT pt_log_seq.NEXTVAL FROM DUAL
-	    </selectKey>
-	    INSERT INTO pt_log (
-	        usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
-	    ) VALUES (
-	        #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL, #{regId, jdbcType=NULL}
-	    )
+	  <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
+	    SELECT pt_log_seq.NEXTVAL FROM DUAL
+	  </selectKey>
+	  INSERT INTO pt_log (
+	    usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
+	  )
+	  SELECT
+	    #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL, #{regId, jdbcType=NULL}
+	  FROM dual
+	  WHERE (
+	    SELECT NVL(SUM(countChange), 0)
+	    FROM pt_log
+	    WHERE memNum = #{memNum}
+	  ) > 0
 	</insert>
+
 	
 	<!-- PT 예약 취소 로그 등록 (복구) -->
 	<insert id="insertPtCancelLog" parameterType="PtLogDto">

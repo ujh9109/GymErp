@@ -33,18 +33,27 @@
 
   <!-- ====================== 단건 조회 ====================== -->
   <select id="selectByShNum" parameterType="int" resultMap="ScheduleMap">
-    SELECT
-      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
-      e.empName, cb.name AS codeBName, m.memName
-    FROM SCHEDULE s
-      JOIN Employee e ON s.empNum = e.empNum
-      LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
-      LEFT JOIN Registration r ON s.shNum = r.shNum
-      LEFT JOIN Member m ON r.memNum = m.memNum
-    WHERE s.shNum = #{shNum}
-  </select>
-
-  <!-- ====================== 직원별 일정 조회 ====================== -->
+	  SELECT 
+	    s.shNum,
+	    s.empNum,
+	    s.codeBid,
+	    s.startTime,
+	    s.endTime,
+	    s.memo,
+	    e.empName,
+	    cb.name AS codeBName,
+	    s.memNum,       
+	    r.regNum AS regId,   
+	    m.memName
+	  FROM SCHEDULE s
+	    JOIN Employee e ON s.empNum = e.empNum
+	    LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
+	    LEFT JOIN Registration r ON s.shNum = r.shNum
+	    LEFT JOIN Member m ON s.memNum = m.memNum
+	  WHERE s.shNum = #{shNum}
+	</select>
+	
+	  <!-- ====================== 직원별 일정 조회 ====================== -->
   <select id="selectByEmpNum" parameterType="int" resultMap="ScheduleMap">
     SELECT
       s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
