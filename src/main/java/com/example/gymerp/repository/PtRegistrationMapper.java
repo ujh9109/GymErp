@@ -9,4 +9,6 @@ public interface PtRegistrationMapper {
     int insertPtRegistration(PtRegistrationDto dto);
     List<PtRegistrationDto> getAllPtRegistration();
     PtRegistrationDto getPtRegistrationById(int regNum);
+    PtRegistrationDto getRegistrationByShNum(int shNum);
+    int deletePtRegistration(Long regNum); 
 }

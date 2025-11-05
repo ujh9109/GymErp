@@ -24,6 +24,5 @@ public interface SalesItemService {
 			Integer empNum);
 
 
-
 	
 }
