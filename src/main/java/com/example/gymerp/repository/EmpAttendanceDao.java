@@ -10,6 +10,7 @@ import com.example.gymerp.dto.EmpAttendanceDto;
 
 public interface EmpAttendanceDao {
 
+	List<EmpAttendanceDto> selectAllByDate(@Param("date") Date date);
     // 전체 근태 목록
     List<EmpAttendanceDto> selectAllEmpAttendances();
 
