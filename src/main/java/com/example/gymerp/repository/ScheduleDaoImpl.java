@@ -20,6 +20,20 @@ public class ScheduleDaoImpl implements ScheduleDao {
 
     private final SqlSession session;
 
+    
+    /*하단 2개 어드민용 추가됨*/
+    @Override
+    public List<ScheduleDto> selectByFiltersForAdmin(Map<String, Object> p) {
+        return session.selectList("ScheduleMapper.selectByFiltersForAdmin", p);
+    }
+    @Override
+    public int countByFiltersForAdmin(Map<String, Object> p) {
+        return session.selectOne("ScheduleMapper.countByFiltersForAdmin", p);
+    }
+    
+    
+    
+    
     /* 전체 일정 조회 */
     @Override
     public List<ScheduleDto> selectAll() {

@@ -8,7 +8,7 @@
 	  SELECT
 	    COALESCE( (SELECT SUM(quantity) FROM Purchase        WHERE productId = #{productId}), 0 )
 	  - COALESCE( (SELECT SUM(quantity) FROM StockAdjustment WHERE productId = #{productId}), 0 )
-	  - COALESCE( (SELECT SUM(quantity) FROM SalesItem       WHERE productId = #{productId}), 0 )
+	  - COALESCE( (SELECT SUM(quantity) FROM Sales_Item       WHERE productId = #{productId}), 0 )
 	  AS availableQty
 	  FROM DUAL
 	</select>
@@ -33,11 +33,30 @@
 	            ROW_NUMBER() OVER (ORDER BY p.createdAt DESC, p.purchaseId DESC) AS rn
 	        FROM PURCHASE p
 	        WHERE p.productId = #{productId}
+			<if test="startDate != null and startDate != ''">
+				AND p.createdAt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND p.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+			</if>
 	    )
 	    WHERE rn > #{offset}
 	      AND rn &lt;= #{offset} + #{size}
 	    ORDER BY createdAt DESC, purchaseId DESC
 	</select>
+	
+	<!-- 2-1-1. 입고 내역 row 수 계산 -->
+	<select id="getPurchaseListCount" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM PURCHASE p
+	    WHERE p.productId = #{productId}
+		<if test="startDate != null and startDate != ''">
+			AND p.createdAt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDate != null and endDate != ''">
+			AND p.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+		</if>
+    </select>
 	
 	<!-- 2-2. 출고 + 판매 내역 조회 -->
 	<!-- 재고출고 테이블과, 판매 테이블 데이터 합쳐서 select 판매 테이블에 없는 칼럼은 임시 칼럼으로 생성 -->
@@ -68,6 +87,12 @@
 	                sa.notes        AS notes
 	            FROM STOCKADJUSTMENT sa
 	            WHERE sa.productId = #{productId}
+				<if test="startDate != null and startDate != ''">
+					AND sa.createdAt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDate != null and endDate != ''">
+					AND sa.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+				</if>
 
 	            UNION ALL
 
@@ -78,13 +103,41 @@
 	                si.createdAt    AS createdAt,
 	                si.quantity     AS quantity,
 	                '상품 판매'      AS notes
-	            FROM SALESITEM si
+	            FROM SALES_ITEM si
 	            WHERE si.productId = #{productId}
+				<if test="startDate != null and startDate != ''">
+					AND si.createdAt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDate != null and endDate != ''">
+					AND si.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+				</if>
 	        ) t
 	    )
 	    WHERE rn > #{offset}
 	      AND rn &lt;= #{offset} + #{size}
 	    ORDER BY createdAt DESC, adjustmentId DESC
+	</select>
+
+	<!-- 2-2-1. 출고 + 판매 내역 row 수 계산 -->
+	<select id="getAdjustStockAndSalesListCount" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM (
+	        SELECT adjustmentId FROM STOCKADJUSTMENT sa WHERE sa.productId = #{productId}
+			<if test="startDate != null and startDate != ''">
+				AND sa.createdAt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND sa.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+			</if>
+	        UNION ALL
+	        SELECT itemSalesId FROM SALES_ITEM si WHERE si.productId = #{productId}
+			<if test="startDate != null and startDate != ''">
+				AND si.createdAt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND si.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+			</if>
+	    )
 	</select>
 
 	<!-- 2-3. 현재 재고 현황 조회 (페이지) -->
@@ -118,7 +171,7 @@
 		      ) sa ON sa.productId = p.productId
 		      LEFT JOIN (
 		          SELECT productId, SUM(quantity) AS total_sales
-		          FROM SALESITEM
+		          FROM SALES_ITEM
 		          GROUP BY productId
 		      ) si ON si.productId = p.productId
 		      <where>
@@ -135,41 +188,43 @@
 	
 	<!-- 3-1. 입고시 Purchase Table에 row 추가 -->
 	<insert id="insertPurchase" parameterType="PurchaseDto">
-    INSERT INTO Purchase (
-        purchaseId,
-        productId,
-        codeBId,
-        createdAt,
-        quantity,
-        notes
-    ) VALUES (
-        PURCHASE_SEQ.NEXTVAL,
-        #{productId},
-        #{codeBId},
-        SYSDATE,
-        #{quantity},
-        #{notes, jdbcType=VARCHAR}
-    )
-	</insert>
+      INSERT INTO Purchase (
+          purchaseId,
+          productId,
+          codeBId,
+          createdAt,
+          quantity,
+          notes
+      ) VALUES (
+          PURCHASE_SEQ.NEXTVAL,
+          #{productId},
+          #{codeBId},
+          COALESCE(#{createdAt}, CURRENT_TIMESTAMP),
+          #{quantity},
+          #{notes, jdbcType=VARCHAR}
+      )
+  	</insert>
+
 	
 	<!-- 3-2. 출고시 StockAdjustment Table에 row 추가 -->
 	<insert id="insertStockAdjustment" parameterType="StockAdjustmentDto">
-    INSERT INTO StockAdjustment (
-        adjustmentId,
-        productId,
-        codeBId,
-        createdAt,
-        quantity,
-        notes
-    ) VALUES (
-        STOCK_ADJUSTMENT_SEQ.NEXTVAL,
-        #{productId},
-        #{codeBId},
-        SYSDATE,
-        #{quantity},
-        #{notes}
-    )
-	</insert>
+      INSERT INTO StockAdjustment (
+          adjustmentId,
+          productId,
+          codeBId,
+          createdAt,
+          quantity,
+          notes
+      ) VALUES (
+          STOCK_ADJUSTMENT_SEQ.NEXTVAL,
+          #{productId},
+          #{codeBId},
+          COALESCE(#{createdAt}, CURRENT_TIMESTAMP),
+          #{quantity},
+          #{notes}
+      )
+  	</insert>
+
 	
 	
 

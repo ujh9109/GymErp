@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.gymerp.dto.CurrentStockDto;
+import com.example.gymerp.dto.PaginatedResponse;
 import com.example.gymerp.dto.PurchaseDto;
 import com.example.gymerp.dto.StockAdjustRequestDto;
 import com.example.gymerp.dto.StockAdjustmentDto;
@@ -52,20 +53,24 @@ public class StockController {
 	
 	// 상품 입고 내역 조회
 	@GetMapping("/stock/{productId}/inbound")
-	public List<PurchaseDto> getProductInboundDetail(
+	public PaginatedResponse<PurchaseDto> getProductInboundDetail(
 	        @PathVariable int productId,
-	        @RequestParam(defaultValue = "1") int page,
-	        @RequestParam(defaultValue = "20") int size) {
-	    return stockService.getProductInboundDetail(productId, page, size);
+	        @RequestParam(defaultValue = "1") int inboundPage,
+	        @RequestParam(defaultValue = "20") int size,
+	        @RequestParam(required = false) String startDate,
+	        @RequestParam(required = false) String endDate) {
+	    return stockService.getProductInboundDetail(productId, inboundPage, size, startDate, endDate);
 	}
 	
 	// 상품 출고 내역 조회
 	@GetMapping("/stock/{productId}/outbound")
-	public List<StockAdjustmentDto> getProductOutboundDetail(
+	public PaginatedResponse<StockAdjustmentDto> getProductOutboundDetail(
 	        @PathVariable int productId,
-	        @RequestParam(defaultValue = "1") int page,
-	        @RequestParam(defaultValue = "20") int size) {
-	    return stockService.getProductOutboundDetail(productId, page, size);
+	        @RequestParam(defaultValue = "1") int outboundPage,
+	        @RequestParam(defaultValue = "20") int size,
+	        @RequestParam(required = false) String startDate,
+	        @RequestParam(required = false) String endDate) {
+	    return stockService.getProductOutboundDetail(productId, outboundPage, size, startDate, endDate);
 	}
 	
 	// 상품의 재고를 추가 및 차감 

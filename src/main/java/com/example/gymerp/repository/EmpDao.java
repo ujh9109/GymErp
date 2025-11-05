@@ -29,6 +29,7 @@ public interface EmpDao {
 	
 	// 로그인/인증 전용
 	EmpDto selectAuthByEmail(String email);
+	String selectPasswordHashByEmpNum(int empNum);
 	int updatePassword(int empNum, String hashed);
 
 	// 직원 검색 + 페이징

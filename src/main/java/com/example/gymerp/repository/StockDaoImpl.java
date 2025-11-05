@@ -42,12 +42,18 @@ public class StockDaoImpl implements StockDao {
 	 *  Result: PurchaseDto 
 	 */
 	@Override
-    public List<PurchaseDto> getPurchaseList(int productId, int offset, int size) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("productId", productId);
-        params.put("offset", offset);
-        params.put("size", size);
+    public List<PurchaseDto> getPurchaseList(Map<String, Object> params) {
         return session.selectList("StockMapper.getPurchaseList", params);
+	}
+	
+	/*
+	 *  2-1-1.
+	 *  입고내역 row 수 계산
+	 */
+	@Override
+	public int getPurchaseListCount(Map<String, Object> params) {
+		
+		return session.selectOne("StockMapper.getPurchaseListCount", params);
 	}
 
 	/*
@@ -58,12 +64,17 @@ public class StockDaoImpl implements StockDao {
 	 *  재고 출고 테이블, 판매 테이블 데이터 합쳐서 select 
 	 */
 	@Override
-    public List<StockAdjustmentDto> getAdjustStockAndSalesList(int productId, int offset, int size) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("productId", productId);
-        params.put("offset", offset);
-        params.put("size", size);
+    public List<StockAdjustmentDto> getAdjustStockAndSalesList(Map<String, Object> params) {
         return session.selectList("StockMapper.getAdjustStockAndSalesList", params);
+	}
+
+	/*
+	 *  2-2-1.
+	 *  출고내역 + 판매내역 row 수 계산
+	 */
+	@Override
+	public int getAdjustStockAndSalesListCount(Map<String, Object> params) {
+		return session.selectOne("StockMapper.getAdjustStockAndSalesListCount", params);
 	}
 
 	/*
@@ -104,6 +115,8 @@ public class StockDaoImpl implements StockDao {
 		
 		return session.insert("StockMapper.insertStockAdjustment", dto);
 	}
+
+
 
 
 }

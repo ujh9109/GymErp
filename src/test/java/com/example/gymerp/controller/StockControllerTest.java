@@ -19,12 +19,11 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
 import org.mybatis.spring.boot.autoconfigure.MybatisLanguageDriverAutoConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
@@ -33,10 +32,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.gymerp.dto.CurrentStockDto;
+import com.example.gymerp.dto.PaginatedResponse;
 import com.example.gymerp.dto.PurchaseDto;
 import com.example.gymerp.dto.StockAdjustRequestDto;
 import com.example.gymerp.dto.StockAdjustmentDto;
 import com.example.gymerp.service.StockService;
+import com.example.gymerp.support.ControllerSliceTestBase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -63,14 +64,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
     }
 )
 @AutoConfigureMockMvc(addFilters = false) // 보안필터 제외
-@ImportAutoConfiguration // (명시적 표기; 위 excludeAutoConfiguration가 우선 적용됨)
-class StockControllerTest {
+class StockControllerTest extends ControllerSliceTestBase {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
 
     // 컨트롤러가 위임하는 서비스만 Mock 처리
     @MockitoBean StockService stockService;
+
 
     // --------------------------------------------------------------------
     // 2-3. GET /v1/stock - 기본 파라미터(page=1,size=20,keyword=null) 위임 및 배열 응답 검증
@@ -130,7 +131,7 @@ class StockControllerTest {
     // 2-1. GET /v1/stock/{productId}/inbound - 특정 상품 입고 이력
     // --------------------------------------------------------------------
     @Test
-    @DisplayName("2-1) GET /v1/stock/{productId}/inbound - 입고 내역 배열 반환")
+    @DisplayName("2-1) GET /v1/stock/{productId}/inbound - 입고 내역 페이지 반환")
     void inbound_ok() throws Exception {
         int productId = 1;
         List<PurchaseDto> inboundList = List.of(
@@ -143,24 +144,31 @@ class StockControllerTest {
                 .createdAt(LocalDateTime.of(2025, 10, 10, 10, 30))
                 .quantity(5).notes("추가 입고").build()
         );
-        when(stockService.getProductInboundDetail(productId, 1, 20)).thenReturn(inboundList);
+        PaginatedResponse<PurchaseDto> response = PaginatedResponse.<PurchaseDto>builder()
+                .list(inboundList)
+                .pageNum(1)
+                .totalPageCount(3)
+                .build();
+        when(stockService.getProductInboundDetail(productId, 1, 20, null, null)).thenReturn(response);
 
         mockMvc.perform(get("/v1/stock/{productId}/inbound", productId)
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$", hasSize(2)))
-            .andExpect(jsonPath("$[0].purchaseId", is(101)))
-            .andExpect(jsonPath("$[0].quantity", is(3)))
-            .andExpect(jsonPath("$[0].notes", is("첫 입고")));
+            .andExpect(jsonPath("$.pageNum", is(1)))
+            .andExpect(jsonPath("$.totalPageCount", is(3)))
+            .andExpect(jsonPath("$.list", hasSize(2)))
+            .andExpect(jsonPath("$.list[0].purchaseId", is(101)))
+            .andExpect(jsonPath("$.list[0].quantity", is(3)))
+            .andExpect(jsonPath("$.list[0].notes", is("첫 입고")));
 
-        verify(stockService).getProductInboundDetail(productId, 1, 20);
+        verify(stockService).getProductInboundDetail(productId, 1, 20, null, null);
     }
 
     // --------------------------------------------------------------------
     // 2-2. GET /v1/stock/{productId}/outbound - 특정 상품 출고/판매 이력
     // --------------------------------------------------------------------
     @Test
-    @DisplayName("2-2) GET /v1/stock/{productId}/outbound - 출고+판매 내역 배열 반환")
+    @DisplayName("2-2) GET /v1/stock/{productId}/outbound - 출고+판매 내역 페이지 반환")
     void outbound_ok() throws Exception {
         int productId = 1;
         List<StockAdjustmentDto> outboundList = List.of(
@@ -173,17 +181,24 @@ class StockControllerTest {
                 .createdAt(LocalDateTime.of(2025, 10, 20, 16, 30))
                 .quantity(1).notes("지점 이동").build()
         );
-        when(stockService.getProductOutboundDetail(productId, 1, 20)).thenReturn(outboundList);
+        PaginatedResponse<StockAdjustmentDto> response = PaginatedResponse.<StockAdjustmentDto>builder()
+                .list(outboundList)
+                .pageNum(1)
+                .totalPageCount(2)
+                .build();
+        when(stockService.getProductOutboundDetail(productId, 1, 20, null, null)).thenReturn(response);
 
         mockMvc.perform(get("/v1/stock/{productId}/outbound", productId)
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$", hasSize(2)))
-            .andExpect(jsonPath("$[0].adjustmentId", is(201)))
-            .andExpect(jsonPath("$[0].quantity", is(2)))
-            .andExpect(jsonPath("$[0].notes", is("파손 처리")));
+            .andExpect(jsonPath("$.pageNum", is(1)))
+            .andExpect(jsonPath("$.totalPageCount", is(2)))
+            .andExpect(jsonPath("$.list", hasSize(2)))
+            .andExpect(jsonPath("$.list[0].adjustmentId", is(201)))
+            .andExpect(jsonPath("$.list[0].quantity", is(2)))
+            .andExpect(jsonPath("$.list[0].notes", is("파손 처리")));
 
-        verify(stockService).getProductOutboundDetail(productId, 1, 20);
+        verify(stockService).getProductOutboundDetail(productId, 1, 20, null, null);
     }
 
     // --------------------------------------------------------------------
