@@ -80,6 +80,12 @@ public class EmpDaoImpl implements EmpDao {
 		return session.update("EmployeeMapper.updatePassword", params);
 	}
 	
+	@Override
+	public String selectPasswordHashByEmpNum(int empNum) {
+		
+		return session.selectOne("EmployeeMapper.selectPasswordHashByEmpNum", empNum);
+	}
+	
 
 	// 직원 검색 + 페이징
 	@Override
@@ -124,4 +130,6 @@ public class EmpDaoImpl implements EmpDao {
 	public int checkEmployeeExists(int empNum) {
 		return session.selectOne("EmployeeMapper.checkEmployeeExists", empNum);
 	}
+
+	
 }

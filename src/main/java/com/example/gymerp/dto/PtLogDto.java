@@ -34,4 +34,7 @@ public class PtLogDto {
     private LocalDateTime createdAt; // 생성일자 (로그 발생 시각)
     private Long salesId;			 // 판매ID
     private Long regId; 			 // PT등록 ID
+    
+    private String usageType; // CONSUME, CANCEL 등
+    private LocalDateTime usageDate;
 }

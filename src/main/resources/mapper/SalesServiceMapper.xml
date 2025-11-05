@@ -91,4 +91,78 @@
           AND status = 'ACTIVE'
     </update>
 
+
+    <!-- ===============================
+         [3. 서비스 판매 내역 조회 (필터 + 스크롤용)]
+         ※ 총 4개 필터: 기간 / 품목명 / 회원 / 직원
+    =============================== -->
+
+    <sql id="baseWhereService">
+        <where>
+            <!-- ① 기간 -->
+            <if test="startDate != null and startDate != ''">
+                AND ss.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND ss.createdAt &lt;= TO_DATE(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+            </if>
+
+            <!-- ② 품목명 (검색창 입력 기반, 실시간 LIKE 검색 / 대소문자 무시) -->
+            <if test="serviceNameKeyword != null and serviceNameKeyword != ''">
+                AND UPPER(s.serviceName) LIKE '%' || UPPER(#{serviceNameKeyword}) || '%'
+            </if>
+
+            <!-- ③ 회원 -->
+            <if test="memNum != null">
+                AND ss.memNum = #{memNum}
+            </if>
+
+            <!-- ④ 직원 -->
+            <if test="empNum != null">
+                AND ss.empNum = #{empNum}
+            </if>
+
+            AND ss.status = 'ACTIVE'
+        </where>
+    </sql>
+
+    <!-- 총 개수 조회 -->
+    <select id="selectSalesServiceCount" parameterType="map" resultType="int">
+        SELECT COUNT(1)
+        FROM sales_service ss
+        JOIN service  s ON ss.serviceId = s.serviceId
+        JOIN employee e ON ss.empNum    = e.empNum
+        <include refid="baseWhereService"/>
+    </select>
+
+    <!-- 서비스 판매 내역 조회 -->
+    <select id="selectPagedSalesServices" parameterType="map"
+            resultType="com.example.gymerp.dto.SalesService">
+        SELECT *
+        FROM (
+            SELECT
+                ss.serviceSalesId,
+                ss.serviceId,
+                s.serviceName AS serviceName,
+                ss.serviceType,
+                ss.empNum,
+                e.empEmail AS empEmail,
+                ss.memNum,
+                ss.baseCount,
+                ss.actualCount,
+                ss.discount,
+                ss.baseAmount,
+                ss.actualAmount,
+                ss.status,
+                ss.createdAt,
+                ss.updatedAt,
+                ROW_NUMBER() OVER(ORDER BY ss.serviceSalesId DESC) AS rn
+            FROM sales_service ss
+            JOIN service  s ON ss.serviceId = s.serviceId
+            JOIN employee e ON ss.empNum    = e.empNum
+            <include refid="baseWhereService"/>
+        )
+        WHERE rn BETWEEN #{startRow} AND #{endRow}
+    </select>
+
 </mapper>

@@ -27,7 +27,7 @@ public interface EmpService {
     EmpDto login(String email, String password);
     
     // 비밀번호 변경 (선택)
-    int updatePassword(int empNum, String newPassword);
+    void updatePassword(int empNum, String currentPassword, String newPassword);
     // 직원 검색 + 페이징
     List<EmpDto> getEmpListPaged(String type, String keyword, int start, int end);
 

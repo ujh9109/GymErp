@@ -179,42 +179,6 @@
     </select>
 
 
-    
-
-	<select id="selectItemSalesGraphData" parameterType="map" resultType="map">
-	    SELECT 
-	        <choose>
-	            <when test="groupByUnit == 'MONTH'">
-	                TO_CHAR(si.createdAt, 'YYYY-MM') AS groupDate
-	            </when>
-	            <otherwise>
-	                TO_CHAR(si.createdAt, 'YYYY-MM-DD') AS groupDate
-	            </otherwise>
-	        </choose>,
-	        SUM(si.totalAmount) AS totalSales
-	    FROM sales_item si 
-	    <where>
-	        si.status = 'ACTIVE' 
-	        <if test="startDate != null and startDate != ''">
-	            AND si.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
-	        </if>
-	        <if test="endDate != null and endDate != ''">
-	            AND si.createdAt &lt; TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1 
-	        </if>
-	    </where>
-	    
-	    GROUP BY
-	        <choose>
-	            <when test="groupByUnit == 'MONTH'">
-	                TO_CHAR(si.createdAt, 'YYYY-MM')
-	            </when>
-	            <otherwise>
-	                TO_CHAR(si.createdAt, 'YYYY-MM-DD')
-	            </otherwise>
-	        </choose>
-	        
-	    ORDER BY groupDate ASC
-	</select>
-
+ 
 
 </mapper>
