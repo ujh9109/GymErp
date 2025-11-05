@@ -6,42 +6,56 @@ import java.util.Map;
 public interface SalesAnalyticsService {
 
     /* =========================================================
-       [서비스 매출 그래프]
-       - 필터: 기간, 품목(최대 3개), 회원, 직원
-       - 품목 미선택 시 serviceType 기준 그룹화
+       [전체 매출 그래프]
+       - 기준: 서비스 + 실물 상품 매출 합산
+       - 필터: 기간, 품목(중분류)
        - 기간 미선택 시: 올해 전체
-       - 결과: label, total_sales
+       - 품목 미선택 시: 전체 중분류
+       - 결과: groupLabel, totalSales
+    ========================================================= */
+    List<Map<String, Object>> getTotalSalesChart(
+            String startDate,
+            String endDate,
+            List<String> categories
+    );
+
+
+    /* =========================================================
+       [서비스 매출 그래프]
+       - 기준: sales_service
+       - 필터: 기간, 품목(최대 3개)
+       - 기간 미선택 시: 올해 전체
+       - 품목 미선택 시: 중분류 전체
+       - 결과: label, totalSales
     ========================================================= */
     List<Map<String, Object>> getServiceSalesChart(
             String startDate,
             String endDate,
-            List<String> serviceTypes,
-            Long memberId,
-            Long empId
+            List<String> serviceTypes
     );
 
 
     /* =========================================================
        [실물 상품 매출 그래프]
-       - 필터: 기간, 품목(최대 3개), 직원
-       - 품목 미선택 시 productType 기준 그룹화
+       - 기준: sales_item
+       - 필터: 기간, 품목(최대 3개)
        - 기간 미선택 시: 올해 전체
-       - 결과: label, total_sales
+       - 품목 미선택 시: 중분류 전체
+       - 결과: label, totalSales
     ========================================================= */
     List<Map<String, Object>> getItemSalesChart(
             String startDate,
             String endDate,
-            List<String> productTypes,
-            Long empId
+            List<String> productTypes
     );
-    
-    
+
+
     /* =========================================================
        [트레이너 실적 그래프]
        - 기준: PT 이용내역(status='소비')
        - 필터: 기간, 직원(최대 3명)
        - 기간 미선택 시: 저번 달 전체
-       - 직원 미선택 시: 실적 TOP3
+       - 직원 미선택 시: 실적 TOP3 자동 선택
        - 결과: groupDate, trainerName, totalSessions
     ========================================================= */
     List<Map<String, Object>> getTrainerPerformanceChart(
@@ -70,4 +84,7 @@ public interface SalesAnalyticsService {
        - 그래프: 꺾은선 그래프 (LineChart)
     ========================================================= */
     List<Map<String, Object>> getAiSalesPredictionChart();
+    
+    
+    
 }

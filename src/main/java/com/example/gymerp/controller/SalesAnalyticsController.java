@@ -17,60 +17,73 @@ public class SalesAnalyticsController {
     private final SalesAnalyticsService salesAnalyticsService;
 
     /* =========================================================
-       [서비스 매출 그래프]
-       - 필터: 기간, 품목, 회원, 직원
+       [전체 매출 그래프]
+       - 기준: 서비스 + 실물 상품 매출 합산
+       - 필터: 기간, 품목(중분류)
        - 기간 미선택 시: 올해 전체
-       - 품목 최대 3개까지 OR 조건
+       - 품목 미선택 시: 전체 중분류
+       - 그래프: 막대(BarChart)
+    ========================================================= */
+    @GetMapping("/analytics/sales/total")
+    public List<Map<String, Object>> getTotalSalesChart(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) List<String> categories
+    ) {
+        return salesAnalyticsService.getTotalSalesChart(startDate, endDate, categories);
+    }
+
+    /* =========================================================
+       [서비스 매출 그래프]
+       - 기준: sales_service
+       - 필터: 기간, 품목(최대 3개)
+       - 기간 미선택 시: 올해 전체
+       - 품목 미선택 시: 중분류 전체
        - 그래프: 원형(PieChart) or 막대(BarChart)
     ========================================================= */
     @GetMapping("/analytics/sales/service")
     public List<Map<String, Object>> getServiceSalesChart(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) List<String> serviceTypes,
-            @RequestParam(required = false) Long memberId,
-            @RequestParam(required = false) Long empId
+            @RequestParam(required = false) List<String> serviceTypes
     ) {
-        return salesAnalyticsService.getServiceSalesChart(startDate, endDate, serviceTypes, memberId, empId);
+        return salesAnalyticsService.getServiceSalesChart(startDate, endDate, serviceTypes);
     }
-
 
     /* =========================================================
        [실물 상품 매출 그래프]
-       - 필터: 기간, 품목, 직원
+       - 기준: sales_item
+       - 필터: 기간, 품목(최대 3개)
        - 기간 미선택 시: 올해 전체
-       - 품목 최대 3개까지 OR 조건
+       - 품목 미선택 시: 중분류 전체
        - 그래프: 원형(PieChart) or 막대(BarChart)
     ========================================================= */
     @GetMapping("/analytics/sales/item")
     public List<Map<String, Object>> getItemSalesChart(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) List<String> productTypes,
-            @RequestParam(required = false) Long empId
+            @RequestParam(required = false) List<String> productTypes
     ) {
-        return salesAnalyticsService.getItemSalesChart(startDate, endDate, productTypes, empId);
+        return salesAnalyticsService.getItemSalesChart(startDate, endDate, productTypes);
     }
-    
-    
-    /* =========================================================
-	    [트레이너 실적 그래프]
-	    - 기준: PT 이용내역(status='소비')
-	    - 필터: 기간, 직원(최대 3명)
-	    - 기간 미선택 시: 저번 달 전체
-	    - 직원 미선택 시: 실적 TOP3
-	    - 단위 자동 분기: 일 / 주 / 월 / 년
-	    - 그래프: 꺾은선(LineChart)
-	 ========================================================= */
-	 @GetMapping("/analytics/trainer/performance")
-	 public List<Map<String, Object>> getTrainerPerformanceChart(
-	         @RequestParam(required = false) String startDate,
-	         @RequestParam(required = false) String endDate,
-	         @RequestParam(required = false) List<Long> trainerIds
-	 ) {
-	     return salesAnalyticsService.getTrainerPerformanceChart(startDate, endDate, trainerIds);
-	 }
 
+    /* =========================================================
+       [트레이너 실적 그래프]
+       - 기준: PT 이용내역(status='소비')
+       - 필터: 기간, 직원(최대 3명)
+       - 기간 미선택 시: 저번 달 전체
+       - 직원 미선택 시: 실적 TOP3 자동 선택
+       - 단위 자동 분기: 일 / 주 / 월 / 년
+       - 그래프: 꺾은선(LineChart)
+    ========================================================= */
+    @GetMapping("/analytics/trainer/performance")
+    public List<Map<String, Object>> getTrainerPerformanceChart(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) List<Long> trainerIds
+    ) {
+        return salesAnalyticsService.getTrainerPerformanceChart(startDate, endDate, trainerIds);
+    }
 
     /* =========================================================
        [AI 회원수 예측 그래프]
@@ -84,7 +97,6 @@ public class SalesAnalyticsController {
     public List<Map<String, Object>> getAiMemberPredictionChart() {
         return salesAnalyticsService.getAiMemberPredictionChart();
     }
-
 
     /* =========================================================
        [AI 매출 예측 그래프]

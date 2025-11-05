@@ -78,7 +78,6 @@
             actualAmount  = #{actualAmount},
             updatedAt     = SYSDATE
         WHERE serviceSalesId = #{serviceSalesId}
-          AND serviceType = #{serviceType}
           AND status = 'ACTIVE'
     </update>
 
