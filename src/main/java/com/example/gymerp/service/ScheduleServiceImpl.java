@@ -54,11 +54,11 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public int createSchedule(ScheduleDto schedule) {
-    	// 1️⃣ 일정 기본 등록
+    	// 1️ 일정 기본 등록
         int result = scheduleDao.insert(schedule);
         System.out.println("[일정 등록 완료] shNum=" + schedule.getShNum() + ", codeBid=" + schedule.getCodeBid());
 
-        // 2️⃣ PT 일정인 경우만 추가 로직 수행
+        // 2️ PT 일정인 경우만 추가 로직 수행
         if ("SCHEDULE-PT".equalsIgnoreCase(schedule.getCodeBid())) {
             
             // 회원이 선택되지 않은 경우 → PT 등록 생략
@@ -67,7 +67,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                 return result;
             }
 
-            // 3️⃣ REGISTRATION 테이블에 PT 예약 등록
+            // 3️ REGISTRATION 테이블에 PT 예약 등록
             PtRegistrationDto reg = PtRegistrationDto.builder()
                     .empNum((long) schedule.getEmpNum())                                 // 직원 번호
                     .memNum(schedule.getMemNum() == null ? null : schedule.getMemNum().longValue()) // 회원 번호
@@ -86,8 +86,16 @@ public class ScheduleServiceImpl implements ScheduleService {
                     .status("소비")   // 소비 로그
                     .countChange(-1L) // 회차 차감
                     .build();
+            
+            // Mapper의 insertPtConsumeLog는 "잔여>0일 때만 INSERT"로 수정되어 있어야 함
+            int insertedRows = logDao.insertPtConsumeLog(consumeLog);
 
-            logDao.insertPtConsumeLog(consumeLog);
+            // 잔여가 0이면 0행 삽입 → 예외 던져 전체 트랜잭션 롤백
+            if (insertedRows <= 0) {
+                System.out.println("[PT 소비 로그 등록 실패] 잔여 PT 회차 없음 → 트랜잭션 롤백");
+                throw new IllegalStateException("남은 PT 회차가 없어 예약할 수 없습니다.");
+            }
+
             System.out.println("[PT 소비 로그 등록 완료]");
         }
 
@@ -109,7 +117,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public int deleteSchedule(int shNum) {
-        // 1️⃣ 삭제 대상 조회
+        // 삭제 대상 조회
         ScheduleDto target = scheduleDao.selectByShNum(shNum);
         if (target == null) {
             throw new IllegalArgumentException("존재하지 않는 일정입니다.");
@@ -117,12 +125,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         System.out.println("[일정 삭제 요청] shNum=" + shNum + ", type=" + target.getCodeBid());
 
-        // 2️ PT 일정인 경우만 추가 로직 수행
+        // PT 일정인 경우만 추가 로직 수행
         if ("SCHEDULE-PT".equalsIgnoreCase(target.getCodeBid())) {
             Integer regNum = ptRegistrationService.findRegNumByShNum(shNum);
 
             if (regNum != null) {
-                // ✅ 회원이 존재할 때만 PT_LOG 기록
+                // 회원이 존재할 때만 PT_LOG 기록
                 if (target.getMemNum() != null) {
                     PtLogDto cancelLog = PtLogDto.builder()
                             .memNum(target.getMemNum().longValue())
@@ -146,7 +154,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             }
         }
 
-        // 3️ SCHEDULE 테이블에서 일정 삭제
+        // SCHEDULE 테이블에서 일정 삭제
         int deleted = scheduleDao.delete(shNum);
         System.out.println("[일정 삭제 완료] deleted=" + deleted);
 

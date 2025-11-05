@@ -41,7 +41,7 @@
 	    s.memo,
 	    e.empName,
 	    cb.name AS codeBName,
-	    s.memNum,        -- ✅ 회원번호 추가
+	    s.memNum,       
 	    r.regNum AS regId,   
 	    m.memName
 	  FROM SCHEDULE s

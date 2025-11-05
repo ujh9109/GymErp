@@ -64,5 +64,12 @@ public class ScheduleController {
         scheduleService.updateSchedule(scheduleDto);
         return ResponseEntity.ok("일정이 수정되었습니다.");
     }
+    
+    // 일정 삭제 
+    @DeleteMapping("/schedule/delete/{shNum}")
+    public ResponseEntity<String> deleteSchedule(@PathVariable int shNum) {
+        scheduleService.deleteSchedule(shNum);
+        return ResponseEntity.ok("일정이 삭제되었습니다.");
+    }
 
 }
