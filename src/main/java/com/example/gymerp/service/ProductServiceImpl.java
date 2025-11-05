@@ -64,6 +64,12 @@ public class ProductServiceImpl implements ProductService{
 		
 		//상품 목록 얻어오기 (검색 키워드가 있다면 조건에 맞는 목록만 얻어낸다)
 		List<ProductDto> list = productDao.selectPage(dto);
+		
+		// 각 상품에 대한 재고 수량 설정
+		for (ProductDto product : list) {
+			int qunatity = stockService.getStockOne(product.getProductId());
+			product.setQuantity(qunatity);
+		}
 
 		return ProductListResponse.builder()
 				.list(list)
