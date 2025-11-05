@@ -136,7 +136,7 @@
 	    INSERT INTO pt_log (
 	        usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
 	    ) VALUES (
-	        #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL, #{regId, jdbcType=NUMERIC}
+	        #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL, #{regId, jdbcType=NULL}
 	    )
 	</insert>
 	
@@ -155,7 +155,7 @@
         1,
         SYSDATE,
         NULL,
-        NULL
+        #{regId, jdbcType=NULL}
     )
 	</insert>
 	

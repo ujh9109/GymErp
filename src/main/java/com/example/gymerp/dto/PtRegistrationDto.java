@@ -27,6 +27,8 @@ public class PtRegistrationDto {
     private Date regDate;         // 예약 일자
     private Timestamp regUpdatedAt; // 예약 수정 일시
     private String regNote;       // 비고
-    
+ // ------------------- PT 로그 연계용 필드 -------------------
+    private Long usageId;         // PT_LOG PK (Mapper에서 selectKey로 자동 생성)
+    private Long salesId;         // 판매 ID (기본은 NULL, 필요 시 연결)
     
 }

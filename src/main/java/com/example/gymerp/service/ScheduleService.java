@@ -25,5 +25,8 @@ public interface ScheduleService {
     // 일정 수정
     int updateSchedule(ScheduleDto schedule);
     
+    // 일정 삭제
+    int deleteSchedule(int shNum);
+    
 }
 
