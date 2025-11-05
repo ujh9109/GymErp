@@ -43,7 +43,7 @@ public class SecurityConfig {
 
                 .anyRequest().authenticated()
 
-                .anyRequest().permitAll()     // 전체 허용 (초기 개발용)
+//                .anyRequest().permitAll()     // 전체 허용 (초기 개발용)
             )
             
             // 로그인 폼 비활성화

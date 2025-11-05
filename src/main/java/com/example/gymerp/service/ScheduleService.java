@@ -2,11 +2,17 @@ package com.example.gymerp.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import com.example.gymerp.dto.ScheduleDto;
 
 public interface ScheduleService {
 
+	
+	//어드민용 1개 추가됨
+	Map<String,Object> searchForAdmin(Map<String,Object> q);
+	
+	
     // 전체 일정 조회
     List<ScheduleDto> getAllSchedules();
 
