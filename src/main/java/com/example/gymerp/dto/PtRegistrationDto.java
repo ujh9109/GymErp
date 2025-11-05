@@ -30,5 +30,6 @@ public class PtRegistrationDto {
  // ------------------- PT 로그 연계용 필드 -------------------
     private Long usageId;         // PT_LOG PK (Mapper에서 selectKey로 자동 생성)
     private Long salesId;         // 판매 ID (기본은 NULL, 필요 시 연결)
+
     
 }

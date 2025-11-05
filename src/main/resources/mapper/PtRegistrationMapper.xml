@@ -98,5 +98,4 @@
 	    SET REMAINING_COUNT = REMAINING_COUNT + 1
 	    WHERE MEMNUM = #{memNum}
 	</update>
-
 </mapper>

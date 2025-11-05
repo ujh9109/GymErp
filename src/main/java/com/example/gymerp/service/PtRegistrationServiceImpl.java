@@ -34,7 +34,7 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
     // 단일 예약 조회
     @Override
     public PtRegistrationDto getPtRegistrationById(int regNum) {
-        return session.selectOne("PtRegistrationMapper.getPtRegistrationById", regNum);
+        return session.selectOne("com.example.gymerp.repository.PtRegistrationMapper.getPtRegistrationById", regNum);
     }
 
 
@@ -81,4 +81,6 @@ public class PtRegistrationServiceImpl implements PtRegistrationService {
         System.out.println("[findRegNumByShNum 호출] shNum=" + shNum);
     return sessionT.selectOne("PtRegistrationMapper.findRegNumByShNum", shNum);
     }
+
+	
 }
