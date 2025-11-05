@@ -119,7 +119,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         // 2️ PT 일정인 경우만 추가 로직 수행
         if ("SCHEDULE-PT".equalsIgnoreCase(target.getCodeBid())) {
-            Integer regNum = ptRegistrationService.findRegNumByShNum(shNum);
+            Long regNum = ptRegistrationService.findRegNumByShNum(shNum);
 
             if (regNum != null) {
                 // ✅ 회원이 존재할 때만 PT_LOG 기록
