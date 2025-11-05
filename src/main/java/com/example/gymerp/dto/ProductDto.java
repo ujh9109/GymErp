@@ -45,5 +45,4 @@ public class ProductDto {
 	//정렬용 필드
 	private String sortBy;    // (정렬 기준 컬럼: "name", "price" 등)
 	private String direction; // (정렬 방향: "ASC", "DESC")
-	
 }
