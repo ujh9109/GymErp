@@ -19,12 +19,13 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
+import org.mybatis.spring.boot.autoconfigure.MybatisLanguageDriverAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
-import org.mybatis.spring.boot.autoconfigure.MybatisLanguageDriverAutoConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
@@ -37,6 +38,7 @@ import com.example.gymerp.dto.PurchaseDto;
 import com.example.gymerp.dto.StockAdjustRequestDto;
 import com.example.gymerp.dto.StockAdjustmentDto;
 import com.example.gymerp.service.StockService;
+import com.example.gymerp.support.ControllerSliceTestBase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -64,13 +66,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 )
 @AutoConfigureMockMvc(addFilters = false) // 보안필터 제외
 @ImportAutoConfiguration // (명시적 표기; 위 excludeAutoConfiguration가 우선 적용됨)
-class StockControllerTest {
+class StockControllerTest extends ControllerSliceTestBase {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
 
     // 컨트롤러가 위임하는 서비스만 Mock 처리
     @MockitoBean StockService stockService;
+
 
     // --------------------------------------------------------------------
     // 2-3. GET /v1/stock - 기본 파라미터(page=1,size=20,keyword=null) 위임 및 배열 응답 검증

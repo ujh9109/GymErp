@@ -103,8 +103,8 @@ class StockServiceIntegrationTest {
     	jdbcTemplate.execute("ALTER SEQUENCE PURCHASE_SEQ RESTART WITH " + nextPur);
 
     	Integer nextSi = jdbcTemplate.queryForObject(
-    	    "SELECT COALESCE(MAX(ITEMSALESID),0) + 1 FROM SALESITEM", Integer.class);
-    	jdbcTemplate.execute("ALTER SEQUENCE SALESITEM_SEQ RESTART WITH " + nextSi);
+    	    "SELECT COALESCE(MAX(ITEMSALESID),0) + 1 FROM SALES_ITEM", Integer.class);
+    	jdbcTemplate.execute("ALTER SEQUENCE SALES_ITEM_SEQ RESTART WITH " + nextSi);
     }
 
 

@@ -43,7 +43,7 @@ public class SecurityConfig {
 
                 .anyRequest().authenticated()
 
-                .anyRequest().permitAll()     // 전체 허용 (초기 개발용)
+//                .anyRequest().permitAll()     // 전체 허용 (초기 개발용)
             )
             
             // 로그인 폼 비활성화
@@ -81,7 +81,7 @@ public class SecurityConfig {
         // Vite 개발 서버
         // Swagger (Spring 내부)
         config.setAllowedOrigins(List.of("http://localhost:5173","http://localhost:9000")); 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
