@@ -29,9 +29,14 @@ public class ProductController {
 	
 	//상품 목록 조회
 	@GetMapping("/product")
-	public ProductListResponse getProductList(@RequestParam(defaultValue = "1") int pageNum, ProductDto dto) {
+	public ProductListResponse getProductList(
+			@RequestParam(defaultValue = "1") int pageNum, 
+			ProductDto dto,
+			@RequestParam(defaultValue = "codeBName") String sortBy,
+        	@RequestParam(defaultValue = "ASC") String direction
+	) {
 		
-		return productService.getProducts(pageNum, dto);
+		return productService.getProducts(pageNum, dto, sortBy, direction);
 	}
 		
 	//실물 상품 등록
