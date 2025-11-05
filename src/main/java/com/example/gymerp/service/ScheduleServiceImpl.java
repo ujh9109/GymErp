@@ -1,12 +1,12 @@
 package com.example.gymerp.service;
 
 
+import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-
 import com.example.gymerp.dto.PtLogDto;
 import com.example.gymerp.dto.PtRegistrationDto;
 import com.example.gymerp.dto.ScheduleDto;
@@ -24,6 +24,42 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final PtRegistrationService ptRegistrationService; // PT 등록 테이블 접근
 	private final LogDao logDao; // PT 로그 테이블 접근
 
+	
+	//어드민용 추가 작성
+	  @Override
+	  public Map<String, Object> searchForAdmin(Map<String, Object> p) {
+		    String keyword = String.valueOf(p.getOrDefault("keyword","")).trim();
+		    String codeBid = String.valueOf(p.getOrDefault("codeBid","")).trim();
+		    int offset = (int) p.getOrDefault("offset", 0);
+		    int limit  = (int) p.getOrDefault("limit", 20);
+
+		    Map<String,Object> param = new HashMap<>();
+		    param.put("keyword", keyword);
+		    param.put("codeBid", codeBid);
+		    param.put("offset", offset);
+		    param.put("limit", limit);
+
+		    List<ScheduleDto> list = scheduleDao.selectByFiltersForAdmin(param);
+		    int total = scheduleDao.countByFiltersForAdmin(param);
+
+		    Map<String,Object> res = new HashMap<>();
+		    res.put("list", list);
+		    res.put("total", total);
+		    res.put("page", (offset/Math.max(limit,1))+1);
+		    res.put("size", limit);
+		    return res;
+		}
+
+	    private static Integer optInt(String s){ try{ return s==null?null:Integer.valueOf(s);}catch(Exception e){return null;}}
+	    private static int optInt(String s,int d){ try{ return Integer.parseInt(s);}catch(Exception e){return d;}}
+	    private static String str(String s){ return (s==null||s.isBlank())?null:s; }
+	    private static Timestamp ts(String s){
+	        if (s==null || s.isBlank()) return null;
+	        return Timestamp.valueOf(s.replace("T"," ") + (s.length()==16?":00":"")); // 'YYYY-MM-DDTHH:mm'도 대응
+	    }
+	
+	
+	
     // 전체 일정 조회 
     @Override
     public List<ScheduleDto> getAllSchedules() {
