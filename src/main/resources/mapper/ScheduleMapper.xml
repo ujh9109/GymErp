@@ -103,7 +103,7 @@
     UPDATE SCHEDULE
     SET
       empNum = #{empNum},
-      memNum = #{memNum},
+      memNum = #{memNum, jdbcType=VARCHAR},
       codeBid = #{codeBid, jdbcType=VARCHAR},
       startTime = #{startTime},
       endTime = #{endTime},
