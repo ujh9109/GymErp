@@ -113,6 +113,12 @@
     		SET PASSWORD = #{password}
     	WHERE EMPNUM = #{empNum}
     </update>
+    <!-- 비빈 해쉬 조회용 -->
+	<select id="selectPasswordHashByEmpNum" resultType="string">
+		SELECT PASSWORD
+			FROM EMPLOYEE
+		WHERE EMPNUM = #{empNum}
+	</select>
 
 	<!-- 직원 검색 + 페이징 -->
 	<select id="getEmpListPaged" resultType="EmpDto">

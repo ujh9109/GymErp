@@ -28,6 +28,8 @@ public class EmpDto {
     private String empPhone;      // 연락처
     private String empEmail;      // 이메일
     private String password;      // 비밀번호 2025-10-30 13:07 추가
+    private String currentPassword;   // 비밀번호 변경 요청 시 현재 비번 (요청에서만 받음)
+    private String newPassword;       // 비밀번호 변경 요청 시 새 비번 (요청에서만 받음)
     
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date hireDate;        // 입사일

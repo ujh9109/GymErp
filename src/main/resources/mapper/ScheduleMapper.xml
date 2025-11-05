@@ -112,7 +112,7 @@
   </update>
 
   <!-- ====================== 일정 삭제 ====================== -->
-  <delete id="delete" parameterType="int">
+  <delete id="delete" parameterType="map">
     DELETE FROM SCHEDULE WHERE shNum = #{shNum}
   </delete>
 
