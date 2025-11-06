@@ -40,9 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/emp/login", "/v1/emp/logout", "/v1/member/**", "/v1/sales/**").permitAll() // 로그인 허용
                 .requestMatchers("/v1/pt/**").permitAll()     // Swagger 테스트용 PT API 허용
                 .requestMatchers("/v1/schedule/**").permitAll() // 일정 관련 API Swagger 테스트 허용
-
                 .anyRequest().authenticated()
-                // .anyRequest().permitAll()
             )
             
             // 로그인 폼 비활성화
@@ -80,7 +78,7 @@ public class SecurityConfig {
         // Vite 개발 서버
         // Swagger (Spring 내부)
         config.setAllowedOrigins(List.of("http://localhost:5173","http://localhost:9000")); 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
