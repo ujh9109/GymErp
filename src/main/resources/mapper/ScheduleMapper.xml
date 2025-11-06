@@ -115,5 +115,26 @@
   <delete id="delete" parameterType="map">
     DELETE FROM SCHEDULE WHERE shNum = #{shNum}
   </delete>
+  
+  <!-- 해당 직원의 휴가가 지정 구간과 겹치는지 카운트 -->
+  <select id="countVacationOverlap" parameterType="map" resultType="int">
+    SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE empNum = #{empNum}
+      AND codeBid = 'VACATION'
+      AND startTime &lt;= #{endTime}
+      AND endTime   &gt;= #{startTime}
+  </select>
+
+  <!-- (수정용) 자기 자신 shNum을 제외하고 겹치는지 카운트 -->
+  <select id="countVacationOverlapExcludingSelf" parameterType="map" resultType="int">
+    SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE empNum = #{empNum}
+      AND codeBid = 'VACATION'
+      AND shNum  &lt;&gt; #{shNum}
+      AND startTime &lt;= #{endTime}
+      AND endTime   &gt;= #{startTime}
+  </select>
 
 </mapper>

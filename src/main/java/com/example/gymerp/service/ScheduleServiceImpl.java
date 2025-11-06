@@ -54,6 +54,36 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public int createSchedule(ScheduleDto schedule) {
+    	
+    	// PT 일정에 대해 회원권/잔여 회수 선검사
+        if ("SCHEDULE-PT".equalsIgnoreCase(schedule.getCodeBid())) {
+            Long memNum = schedule.getMemNum();
+            if (memNum != null) {
+                // ① 회원권 유효 여부 확인
+                int validCnt = logDao.checkVoucherValid(memNum);
+                if (validCnt <= 0) {
+                    throw new IllegalStateException("회원권이 만료되었거나 존재하지 않습니다.");
+                }
+                // ② 남은 PT 회수 확인
+                int remain = logDao.selectRemainingPtCount(memNum);
+                if (remain <= 0) {
+                    throw new IllegalStateException("남은 PT 회차가 없어 예약할 수 없습니다.");
+                }
+            }
+        }
+        
+    	// 휴가 중복 방지: 먼저 검사
+        if ("VACATION".equalsIgnoreCase(schedule.getCodeBid())) {
+            int dup = scheduleDao.countVacationOverlap(
+                    schedule.getEmpNum(),
+                    schedule.getStartTime(),
+                    schedule.getEndTime()
+            );
+            if (dup > 0) {
+                throw new IllegalStateException("해당 기간에 이미 휴가가 등록되어 있습니다.");
+            }
+        }
+    	
     	// 1️ 일정 기본 등록
         int result = scheduleDao.insert(schedule);
         System.out.println("[일정 등록 완료] shNum=" + schedule.getShNum() + ", codeBid=" + schedule.getCodeBid());
@@ -107,6 +137,19 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Transactional
     @Override
     public int updateSchedule(ScheduleDto schedule) {
+    	// 휴가 일정이면 겹침 검사 (자기 자신 제외)
+        if ("VACATION".equalsIgnoreCase(schedule.getCodeBid())) {
+            int dup = scheduleDao.countVacationOverlapExcludingSelf(
+                    schedule.getEmpNum(),
+                    schedule.getStartTime(),
+                    schedule.getEndTime(),
+                    schedule.getShNum()
+            );
+            if (dup > 0) {
+                throw new IllegalStateException("해당 기간에 이미 휴가가 등록되어 있습니다.");
+            }
+        }
+        
         int updated = scheduleDao.update(schedule);
         System.out.println("[일정 수정 완료] shNum=" + schedule.getShNum());
         return updated;
