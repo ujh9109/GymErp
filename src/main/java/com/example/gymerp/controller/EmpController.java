@@ -155,21 +155,24 @@ public class EmpController {
     }
 
     
-    // 직원 검색 + 페이징
+    // 직원 검색 + 페이징 (STATUS 포함)
     @GetMapping("/list/paging")
     public Map<String, Object> getEmpListPaged(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "all") String type,
-            @RequestParam(required = false) String keyword
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "ALL") String status // ACTIVE | RESIGNED | ALL
     ) {
         Map<String, Object> result = new HashMap<>();
 
-        int totalCount = empService.getTotalCount(type, keyword);
         int start = (page - 1) * size + 1;
-        int end = page * size;
+        int end   = page * size;
 
-        List<EmpDto> list = empService.getEmpListPaged(type, keyword, start, end);
+        // 상태 포함 버전을 호출
+        int totalCount = empService.getTotalCount(type, keyword, status);
+        List<EmpDto> list = empService.getEmpListPaged(type, keyword, status, start, end);
+
         int totalPage = (int) Math.ceil((double) totalCount / size);
 
         result.put("list", list);
@@ -177,9 +180,9 @@ public class EmpController {
         result.put("size", size);
         result.put("totalCount", totalCount);
         result.put("totalPage", totalPage);
-
         return result;
     }
+
     
     // 프로필이미지 업로드
     @PostMapping("/upload/{empNum}")
