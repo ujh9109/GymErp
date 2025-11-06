@@ -14,7 +14,7 @@ public interface PtRegistrationService {
     List<PtRegistrationDto> getAllPtRegistration(Integer empNum, String date);
 
     // 단일 예약 조회
-    PtRegistrationDto getPtRegistrationById(long regNum);
+    PtRegistrationDto getPtRegistrationById(int regNum);
 
     // 예약 등록
     int insertPtRegistration(PtRegistrationDto dto);
@@ -24,11 +24,12 @@ public interface PtRegistrationService {
 
     // 예약 삭제
     int deletePtRegistration(int regNum);
+    
+    
+    
     // 스케줄번호로 예약번호 select 
     Integer findRegNumByShNum(int shNum);
 
-
-  
 
     // ===============================
     // [PT LOG 관련 추가 기능]
@@ -48,7 +49,4 @@ public interface PtRegistrationService {
      *  - REGISTRATION 테이블에서 예약 삭제
      */
     //void cancelPtWithLog(long regNum);
-    
-    
 }
-

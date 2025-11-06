@@ -30,15 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ScheduleController {
 
-	private final ScheduleService scheduleService;
-
-
-	// 전체일정 조회
-	@GetMapping("/schedule/all")
-	public ResponseEntity<List<ScheduleDto>> getAllSchedules() {
-		List<ScheduleDto> list = scheduleService.getAllSchedules();
-		return ResponseEntity.ok(list);
-	}
+    private final ScheduleService scheduleService;
 
     
     //어드민용 추가 2개
@@ -73,51 +65,69 @@ public class ScheduleController {
         // 만약 Employee.role 값을 세션/토큰에서 직접 보신다면 여기를 프로젝트에 맞게 교체.
     }
     
+    
+    
+    
+    // 전체일정 조회 
+    @GetMapping("/schedule/all")
+    public ResponseEntity<List<ScheduleDto>> getAllSchedules() {
+        List<ScheduleDto> list = scheduleService.getAllSchedules();
+        return ResponseEntity.ok(list);
+    }
 
-	// 일정 상세 조회
-	@GetMapping("/schedule/{shNum}")
-	public ResponseEntity<ScheduleDto> getScheduleById(@PathVariable int shNum) {
-		ScheduleDto dto = scheduleService.getScheduleById(shNum);
-		return ResponseEntity.ok(dto);
-	}
+    // 일정 상세 조회
+    @GetMapping("/schedule/{shNum}")
+    public ResponseEntity<ScheduleDto> getScheduleById(@PathVariable int shNum) {
+        ScheduleDto dto = scheduleService.getScheduleById(shNum);
+        return ResponseEntity.ok(dto);
+    }
 
-	// 직원별 일정 조회
-	@GetMapping("/schedule/emp/{empNum}")
-	public ResponseEntity<List<ScheduleDto>> getSchedulesByEmp(@PathVariable int empNum) {
-		List<ScheduleDto> list = scheduleService.getSchedulesByEmpNum(empNum);
-		return ResponseEntity.ok(list);
-	}
+    // 직원별 일정 조회
+    @GetMapping("/schedule/emp/{empNum}")
+    public ResponseEntity<List<ScheduleDto>> getSchedulesByEmp(@PathVariable int empNum) {
+        List<ScheduleDto> list = scheduleService.getSchedulesByEmpNum(empNum);
+        return ResponseEntity.ok(list);
+    }
 
-	// 날짜 범위 조회 (달력)
-	@GetMapping("/schedule/range")
-	public ResponseEntity<List<ScheduleDto>> getSchedulesByDateRange(
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-		List<ScheduleDto> list = scheduleService.getSchedulesByDateRange(startDate, endDate);
-		return ResponseEntity.ok(list);
-	}
+   	// 날짜 범위 조회 (달력)
+    @GetMapping("/schedule/range")
+    public ResponseEntity<List<ScheduleDto>> getSchedulesByDateRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
+    ) {
+        List<ScheduleDto> list = scheduleService.getSchedulesByDateRange(startDate, endDate);
+        return ResponseEntity.ok(list);
+    }
 
-	// 일정 등록
-	@PostMapping("/schedule/add")
-	public ResponseEntity<String> createSchedule(@RequestBody ScheduleDto scheduleDto) {
-		scheduleService.createSchedule(scheduleDto);
-		return ResponseEntity.status(HttpStatus.CREATED).body("일정이 등록되었습니다.");
-	}
+ //------------------------------------수정-------------------------------------------------------
+    // 일정 등록 
+    @PostMapping("/schedule/add")
+    public ResponseEntity<String> createSchedule(@RequestBody ScheduleDto scheduleDto) {
+    	try {
+            scheduleService.createSchedule(scheduleDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body("일정이 등록되었습니다.");
+        } catch (IllegalStateException e) {
+            // 회원권 만료, 잔여 PT 0, 중복 등 “비즈니스 조건 위반” → 409 Conflict
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 파라미터 누락 등 → 400 Bad Request
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+//-------------------------------------------------------------------------------------------------------
 
-
-	// 일정 수정
-	@PutMapping("/schedule/update")
-	public ResponseEntity<String> updateSchedule(@RequestBody ScheduleDto scheduleDto) {
-		scheduleService.updateSchedule(scheduleDto);
-		return ResponseEntity.ok("일정이 수정되었습니다.");
-	}
-
-	// 일정 삭제
-	@DeleteMapping("/schedule/delete/{shNum}")
-	public ResponseEntity<String> deleteSchedule(@PathVariable int shNum) {
-		scheduleService.deleteSchedule(shNum);
-		return ResponseEntity.ok("일정이 삭제되었습니다.");
-	}
-
+    // 일정 수정 
+    @PutMapping("/schedule/update")
+    public ResponseEntity<String> updateSchedule(@RequestBody ScheduleDto scheduleDto) {
+        scheduleService.updateSchedule(scheduleDto);
+        return ResponseEntity.ok("일정이 수정되었습니다.");
+    }
+    
+    // 일정 삭제 
+    @DeleteMapping("/schedule/delete/{shNum}")
+    public ResponseEntity<String> deleteSchedule(@PathVariable int shNum) {
+        scheduleService.deleteSchedule(shNum);
+        return ResponseEntity.ok("일정이 삭제되었습니다.");
+    }
 
 }
