@@ -90,11 +90,11 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public int createSchedule(ScheduleDto schedule) {
-    	// 1️ 일정 기본 등록
+    	// 1️. 일정 기본 등록
         int result = scheduleDao.insert(schedule);
         System.out.println("[일정 등록 완료] shNum=" + schedule.getShNum() + ", codeBid=" + schedule.getCodeBid());
 
-        // 2️ PT 일정인 경우만 추가 로직 수행
+        // 2️. PT 일정인 경우만 추가 로직 수행
         if ("SCHEDULE-PT".equalsIgnoreCase(schedule.getCodeBid())) {
             
             // 회원이 선택되지 않은 경우 → PT 등록 생략
@@ -103,18 +103,18 @@ public class ScheduleServiceImpl implements ScheduleService {
                 return result;
             }
 
-            // 3️ REGISTRATION 테이블에 PT 예약 등록
+            // 3️. REGISTRATION 테이블에 PT 예약 등록
             PtRegistrationDto reg = PtRegistrationDto.builder()
-                    .empNum((long) schedule.getEmpNum())                                 // 직원 번호
+                    .empNum((long) schedule.getEmpNum())                                 			// 직원 번호
                     .memNum(schedule.getMemNum() == null ? null : schedule.getMemNum().longValue()) // 회원 번호
-                    .shNum((long) schedule.getShNum())                                   // 일정 번호
-                    .regNote(schedule.getMemo())                                         // 메모
+                    .shNum((long) schedule.getShNum())                                   			// 일정 번호
+                    .regNote(schedule.getMemo())                                         			// 메모
                     .build();
 
             ptRegistrationService.insertPtRegistration(reg);
             System.out.println("[PT 예약 등록 완료] regNum=" + reg.getRegNum());
 
-            // 4️ PT_LOG 테이블에 "소비" 로그 등록 (-1)
+            // 4.️ PT_LOG 테이블에 "소비" 로그 등록 (-1)
             PtLogDto consumeLog = PtLogDto.builder()
                     .memNum(schedule.getMemNum() == null ? null : schedule.getMemNum().longValue())
                     .empNum((long) schedule.getEmpNum())
