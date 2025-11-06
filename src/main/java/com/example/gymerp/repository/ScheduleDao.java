@@ -40,6 +40,9 @@ public interface ScheduleDao {
 
     /* 일정 삭제 */
     public int delete(@Param("shNum") int shNum);
+ // ----------------------- 추가 -------------------------
+    int insertIfNoOverlap(ScheduleDto dto);     
 
-   
+    int updateIfNoOverlap(ScheduleDto schedule);
+//--------------------------------------------------------
 }
