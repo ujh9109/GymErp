@@ -99,12 +99,22 @@ public class ScheduleController {
         return ResponseEntity.ok(list);
     }
 
+ //------------------------------------수정-------------------------------------------------------
     // 일정 등록 
     @PostMapping("/schedule/add")
     public ResponseEntity<String> createSchedule(@RequestBody ScheduleDto scheduleDto) {
-        scheduleService.createSchedule(scheduleDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body("일정이 등록되었습니다.");
+    	try {
+            scheduleService.createSchedule(scheduleDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body("일정이 등록되었습니다.");
+        } catch (IllegalStateException e) {
+            // 회원권 만료, 잔여 PT 0, 중복 등 “비즈니스 조건 위반” → 409 Conflict
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 파라미터 누락 등 → 400 Bad Request
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
+//-------------------------------------------------------------------------------------------------------
 
     // 일정 수정 
     @PutMapping("/schedule/update")
