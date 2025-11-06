@@ -2,6 +2,7 @@ package com.example.gymerp.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -11,6 +12,11 @@ import com.example.gymerp.dto.ScheduleDto;
 @Mapper
 public interface ScheduleDao {
 
+	/*하단 2개 어드민용 추가됨 */
+	List<ScheduleDto> selectByFiltersForAdmin(Map<String,Object> p);
+    int countByFiltersForAdmin(Map<String,Object> p);
+	
+	
     /* 전체 일정 조회 (관리자용) */
     public List<ScheduleDto> selectAll();
 
@@ -34,7 +40,7 @@ public interface ScheduleDao {
 
     /* 일정 삭제 */
     public int delete(@Param("shNum") int shNum);
-    
+
     // 특정 직원의 휴가가 지정 구간과 겹치는지 카운트
     int countVacationOverlap(long empNum, LocalDateTime startTime, LocalDateTime endTime);
     
@@ -42,5 +48,9 @@ public interface ScheduleDao {
     int countVacationOverlapExcludingSelf(long empNum, LocalDateTime startTime, LocalDateTime endTime, long shNum);
 
 
-   
+ // ----------------------- 추가 -------------------------
+    int insertIfNoOverlap(ScheduleDto dto);     
+
+    int updateIfNoOverlap(ScheduleDto schedule);
+//--------------------------------------------------------
 }
