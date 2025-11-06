@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -110,6 +111,13 @@ public class ScheduleController {
     public ResponseEntity<String> updateSchedule(@RequestBody ScheduleDto scheduleDto) {
         scheduleService.updateSchedule(scheduleDto);
         return ResponseEntity.ok("일정이 수정되었습니다.");
+    }
+    
+    // 일정 삭제 
+    @DeleteMapping("/schedule/delete/{shNum}")
+    public ResponseEntity<String> deleteSchedule(@PathVariable int shNum) {
+        scheduleService.deleteSchedule(shNum);
+        return ResponseEntity.ok("일정이 삭제되었습니다.");
     }
 
 }
