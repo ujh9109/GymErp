@@ -34,6 +34,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 🔹 React CORS 설정
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(SWAGGER).permitAll() // Swagger 허용
+                .requestMatchers("/upload/**").permitAll()
                 .requestMatchers("/v1/emp/login", "/v1/emp/logout", "/v1/member/**", "/v1/sales/**").permitAll() // 로그인 허용
 
                 .requestMatchers("/v1/pt/**").permitAll()     // Swagger 테스트용 PT API 허용
