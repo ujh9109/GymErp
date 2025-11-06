@@ -4,8 +4,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;   // ✅ 추가 필요!
+import java.util.HashMap;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty; // ✅ 추가
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,12 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(                      // ✅ 서비스판매 모듈 ON/OFF 스위치
+    prefix = "feature",
+    name = "service-sale",
+    havingValue = "true",
+    matchIfMissing = false
+)
 public class SalesServiceServiceImpl implements SalesServiceService {
 
     private final SalesServiceDao salesServiceDao;
@@ -42,7 +49,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
     public SalesService getSalesServiceById(long serviceSalesId) {
         return salesServiceDao.selectSalesServiceById(serviceSalesId);
     }
-
 
     /* ===============================
        [2. 등록]
@@ -68,9 +74,7 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 
             if (!hasValidVoucher) logService.insertVoucherLog(voucher);
             else logService.extendVoucherLog(voucher);
-        }
-
-        else if ("PT".equalsIgnoreCase(salesService.getServiceType())) {
+        } else if ("PT".equalsIgnoreCase(salesService.getServiceType())) {
             if (!logService.isVoucherValid(salesService.getMemNum()))
                 throw new IllegalStateException("회원권이 유효하지 않아 PT 등록이 불가합니다.");
 
@@ -89,7 +93,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
         return salesServiceDao.insertSalesService(salesService);
     }
 
-
     /* ===============================
        [3. 수정]
     =============================== */
@@ -100,7 +103,7 @@ public class SalesServiceServiceImpl implements SalesServiceService {
         SalesService existing = salesServiceDao.selectSalesServiceById(salesService.getServiceSalesId());
         if (existing == null)
             throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
-        
+
         if (!existing.getServiceType().equalsIgnoreCase(salesService.getServiceType()))
             throw new IllegalStateException("상품 타입(PT/회원권)은 수정할 수 없습니다.");
 
@@ -133,7 +136,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 
         return salesServiceDao.updateSalesService(salesService);
     }
-
 
     /* ===============================
        [4. 삭제]
@@ -169,7 +171,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
         return salesServiceDao.deleteSalesService(serviceSalesId);
     }
 
-
     /* ===============================
        [5. 내역 조회 (필터 + 스크롤)]
     =============================== */
@@ -183,7 +184,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
     public List<SalesService> getPagedSalesServices(Map<String, Object> params) {
         return salesServiceDao.selectPagedSalesServices(params);
     }
-
 
     /* ===============================
        [6. 서비스 매출 통계 조회]

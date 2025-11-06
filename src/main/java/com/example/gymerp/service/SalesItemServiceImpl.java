@@ -29,6 +29,7 @@ public class SalesItemServiceImpl implements SalesItemService {
     private final StockService stockService;
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getAllSalesItems(String startDate, String endDate, String productNameKeyword, Integer empNum, int page, int size) {
                 
         Map<String, Object> params = new HashMap<>();

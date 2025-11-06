@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,71 +22,77 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
-	
+
     private static final String[] SWAGGER = {
-            "/swagger-ui.html", "/swagger-ui/**",
-            "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**",
-            "/configuration/ui", "/configuration/security", "/upload/**",
-            "/v1/product/**"
-            
+        "/swagger-ui.html", "/swagger-ui/**",
+        "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**",
+        "/configuration/ui", "/configuration/security"
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // csrf 일단 비활성화 (API 테스트 용도)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // cors 설정 (react)
-            .authorizeHttpRequests(auth -> auth // 요청 권한 제어
-                .requestMatchers(SWAGGER).permitAll() // Swagger 허용
-                .requestMatchers("/v1/emp/login", "/v1/emp/logout").permitAll() // 로그인 허용
-                .requestMatchers("/v1/pt/**").permitAll()     // Swagger 테스트용 PT API 허용
-                .requestMatchers("/v1/schedule/**").permitAll() // 일정 관련 API Swagger 테스트 허용
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                // ✅ CORS preflight
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                .anyRequest().authenticated()     // 전체 허용 (초기 개발용)
+                // ✅ Swagger
+                .requestMatchers(SWAGGER).permitAll()
+
+                // ✅ 로그인/로그아웃(필요 시)
+                .requestMatchers("/v1/emp/login", "/v1/emp/logout").permitAll()
+
+                // ✅ 상품 판매 API (개발용 전면 개방)
+                .requestMatchers(HttpMethod.GET,  "/v1/sales/products/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/sales/products/**").permitAll()
+
+                // 필요하면 조회성 API들 추가로 열기
+                // .requestMatchers("/v1/modal/**").permitAll()
+
+                .anyRequest().authenticated()
             )
-            
-            // 로그인 폼 비활성화
             .formLogin(login -> login.disable())
-            // 세션 기반 로그인도 비활성화 (JWT 같은 stateless용)
             .httpBasic(basic -> basic.disable());
-        
+
         return http.build();
     }
-    
-    // BCryptPasswordEncoder 등록
+
+    // ✅ PasswordEncoder Bean
     @Bean
-    PasswordEncoder passwordEncoder() {
-    	return new BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
-    
-    //인증 메니저 객체를 bean 으로 만든다. (Spring Security 가 자동 로그인 처리할때도 사용되는 객체)
-  	@Bean
-  	AuthenticationManager authenticationManager(HttpSecurity http,
-  			BCryptPasswordEncoder encoder, UserDetailsService service) throws Exception{
-  		//적절한 설정을한 인증 메니저 객체를 리턴해주면 bean 이 되어서 Spring Security 가 사용한다 
-  		return http.getSharedObject(AuthenticationManagerBuilder.class)
-  				.userDetailsService(service)
-  				.passwordEncoder(encoder)
-  				.and()
-  				.build();
-  	}
-  	
-    // REACT(React:5173)에서의 요청을 허용 
-    // 나중에 REACT Repository 만들어지면 설정해주세요
+
+    // ✅ AuthenticationManager (타입 미스 없이 설정)
+    @Bean
+    public AuthenticationManager authenticationManager(
+            HttpSecurity http,
+            PasswordEncoder encoder,
+            UserDetailsService userDetailsService) throws Exception {
+
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .userDetailsService(userDetailsService)
+                .passwordEncoder(encoder)
+                .and()
+                .build();
+    }
+
+    // ✅ CORS(React Vite dev server 5173)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        // Vite 개발 서버
-        // Swagger (Spring 내부)
-        config.setAllowedOrigins(List.of("http://localhost:5174","http://localhost:9000")); 
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173", // 프론트
+            "http://localhost:9000"  // 스웨거(동일 출처)
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config); // 모든 경로에 적용
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
