@@ -1,6 +1,8 @@
 package com.example.gymerp.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,4 +65,17 @@ public class MemberServiceImpl implements MemberService {
     public List<MemberDto> searchMembers(String keyword) {
         return memberDao.search(keyword);
     }
+
+    
+    
+	@Override
+	public List<MemberDto> getAllWithStats(String status) {
+        return memberDao.selectAllWithStats(status);
+	}
+
+	@Override
+	public MemberDto getWithStats(int memNum) {
+        return memberDao.getWithStats(memNum);
+	}
+
 }
