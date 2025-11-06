@@ -33,18 +33,27 @@
 
   <!-- ====================== 단건 조회 ====================== -->
   <select id="selectByShNum" parameterType="int" resultMap="ScheduleMap">
-    SELECT
-      s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
-      e.empName, cb.name AS codeBName, m.memName
-    FROM SCHEDULE s
-      JOIN Employee e ON s.empNum = e.empNum
-      LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
-      LEFT JOIN Registration r ON s.shNum = r.shNum
-      LEFT JOIN Member m ON r.memNum = m.memNum
-    WHERE s.shNum = #{shNum}
-  </select>
-
-  <!-- ====================== 직원별 일정 조회 ====================== -->
+	  SELECT 
+	    s.shNum,
+	    s.empNum,
+	    s.codeBid,
+	    s.startTime,
+	    s.endTime,
+	    s.memo,
+	    e.empName,
+	    cb.name AS codeBName,
+	    s.memNum,       
+	    r.regNum AS regId,   
+	    m.memName
+	  FROM SCHEDULE s
+	    JOIN Employee e ON s.empNum = e.empNum
+	    LEFT JOIN CodeB cb ON s.codeBid = cb.codeBid
+	    LEFT JOIN Registration r ON s.shNum = r.shNum
+	    LEFT JOIN Member m ON s.memNum = m.memNum
+	  WHERE s.shNum = #{shNum}
+	</select>
+	
+	  <!-- ====================== 직원별 일정 조회 ====================== -->
   <select id="selectByEmpNum" parameterType="int" resultMap="ScheduleMap">
     SELECT
       s.shNum, s.empNum, s.codeBid, s.startTime, s.endTime, s.memo,
@@ -139,6 +148,8 @@
                 AND #{offset,javaType=int} + #{limit,javaType=int}
   </select>
 
+
+
   <select id="countByFiltersForAdmin" parameterType="map" resultType="int">
     SELECT COUNT(*)
     FROM SCHEDULE s
@@ -160,5 +171,61 @@
       </if>
     </where>
   </select>
+ 
+ <!-- ===================== ⬇ 추가 ⬇ ========================================================================== --> 
+ 
+   <!-- ===================== ⬇ 회원권 유효 확인 ⬇ ===================== -->
+<insert id="insertIfNoOverlap" parameterType="com.example.gymerp.dto.ScheduleDto">
+  <selectKey keyProperty="shNum" resultType="long" order="BEFORE">
+    SELECT SCHEDULE_SEQ.NEXTVAL FROM DUAL
+  </selectKey>
+
+  <![CDATA[
+  INSERT INTO SCHEDULE (
+    SHNUM, EMPNUM, CODEBID, STARTTIME, ENDTIME, MEMNUM, MEMO
+  )
+  SELECT
+    #{shNum,      jdbcType=NUMERIC},
+    #{empNum,     jdbcType=NUMERIC},
+    #{codeBid,    jdbcType=VARCHAR},
+    #{startTime,  jdbcType=TIMESTAMP},
+    #{endTime,    jdbcType=TIMESTAMP},
+    #{memNum,     jdbcType=NUMERIC},
+    #{memo,       jdbcType=VARCHAR}
+  FROM DUAL
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM SCHEDULE s
+    WHERE s.EMPNUM = #{empNum, jdbcType=NUMERIC}
+      AND #{startTime, jdbcType=TIMESTAMP} < s.ENDTIME
+      AND s.STARTTIME < #{endTime, jdbcType=TIMESTAMP}
+  )
+  ]]>
+</insert>
+
+
+<!-- 일정 시간이 겹치지 않을 때만 UPDATE -->
+<update id="updateIfNoOverlap" parameterType="com.example.gymerp.dto.ScheduleDto">
+  <![CDATA[
+  UPDATE SCHEDULE s
+     SET s.EMPNUM    = #{empNum,    jdbcType=NUMERIC}
+       , s.CODEBID   = #{codeBid,   jdbcType=VARCHAR}
+       , s.STARTTIME = #{startTime, jdbcType=TIMESTAMP}
+       , s.ENDTIME   = #{endTime,   jdbcType=TIMESTAMP}
+       , s.MEMNUM    = #{memNum,    jdbcType=NUMERIC}
+       , s.MEMO      = #{memo,      jdbcType=VARCHAR}
+   WHERE s.SHNUM = #{shNum, jdbcType=NUMERIC}
+     AND NOT EXISTS (
+           SELECT 1
+             FROM SCHEDULE x
+            WHERE x.EMPNUM = #{empNum, jdbcType=NUMERIC}
+              AND x.SHNUM <> #{shNum, jdbcType=NUMERIC}   -- 자기 자신 제외
+              AND #{startTime, jdbcType=TIMESTAMP} < x.ENDTIME
+              AND x.STARTTIME < #{endTime, jdbcType=TIMESTAMP}
+         )
+  ]]>
+</update>
+
+<!-- ======================================================================================= --> 
 
 </mapper>

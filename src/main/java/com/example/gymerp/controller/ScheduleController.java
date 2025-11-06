@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -98,18 +99,35 @@ public class ScheduleController {
         return ResponseEntity.ok(list);
     }
 
+ //------------------------------------수정-------------------------------------------------------
     // 일정 등록 
     @PostMapping("/schedule/add")
     public ResponseEntity<String> createSchedule(@RequestBody ScheduleDto scheduleDto) {
-        scheduleService.createSchedule(scheduleDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body("일정이 등록되었습니다.");
+    	try {
+            scheduleService.createSchedule(scheduleDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body("일정이 등록되었습니다.");
+        } catch (IllegalStateException e) {
+            // 회원권 만료, 잔여 PT 0, 중복 등 “비즈니스 조건 위반” → 409 Conflict
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 파라미터 누락 등 → 400 Bad Request
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
+//-------------------------------------------------------------------------------------------------------
 
     // 일정 수정 
     @PutMapping("/schedule/update")
     public ResponseEntity<String> updateSchedule(@RequestBody ScheduleDto scheduleDto) {
         scheduleService.updateSchedule(scheduleDto);
         return ResponseEntity.ok("일정이 수정되었습니다.");
+    }
+    
+    // 일정 삭제 
+    @DeleteMapping("/schedule/delete/{shNum}")
+    public ResponseEntity<String> deleteSchedule(@PathVariable int shNum) {
+        scheduleService.deleteSchedule(shNum);
+        return ResponseEntity.ok("일정이 삭제되었습니다.");
     }
 
 }

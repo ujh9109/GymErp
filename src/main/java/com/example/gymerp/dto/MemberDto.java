@@ -24,6 +24,11 @@ public class MemberDto {
 	 private String memProfile;       // 프로필 이미지 파일명 또는 URL
 	 private String memNote;          // 메모
 
-	
+	// ▼ 계산/조인으로 채우는 확장 필드
+	private String  trainerName;       // employee.empName (last trainer by pt_log)
+	private Date    voucherStartDate;  // 최신권 시작일
+	private Date    voucherEndDate;    // 최신권 만료일
+	private Integer ptRemain;          // pt_log.countChange 합계
+	private String  membershipStatus;  // '사용중' | '미사용중'
 
 }
