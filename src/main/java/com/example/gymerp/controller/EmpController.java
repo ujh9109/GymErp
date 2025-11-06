@@ -33,6 +33,7 @@ import com.example.gymerp.security.CustomUserDetails;
 import com.example.gymerp.service.EmpService;
 import com.example.gymerp.service.SalesItemServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
@@ -126,21 +127,52 @@ public class EmpController {
     	return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
     }
     
-    // 직원 검색 + 페이징
+    // 비밀번호 변경 + 즉시 로그아웃
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody EmpDto body,
+            Authentication authentication,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(Map.of("message", "인증 정보가 없습니다."));
+        }
+
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        empService.updatePassword(user.getEmpNum(), body.getCurrentPassword(), body.getNewPassword());
+
+        // ★ 세션 무효화 + 시큐리티 컨텍스트 클리어 + (remember-me 있으면 쿠키도 제거)
+        new org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler()
+                .logout(request, response, authentication);
+        // new org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler("remember-me")
+        //        .logout(request, response, authentication);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "비밀번호가 변경되어 재로그인이 필요합니다.",
+                "requireReLogin", true
+        ));
+    }
+
+    
+    // 직원 검색 + 페이징 (STATUS 포함)
     @GetMapping("/list/paging")
     public Map<String, Object> getEmpListPaged(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "all") String type,
-            @RequestParam(required = false) String keyword
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "ALL") String status // ACTIVE | RESIGNED | ALL
     ) {
         Map<String, Object> result = new HashMap<>();
 
-        int totalCount = empService.getTotalCount(type, keyword);
         int start = (page - 1) * size + 1;
-        int end = page * size;
+        int end   = page * size;
 
-        List<EmpDto> list = empService.getEmpListPaged(type, keyword, start, end);
+        // 상태 포함 버전을 호출
+        int totalCount = empService.getTotalCount(type, keyword, status);
+        List<EmpDto> list = empService.getEmpListPaged(type, keyword, status, start, end);
+
         int totalPage = (int) Math.ceil((double) totalCount / size);
 
         result.put("list", list);
@@ -148,9 +180,9 @@ public class EmpController {
         result.put("size", size);
         result.put("totalCount", totalCount);
         result.put("totalPage", totalPage);
-
         return result;
     }
+
     
     // 프로필이미지 업로드
     @PostMapping("/upload/{empNum}")

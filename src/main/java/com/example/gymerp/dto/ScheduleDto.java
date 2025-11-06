@@ -37,5 +37,7 @@ public class ScheduleDto {
     private String memName;            // 회원 이름 (PT 전용)
     private String refType;            // 개인일정/공통일정 구분
     private Long memNum;               // 회원 번호
+    //  PT 전용 필드 추가
+    private Long regId;
 
 }

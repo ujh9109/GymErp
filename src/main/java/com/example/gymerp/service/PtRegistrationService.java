@@ -24,6 +24,11 @@ public interface PtRegistrationService {
 
     // 예약 삭제
     int deletePtRegistration(int regNum);
+    
+    
+    
+    // 스케줄번호로 예약번호 select 
+    Integer findRegNumByShNum(int shNum);
 
 
     // ===============================

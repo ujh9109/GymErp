@@ -20,7 +20,7 @@
         SELECT COUNT(*)
         FROM voucher_log
         WHERE memNum = #{memNum}
-          AND endDate &gt;= SYSDATE
+          AND endDate >= SYSDATE
     </select>
 
     <!-- 회원권 신규 등록 -->
@@ -107,7 +107,7 @@
         INSERT INTO pt_log (
             usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
         ) VALUES (
-            #{usageId}, #{memNum}, #{empNum}, '전체환불', #{countChange}, SYSDATE, #{salesId}, #{regId,jdbcType=NUMERIC}
+            #{usageId}, #{memNum}, #{empNum}, '전체환불', #{countChange}, SYSDATE, #{salesId}, #{regId, jdbcType=NUMERIC}
         )
     </insert>
 
@@ -129,22 +129,29 @@
     <!-- =============================== -->
     <!-- [PT 예약 / 취소 관련] -->
     <!-- =============================== -->
-    
+
     <!-- PT 예약 로그 등록 (소비) -->
+    <!-- ✅ 잔여 PT가 1 이상일 때만 소비(-1) 삽입 -->
     <insert id="insertPtConsumeLog" parameterType="PtLogDto">
         <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
             SELECT pt_log_seq.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO pt_log (
             usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
-        ) VALUES (
-            #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL, #{regId, jdbcType=NUMERIC}
         )
+        SELECT
+            #{usageId}, #{memNum}, #{empNum}, '소비', -1, SYSDATE, NULL, #{regId, jdbcType=NULL}
+        FROM dual
+        WHERE (
+            SELECT NVL(SUM(countChange), 0)
+            FROM pt_log
+            WHERE memNum = #{memNum}
+        ) > 0
     </insert>
-    
+
     <!-- PT 예약 취소 로그 등록 (복구) -->
     <insert id="insertPtCancelLog" parameterType="PtLogDto">
-       <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
+        <selectKey keyProperty="usageId" resultType="long" order="BEFORE">
             SELECT pt_log_seq.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO pt_log (
@@ -157,10 +164,10 @@
             1,
             SYSDATE,
             NULL,
-            NULL
+            #{regId, jdbcType=NULL}
         )
     </insert>
-    
+
     <!-- PT 등록번호 기준으로 기존 소비 로그 조회 -->
     <select id="selectPtLogByRegId" parameterType="long" resultType="PtLogDto">
         SELECT usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
@@ -168,23 +175,5 @@
         WHERE regId = #{regId}
           AND status = '소비'
     </select>
-
-
-    <!-- ====================================
-         [PT 로그 연장 관련 - 추가]
-    ==================================== -->
-    <select id="selectPtLogBySalesId" parameterType="long" resultType="PtLogDto">
-        SELECT usageId, memNum, empNum, status, countChange, createdAt, salesId, regId
-          FROM pt_log
-         WHERE salesId = #{salesId}
-           AND status = '충전'
-    </select>
-
-    <update id="updatePtChargeCount" parameterType="PtLogDto">
-        UPDATE pt_log
-           SET countChange = #{countChange},
-               createdAt = SYSDATE
-         WHERE usageId = #{usageId}
-    </update>
 
 </mapper>

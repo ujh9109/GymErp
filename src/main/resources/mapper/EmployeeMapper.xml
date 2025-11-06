@@ -113,6 +113,12 @@
     		SET PASSWORD = #{password}
     	WHERE EMPNUM = #{empNum}
     </update>
+    <!-- 비빈 해쉬 조회용 -->
+	<select id="selectPasswordHashByEmpNum" resultType="string">
+		SELECT PASSWORD
+			FROM EMPLOYEE
+		WHERE EMPNUM = #{empNum}
+	</select>
 
 	<!-- 직원 검색 + 페이징 -->
 	<select id="getEmpListPaged" resultType="EmpDto">
@@ -136,6 +142,12 @@
 	                <if test="type == 'phone' and keyword != null and keyword != ''">
 	                    EMPPHONE LIKE '%' || #{keyword} || '%'
 	                </if>
+	                <if test="status == 'ACTIVE'">
+			          FIREDATE IS NULL
+			        </if>
+			        <if test="status == 'RESIGNED'">
+			          FIREDATE IS NOT NULL
+			        </if>
 	            </where>
 	            ORDER BY EMPNUM DESC
 	        ) E
@@ -159,6 +171,12 @@
 	        <if test="type == 'phone' and keyword != null and keyword != ''">
 	            EMPPHONE LIKE '%' || #{keyword} || '%'
 	        </if>
+	        <if test="status == 'ACTIVE'">
+		      FIREDATE IS NULL
+		    </if>
+		    <if test="status == 'RESIGNED'">
+		      FIREDATE IS NOT NULL
+		    </if>
 	    </where>
 	</select>
 		
@@ -185,4 +203,21 @@
         WHERE empNum = #{empNum}
     </select>
     
+    <!-- 이메일 중복 검사 -->
+    <select id="existsByEmail" parameterType="string" resultType="int">
+	  SELECT COUNT(*) FROM EMPLOYEE WHERE EMPEMAIL = #{email}
+	</select>
+	
+	<!-- 퇴사 처리: FIREDATE 찍고, 사유를 메모에 남김 -->
+	<update id="markResigned" parameterType="map">
+	  UPDATE EMPLOYEE
+	  SET
+	    FIREDATE = NVL(FIREDATE, SYSDATE),
+	    EMPMEMO = CASE
+	                WHEN #{reason} IS NOT NULL
+	                THEN NVL(EMPMEMO,'') || CHR(10) || '[퇴사사유] ' || #{reason}
+	                ELSE EMPMEMO
+	              END
+	  WHERE EMPNUM = #{empNum}
+	</update>
 </mapper>
