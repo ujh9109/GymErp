@@ -33,19 +33,31 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    // ✅ (1) 회원 전체 조회
-    // 프론트 요청: GET /v1/member
+//    // ✅ (1) 회원 전체 조회
+//    // 프론트 요청: GET /v1/member
+//    @GetMapping("/member")
+//    public List<MemberDto> list() {
+//        return memberService.getAllMembers();
+//    }
+//
+//    // ✅ (2) 회원 상세 조회
+//    // 프론트 요청: GET /v1/member/{memNum}
+//    @GetMapping("/member/{memNum}")
+//    public MemberDto detail(@PathVariable int memNum) {
+//        return memberService.getMember(memNum);
+//    }
+    
     @GetMapping("/member")
-    public List<MemberDto> list() {
-        return memberService.getAllMembers();
+    public List<MemberDto> list(@RequestParam(required=false, defaultValue="ALL") String status) {
+        return memberService.getAllWithStats(status); // ← 확장 필드 포함(담당트레이너/남은PT/회원권/상태)
     }
 
-    // ✅ (2) 회원 상세 조회
-    // 프론트 요청: GET /v1/member/{memNum}
     @GetMapping("/member/{memNum}")
     public MemberDto detail(@PathVariable int memNum) {
-        return memberService.getMember(memNum);
+        return memberService.getWithStats(memNum); // ← 단건도 확장 필드 포함
     }
+    
+    
 
     // ✅ (3) 회원 등록
     // 프론트 요청: POST /v1/member
