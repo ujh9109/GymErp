@@ -125,8 +125,6 @@ public class ModalServiceImpl implements ModalService {
         return dao.getEmployeeModalCount(params);
     }
 
-    /* =========================================================
-       [직원 선택 모달 끝]
-    ========================================================= */
+
 }
 
