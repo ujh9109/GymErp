@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ModalServiceImpl implements ModalService {
+	
     private final ModalDao dao;
 
     // ---------- 공통 유틸 ----------
@@ -35,12 +36,9 @@ public class ModalServiceImpl implements ModalService {
         return (safePage(page) - 1) * safeLimit(limit);
     }
 
-    /* =========================================================
-       [서비스 상품 선택 모달] (SERVICE)
-       - DTO: ServiceDto (startRowNum, endRowNum 사용)
-       - keyword 공백 -> null
-       - startRowNum/endRowNum가 없으면 1~20 기본값
-    ========================================================= */
+
+    /* ========================================================= [서비스 상품 선택 모달] ========================================================= */
+
     @Override
     public List<ServiceDto> getServiceModalList(ServiceDto dto) {
 
@@ -57,8 +55,12 @@ public class ModalServiceImpl implements ModalService {
 
         // startRowNum / endRowNum 자동 세팅 (없을 때만)
         if (dto.getStartRowNum() <= 0 || dto.getEndRowNum() <= 0) {
-            int startRow = 1;
-            int endRow = limit; // 기본 1~20
+            int page = 1; // 기본 페이지 1
+            
+            // 중복 선언된 startRow 제거 후 로직 통일
+            int startRow = (page - 1) * limit + 1;
+            int endRow = page * limit;
+            
             dto.setStartRowNum(startRow);
             dto.setEndRowNum(endRow);
         }
@@ -73,12 +75,14 @@ public class ModalServiceImpl implements ModalService {
         }
         return dao.getServiceModalCount(dto);
     }
-
-    /* =========================================================
-       [실물 상품 선택 모달]  (PRODUCT)
-       - 조건: ISACTIVE = 1, keyword LIKE (옵션)
-       - 페이징: ROWNUM BETWEEN ? AND ? (Oracle ROWNUM 방식)
-    ========================================================= */
+    
+    /* ========================================================= [서비스 상품 선택 모달 끝] ========================================================= */
+    
+    
+    
+    
+    
+    /* ========================================================= [실물 상품 선택 모달 ] ========================================================= */
     @Override
     public List<ProductDto> getProductModalList(String keyword, int page, int limit) {
         // 1. 안전한 limit 값 확보 (safeLimit 메서드는 이미 있다고 가정)
@@ -102,17 +106,18 @@ public class ModalServiceImpl implements ModalService {
     public int getProductModalCount(String keyword) {
         // Map에 keyword를 담아 DAO로 전달하는 로직입니다.
         Map<String, Object> param = new HashMap<>();
-        param.put("keyword", keyword); // keyword를 Map에 담습니다.
+        param.put("keyword", norm(keyword)); // norm 함수 사용
         
         // DAO 메소드 호출
         return dao.getProductModalCount(param); 
     }
+    
+    /* ========================================================= [실물 상품 선택 모달 끝] ========================================================= */
 
-    /* =========================================================
-       [직원 선택 모달]  (EMPLOYEE)
-       - 조건: EMP_STATUS = 'ACTIVE', keyword LIKE (이름/이메일)
-       - 페이징: ROWNUM BETWEEN ? AND ? (Oracle ROWNUM 방식으로 통일)
-    ========================================================= */
+    
+    
+    /* ========================================================= [직원 선택 모달] ========================================================= */
+    
     @Override
     public List<EmpDto> getEmployeeModalList(String keyword, int page, int limit) {
 
@@ -128,7 +133,6 @@ public class ModalServiceImpl implements ModalService {
         params.put("startRow", startRow); // Mapper가 요구하는 ROWNUM 시작 값
         params.put("endRow",   endRow);   // Mapper가 요구하는 ROWNUM 끝 값
         
-        // 기존 offset, limit 파라미터는 제거됨
 
         return dao.getEmployeeModalList(params);
     }
@@ -139,4 +143,6 @@ public class ModalServiceImpl implements ModalService {
         params.put("keyword", norm(keyword));
         return dao.getEmployeeModalCount(params);
     }
+
+    /* ========================================================= [직원 선택 모달 끝] ========================================================= */
 }

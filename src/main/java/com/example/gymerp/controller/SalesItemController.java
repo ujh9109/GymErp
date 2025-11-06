@@ -19,16 +19,20 @@ import com.example.gymerp.service.SalesItemService;
 import com.example.gymerp.service.StockService;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/v1/sales") 
 @RequiredArgsConstructor
 public class SalesItemController {
 
+    private static final Logger logger = LoggerFactory.getLogger(SalesItemController.class);
+
     private final SalesItemService salesItemService;
     private final StockService stockService;
     
- // SalesItemController.java 의 addSalesItem()만 교체
+ // 상품 등록
     @PostMapping("/products")
     public ResponseEntity<?> addSalesItem(@RequestBody SalesItemDto salesItem) {
         try {
@@ -57,6 +61,7 @@ public class SalesItemController {
                 "detail", e.getMessage()
             ));
         } catch (Exception e) {
+            logger.error("판매 내역 등록 중 심각한 오류 발생", e); // 로거를 사용하여 에러 기록
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "message", "판매 내역 등록 중 서버 오류가 발생했습니다.",
                 "detail", e.getMessage()

@@ -2,11 +2,17 @@ package com.example.gymerp.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import com.example.gymerp.dto.ScheduleDto;
 
 public interface ScheduleService {
 
+	
+	//어드민용 1개 추가됨
+	Map<String,Object> searchForAdmin(Map<String,Object> q);
+	
+	
     // 전체 일정 조회
     List<ScheduleDto> getAllSchedules();
 
@@ -24,9 +30,8 @@ public interface ScheduleService {
 
     // 일정 수정
     int updateSchedule(ScheduleDto schedule);
-
+    
     // 일정 삭제
     int deleteSchedule(int shNum);
     
 }
-

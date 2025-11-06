@@ -32,27 +32,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // 1. CSRF 비활성화 (API 테스트 및 SPA 환경용)
             .csrf(csrf -> csrf.disable())
+            
+            // 2. CORS 설정 적용
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            
+            // 3. 요청 권한 제어
             .authorizeHttpRequests(auth -> auth
-                // ✅ CORS preflight
+                
+                // ✅ CORS preflight 요청 허용
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ Swagger
+                // ✅ Swagger 관련 경로 허용
                 .requestMatchers(SWAGGER).permitAll()
 
-                // ✅ 로그인/로그아웃(필요 시)
+                // ✅ 로그인/로그아웃 경로 허용
                 .requestMatchers("/v1/emp/login", "/v1/emp/logout").permitAll()
+                
+                // ✅ 회원 및 판매 관련 API 경로 허용 (인증 없이 접근 가능하도록 설정)
+                .requestMatchers("/v1/member/**", "/v1/sales/**").permitAll()
 
-                // ✅ 상품 판매 API (개발용 전면 개방)
-                .requestMatchers(HttpMethod.GET,  "/v1/sales/products/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/v1/sales/products/**").permitAll()
+                // ✅ PT 및 일정 관련 API (Swagger 테스트용)
+                .requestMatchers("/v1/pt/**").permitAll()
+                .requestMatchers("/v1/schedule/**").permitAll()
 
-                // 필요하면 조회성 API들 추가로 열기
-                // .requestMatchers("/v1/modal/**").permitAll()
-
+                // ✅ 그 외 모든 요청은 인증 필요
                 .anyRequest().authenticated()
             )
+            
+            // 4. 기본 폼 로그인, HTTP Basic 비활성화
             .formLogin(login -> login.disable())
             .httpBasic(basic -> basic.disable());
 
@@ -79,16 +88,24 @@ public class SecurityConfig {
                 .build();
     }
 
-    // ✅ CORS(React Vite dev server 5173)
+    // ✅ CORS 설정 (React Vite dev server 5173)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+        
+        // 허용 출처 설정
         config.setAllowedOrigins(List.of(
             "http://localhost:5173", // 프론트
-            "http://localhost:9000"  // 스웨거(동일 출처)
+            "http://localhost:9000"  // 스웨거/백엔드 자체
         ));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        // 허용 HTTP 메서드 설정
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        // 모든 헤더 허용
         config.setAllowedHeaders(List.of("*"));
+        
+        // 인증 정보 (쿠키 등) 전송 허용
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
