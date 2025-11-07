@@ -119,6 +119,29 @@ public class ProductServiceImpl implements ProductService{
 
 	@Override
 	public void modifyProduct(ProductDto dto) {
+		
+		//업로드된 이미지가 있는지 읽어와본다
+		MultipartFile image = dto.getProfileFile();
+		
+		//만일 업로드된 이미지가 있다면
+		if(image != null && !image.isEmpty()) {
+			//원본 파일명
+			String orgFileName = image.getOriginalFilename();
+			//이미지의 확장자를 유지하기 위해 뒤에 원본 파일명을 추가한다
+			String saveFileName = UUID.randomUUID().toString()+orgFileName;
+			//저장할 파일의 전체 경로 구성하기
+			String filePath=fileLocation + File.separator + saveFileName;
+			try {
+				//업로드된 파일을 저장할 파일 객체 생성
+				File saveFile=new File(filePath);
+				image.transferTo(saveFile);
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+			//UserDto 에 저장된 이미지의 이름을 넣어준다
+			dto.setProfileImage(saveFileName);
+		}
+		
 		int rowCount = productDao.update(dto);
 		if(rowCount == 0) {
 			throw new RuntimeException("상품 수정 실패!");
