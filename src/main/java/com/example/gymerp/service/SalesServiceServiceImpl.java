@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap; 
+import java.util.HashMap;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +44,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
         return salesServiceDao.selectSalesServiceById(serviceSalesId);
     }
 
-
     /* ===============================
        [2. 등록]
     =============================== */
@@ -55,12 +54,12 @@ public class SalesServiceServiceImpl implements SalesServiceService {
         String memberName = memberDao.selectMemberNameById(salesService.getMemNum().intValue());
         String trainerName = empDao.selectEmployeeNameById(salesService.getEmpNum().intValue());
 
-        //  판매 내역을 먼저 등록 (시퀀스 생성)
+        // 판매 내역을 먼저 등록 (시퀀스 생성)
         salesServiceDao.insertSalesService(salesService);
 
         // 방금 생성된 PK
         Long newSalesId = salesService.getServiceSalesId();
-        
+
         if ("VOUCHER".equalsIgnoreCase(salesService.getServiceType())) {
             // ✅ 기존 회원권 조회
             VoucherLogDto existingVoucher = logService.getVoucherByMember(salesService.getMemNum());
@@ -121,9 +120,9 @@ public class SalesServiceServiceImpl implements SalesServiceService {
                     .build();
 
             logService.addPtChargeLog(ptLog);
-            
+
             // refundId
-            Long refundId = ptLog.getUsageId(); 
+            Long refundId = ptLog.getUsageId();
             if (refundId != null) {
                 Map<String, Object> param = new HashMap<>();
                 param.put("serviceSalesId", newSalesId);
@@ -134,27 +133,23 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 
         return 1;
     }
-
-
+    
     /* ===============================
 	    [3. 수정]
 	 =============================== */
+	
 	 @Override
 	 @Transactional
 	 public int updateSalesService(SalesService salesService) {
 	     // ✅ 1️⃣ 기존 판매내역 조회
 	     SalesService existing = salesServiceDao.selectSalesServiceById(salesService.getServiceSalesId());
-	     if (existing == null)
-	         throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
-	
+	     if (existing == null) throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
 	     if (!existing.getServiceType().equalsIgnoreCase(salesService.getServiceType()))
 	         throw new IllegalStateException("상품 타입(PT/회원권)은 수정할 수 없습니다.");
 	
 	     System.out.println("=== [DEBUG] updateSalesService() 진입 ===");
 	     System.out.println("기존 서비스 타입: " + existing.getServiceType());
 	     System.out.println("기존 판매ID(serviceSalesId): " + existing.getServiceSalesId());
-	
-	     
 	
 	     /* ===============================
 	        [A] PT 상품 (횟수 변경)
@@ -177,7 +172,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 	
 	             baseLog.setCountChange(baseLog.getCountChange() + addCount);
 	             logDao.updatePtChargeCount(baseLog);
-	
 	             System.out.println("[PT] 충전 연장 완료 → +" + addCount + "회");
 	         }
 	
@@ -186,12 +180,10 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 	             int refundCount = oldCount - newCount;
 	
 	             // ✅ 최소 보장 1회
-	             if (newCount < 1)
-	                 throw new IllegalStateException("PT는 최소 1회 이상 남겨야 합니다.");
+	             if (newCount < 1) throw new IllegalStateException("PT는 최소 1회 이상 남겨야 합니다.");
 	
 	             PtLogDto chargeLog = logDao.getPtLogBySalesId(existing.getServiceSalesId());
-	             if (chargeLog == null)
-	                 throw new IllegalStateException("기존 충전 로그를 찾을 수 없습니다.");
+	             if (chargeLog == null) throw new IllegalStateException("기존 충전 로그를 찾을 수 없습니다.");
 	
 	             // ✅ 내 차례 도달 여부
 	             Map<String, Object> params = new HashMap<>();
@@ -220,250 +212,237 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 	     }
 	
 	     /* ===============================
-		     [B] VOUCHER 상품 (일수 변경)
-		  =============================== */
-		  else if ("VOUCHER".equalsIgnoreCase(existing.getServiceType())) {
-		      VoucherLogDto voucher = logDao.selectVoucherByMember(existing.getMemNum());
-		      if (voucher == null)
-		          throw new IllegalStateException("회원권 정보를 찾을 수 없습니다.");
+	        [B] VOUCHER 상품 (일수 변경)
+	     =============================== */
+	     else if ("VOUCHER".equalsIgnoreCase(existing.getServiceType())) {
+	         VoucherLogDto voucher = logDao.selectVoucherByMember(existing.getMemNum());
+	         if (voucher == null) throw new IllegalStateException("회원권 정보를 찾을 수 없습니다.");
 	
-		      int oldDays = existing.getActualCount();
-		      int newDays = salesService.getActualCount();
+	         int oldDays = existing.getActualCount();
+	         int newDays = salesService.getActualCount();
 	
-		      // ✅ 동일하면 변경 없음
-		      if (oldDays == newDays) return 1;
+	         // ✅ 동일하면 변경 없음
+	         if (oldDays == newDays) return 1;
 	
-		      LocalDate now = LocalDate.now();
-		      LocalDate endDate = LocalDateTime.parse(
-		          voucher.getEndDate(),
-		          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-		      ).toLocalDate();
+	         LocalDate now = LocalDate.now();
+	         LocalDate endDate = LocalDateTime.parse(
+	                 voucher.getEndDate(),
+	                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+	         ).toLocalDate();
 	
-		      /* ----------------------------------------
-		         [1] 연장 (일수 증가)
-		      ---------------------------------------- */
-		      if (newDays > oldDays) {
-		          if (endDate.isBefore(now))
-		              throw new IllegalStateException("이미 만료된 회원권은 연장할 수 없습니다.");
+	         /* ----------------------------------------
+	            [1] 연장 (일수 증가)
+	         ---------------------------------------- */
+	         if (newDays > oldDays) {
+	             if (endDate.isBefore(now))
+	                 throw new IllegalStateException("이미 만료된 회원권은 연장할 수 없습니다.");
 	
-		          int addDays = newDays - oldDays;
-		          LocalDate newEndDate = endDate.plusDays(addDays);
+	             int addDays = newDays - oldDays;
+	             LocalDate newEndDate = endDate.plusDays(addDays);
+	             voucher.setEndDate(newEndDate.toString());
+	             logDao.extendVoucherLog(voucher);
+	             System.out.println("[VOUCHER] 연장 완료 → +" + addDays + "일");
+	         }
 	
-		          voucher.setEndDate(newEndDate.toString());
-		          logDao.extendVoucherLog(voucher);
+	         /* ----------------------------------------
+	            [2] 부분환불 (일수 감소)
+	         ---------------------------------------- */
+	         else if (newDays < oldDays) {
+	             int refundDays = oldDays - newDays;
+	             LocalDate newEndDate = endDate.minusDays(refundDays);
 	
-		          System.out.println("[VOUCHER] 연장 완료 → +" + addDays + "일");
-		      }
+	             // ✅ 1️⃣ 직전 로그 조회
+	             VoucherLogDto prev = logDao.selectPreviousVoucherByMember(existing.getMemNum());
+	             boolean allowFullRefund = false;
 	
-		      /* ----------------------------------------
-		         [2] 부분환불 (일수 감소)
-		      ---------------------------------------- */
-		      else if (newDays < oldDays) {
-		          int refundDays = oldDays - newDays;
-		          LocalDate newEndDate = endDate.minusDays(refundDays);
+	             if (prev == null) {
+	                 System.out.println("[VOUCHER] 직전 로그 없음 → 부분환불만 가능");
+	             } else {
+	                 LocalDate prevEnd = LocalDateTime.parse(
+	                         prev.getEndDate(),
+	                         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+	                 ).toLocalDate();
 	
-		          // ✅ 1️⃣ 직전 로그 조회
-		          VoucherLogDto prev = logDao.selectPreviousVoucherByMember(existing.getMemNum());
+	                 if (prevEnd.isBefore(now)) {
+	                     System.out.println("[VOUCHER] 직전 로그 만료 → 부분환불만 가능");
+	                 } else {
+	                     if (endDate.isAfter(now) || endDate.isEqual(now)) {
+	                         System.out.println("[VOUCHER] 유효 + 미사용 상태 → 전액환불 가능");
+	                         allowFullRefund = true;
+	                     } else {
+	                         System.out.println("[VOUCHER] 유효 + 사용중 상태 → 부분환불만 가능");
+	                     }
+	                 }
+	             }
 	
-		          boolean allowFullRefund = false;
-		          if (prev == null) {
-		              // (1) 직전 로그 없음 → 부분환불만
-		              System.out.println("[VOUCHER] 직전 로그 없음 → 부분환불만 가능");
-		          } else {
-		              LocalDate prevEnd = LocalDateTime.parse(
-		                  prev.getEndDate(),
-		                  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-		              ).toLocalDate();
+	             // ✅ 최소 보장 (최소 1일)
+	             if (newEndDate.isBefore(now.plusDays(1)))
+	                 throw new IllegalStateException("회원권은 최소 1일 이상 유지되어야 합니다.");
 	
-		              // (2) 직전 로그 만료 상태
-		              if (prevEnd.isBefore(now)) {
-		                  System.out.println("[VOUCHER] 직전 로그 만료 → 부분환불만 가능");
-		              }
-		              // (3) 직전 로그 유효 상태 → endDate와 수정일 비교
-		              else {
-		                  if (endDate.isAfter(now) || endDate.isEqual(now)) {
-		                      System.out.println("[VOUCHER] 유효 + 미사용 상태 → 전액환불 가능");
-		                      allowFullRefund = true;
-		                  } else {
-		                      System.out.println("[VOUCHER] 유효 + 사용중 상태 → 부분환불만 가능");
-		                  }
-		              }
-		          }
+	             if (endDate.isBefore(now))
+	                 throw new IllegalStateException("이미 만료된 회원권은 환불이 불가능합니다.");
 	
-		          // ✅ 2️⃣ 최소 보장 (최소 1일)
-		          if (newEndDate.isBefore(now.plusDays(1)))
-		              throw new IllegalStateException("회원권은 최소 1일 이상 유지되어야 합니다.");
+	             // ✅ DB 반영 (전액 or 부분 동일하게 endDate update)
+	             voucher.setEndDate(newEndDate.toString());
+	             logDao.partialRefundVoucherLog(voucher);
 	
-		          // ✅ 3️⃣ 환불 불가 조건
-		          if (endDate.isBefore(now))
-		              throw new IllegalStateException("이미 만료된 회원권은 환불이 불가능합니다.");
+	             String refundType = allowFullRefund ? "전액환불" : "부분환불";
+	             System.out.println("[VOUCHER] " + refundType + " 완료 → -" + refundDays + "일");
+	         }
+	     }
 	
-		          // ✅ 4️⃣ DB 반영 (전액 or 부분 동일하게 endDate update)
-		          voucher.setEndDate(newEndDate.toString());
-		          logDao.partialRefundVoucherLog(voucher);
-	
-		          String refundType = allowFullRefund ? "전액환불" : "부분환불";
-		          System.out.println("[VOUCHER] " + refundType + " 완료 → -" + refundDays + "일");
-		      }
-		  }
-
 	     salesServiceDao.updateSalesService(salesService);
-	     
 	     return 1;
 	 }
+	 
+	    /* ===============================
+     [4. 삭제]
+     - PT: 내 차례 및 소비 여부 확인 후 전체환불 가능 시만 삭제
+     - VOUCHER: 직전 로그 상태 + endDate 기준으로 전체환불 가능 시만 삭제
+     - 공통: status='DELETED' (논리삭제)
+     - @Transactional 보장
+  =============================== */
 
+  @Override
+  @Transactional
+  public int deleteSalesService(long serviceSalesId) {
+      // ✅ 1️⃣ 판매내역 조회
+      SalesService sale = salesServiceDao.selectSalesServiceById(serviceSalesId);
+      if (sale == null)
+          throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
 
+      // ===============================
+      // [A] PT 상품 삭제 (전체 환불 분기)
+      // ===============================
+      if ("PT".equalsIgnoreCase(sale.getServiceType())) {
+          // 1️⃣ 내 차례 도달 여부 확인
+          Map<String, Object> params = new HashMap<>();
+          params.put("memNum", sale.getMemNum());
+          params.put("salesId", sale.getServiceSalesId());
+          int turnReached = logDao.checkPtTurnReached(params); // 0: 아직 차례 안 옴 / 1: 내 차례 도달
 
+          // 2️⃣ 남은 PT 수량 확인
+          int remaining = logDao.selectRemainingPtCount(sale.getMemNum());
 
-	 /* ===============================
-	   [4. 삭제]
-	   - PT: 내 차례 및 소비 여부 확인 후 전체환불 가능 시만 삭제
-	   - VOUCHER: 직전 로그 상태 + endDate 기준으로 전체환불 가능 시만 삭제
-	   - 공통: status='DELETED' (논리삭제)
-	   - @Transactional 보장
-	=============================== */
-	@Override
-	@Transactional
-	public int deleteSalesService(long serviceSalesId) {
-	    // ✅ 1️⃣ 판매내역 조회
-	    SalesService sale = salesServiceDao.selectSalesServiceById(serviceSalesId);
-	    if (sale == null)
-	        throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
+          // 3️⃣ 환불 가능성 판별
+          boolean refundable = false;
+          if (turnReached == 0) {
+              refundable = true; // 내 차례 아직 안 옴 → 전체환불 가능
+          } else if (turnReached == 1 && remaining == sale.getActualCount()) {
+              refundable = true; // 내 차례 왔지만 소비 없음 → 전체환불 가능
+          }
 
-	    // ===============================
-	    // [A] PT 상품 삭제 (전체 환불 분기)
-	    // ===============================
-	    if ("PT".equalsIgnoreCase(sale.getServiceType())) {
-	        // 1️⃣ 내 차례 도달 여부 확인
-	        Map<String, Object> params = new HashMap<>();
-	        params.put("memNum", sale.getMemNum());
-	        params.put("salesId", sale.getServiceSalesId());
-	        int turnReached = logDao.checkPtTurnReached(params); // 0: 아직 차례 안 옴 / 1: 내 차례 도달
+          if (!refundable)
+              throw new IllegalStateException("이미 일부 사용된 PT는 전체 환불(삭제)이 불가능합니다.");
 
-	        // 2️⃣ 남은 PT 수량 확인
-	        int remaining = logDao.selectRemainingPtCount(sale.getMemNum());
+          // 4️⃣ 전체환불 로그 생성
+          PtLogDto refundLog = PtLogDto.builder()
+                  .memNum(sale.getMemNum())
+                  .empNum(sale.getEmpNum())
+                  .status("전체환불")
+                  .countChange(-sale.getActualCount().longValue())
+                  .salesId(sale.getServiceSalesId())
+                  .createdAt(LocalDateTime.now())
+                  .build();
 
-	        // 3️⃣ 환불 가능성 판별
-	        boolean refundable = false;
-	        if (turnReached == 0) {
-	            refundable = true; // 내 차례 아직 안 옴 → 전체환불 가능
-	        } else if (turnReached == 1 && remaining == sale.getActualCount()) {
-	            refundable = true; // 내 차례 왔지만 소비 없음 → 전체환불 가능
-	        }
+          logDao.insertPtFullRefundLog(refundLog);
+          System.out.println("[PT] 전체환불 완료 → -" + sale.getActualCount() + "회");
+      }
 
-	        if (!refundable)
-	            throw new IllegalStateException("이미 일부 사용된 PT는 전체 환불(삭제)이 불가능합니다.");
+      // ===============================
+      // [B] 회원권(VOUCHER) 삭제 (전체 환불 분기)
+      // ===============================
+      else if ("VOUCHER".equalsIgnoreCase(sale.getServiceType())) {
+          VoucherLogDto current = logDao.selectVoucherByMember(sale.getMemNum());
+          VoucherLogDto prev = logDao.selectPreviousVoucherByMember(sale.getMemNum());
+          LocalDate now = LocalDate.now();
 
-	        // 4️⃣ 전체환불 로그 생성
-	        PtLogDto refundLog = PtLogDto.builder()
-	                .memNum(sale.getMemNum())
-	                .empNum(sale.getEmpNum())
-	                .status("전체환불")
-	                .countChange(-sale.getActualCount().longValue())
-	                .salesId(sale.getServiceSalesId())
-	                .createdAt(LocalDateTime.now())
-	                .build();
+          if (current == null)
+              throw new IllegalStateException("회원권 정보가 존재하지 않아 환불할 수 없습니다.");
 
-	        logDao.insertPtFullRefundLog(refundLog);
-	        System.out.println("[PT] 전체환불 완료 → -" + sale.getActualCount() + "회");
-	    }
+          boolean refundable = false;
 
-	    // ===============================
-	    // [B] 회원권(VOUCHER) 삭제 (전체 환불 분기)
-	    // ===============================
-	    else if ("VOUCHER".equalsIgnoreCase(sale.getServiceType())) {
-	        VoucherLogDto current = logDao.selectVoucherByMember(sale.getMemNum());
-	        VoucherLogDto prev = logDao.selectPreviousVoucherByMember(sale.getMemNum());
-	        LocalDate now = LocalDate.now();
+          // 1️⃣ 직전 로그 없음 → 이미 사용 중 (환불 불가)
+          if (prev == null) {
+              System.out.println("[VOUCHER] 직전 로그 없음 → 전체환불 불가 (이미 사용 상태)");
+          }
 
-	        if (current == null)
-	            throw new IllegalStateException("회원권 정보가 존재하지 않아 환불할 수 없습니다.");
+          // 2️⃣ 직전 로그 만료 → 이미 사용 중 (환불 불가)
+          else {
+              LocalDate prevEnd = LocalDateTime.parse(
+                      prev.getEndDate(),
+                      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+              ).toLocalDate();
 
-	        boolean refundable = false;
+              if (prevEnd.isBefore(now)) {
+                  System.out.println("[VOUCHER] 직전 로그 만료 → 전체환불 불가");
+              } else {
+                  // 3️⃣ 유효 상태 → endDate와 삭제일 비교
+                  LocalDate endDate = LocalDateTime.parse(
+                          current.getEndDate(),
+                          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                  ).toLocalDate();
 
-	        // 1️⃣ 직전 로그 없음 → 이미 사용 중 (환불 불가)
-	        if (prev == null) {
-	            System.out.println("[VOUCHER] 직전 로그 없음 → 전체환불 불가 (이미 사용 상태)");
-	        }
-	        // 2️⃣ 직전 로그 만료 → 이미 사용 중 (환불 불가)
-	        else {
-	            LocalDate prevEnd = LocalDateTime.parse(
-	                prev.getEndDate(),
-	                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-	            ).toLocalDate();
+                  if (endDate.isAfter(now) || endDate.isEqual(now)) {
+                      refundable = true;
+                      System.out.println("[VOUCHER] 유효 + 미사용 상태 → 전체환불 가능");
+                  } else {
+                      System.out.println("[VOUCHER] 유효 + 사용중 상태 → 전체환불 불가");
+                  }
+              }
+          }
 
-	            if (prevEnd.isBefore(now)) {
-	                System.out.println("[VOUCHER] 직전 로그 만료 → 전체환불 불가");
-	            } else {
-	                // 3️⃣ 유효 상태 → endDate와 삭제일 비교
-	                LocalDate endDate = LocalDateTime.parse(
-	                    current.getEndDate(),
-	                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-	                ).toLocalDate();
+          if (!refundable)
+              throw new IllegalStateException("이미 사용된 회원권은 전체 환불(삭제)이 불가능합니다.");
 
-	                if (endDate.isAfter(now) || endDate.isEqual(now)) {
-	                    refundable = true;
-	                    System.out.println("[VOUCHER] 유효 + 미사용 상태 → 전체환불 가능");
-	                } else {
-	                    System.out.println("[VOUCHER] 유효 + 사용중 상태 → 전체환불 불가");
-	                }
-	            }
-	        }
+          // 4️⃣ 전체환불 처리 (즉시 만료)
+          current.setEndDate(now.toString());
+          logDao.rollbackVoucherLog(current);
+          System.out.println("[VOUCHER] 전체환불 완료 (endDate → 오늘로 조정)");
+      }
 
-	        if (!refundable)
-	            throw new IllegalStateException("이미 사용된 회원권은 전체 환불(삭제)이 불가능합니다.");
+      // ===============================
+      // [C] 공통 처리 - 판매내역 논리삭제
+      // ===============================
+      salesServiceDao.deleteSalesService(serviceSalesId);
+      System.out.println("[SALES] 판매내역 논리삭제 완료 (status='DELETED')");
+      return 1;
+  }
 
-	        // 4️⃣ 전체환불 처리 (즉시 만료)
-	        current.setEndDate(now.toString());
-	        logDao.rollbackVoucherLog(current);
-	        System.out.println("[VOUCHER] 전체환불 완료 (endDate → 오늘로 조정)");
-	    }
+  /* ===============================
+     [5. 내역 조회 (필터 + 스크롤)]
+  =============================== */
 
-	    // ===============================
-	    // [C] 공통 처리 - 판매내역 논리삭제
-	    // ===============================
-	    salesServiceDao.deleteSalesService(serviceSalesId);
-	    System.out.println("[SALES] 판매내역 논리삭제 완료 (status='DELETED')");
+  @Override
+  public int getSalesServiceCount(Map<String, Object> params) {
+      return salesServiceDao.selectSalesServiceCount(params);
+  }
 
-	    return 1;
-	}
+  @Override
+  public List<Map<String, Object>> getPagedSalesServices(Map<String, Object> params) {
+      return salesServiceDao.selectPagedSalesServices(params);
+  }
 
+  /* ===============================
+     [6. 서비스 매출 통계 조회]
+  =============================== */
 
-
-    /* ===============================
-       [5. 내역 조회 (필터 + 스크롤)]
-    =============================== */
-
-    @Override
-    public int getSalesServiceCount(Map<String, Object> params) {
-        return salesServiceDao.selectSalesServiceCount(params);
-    }
-
-    @Override
-    public List<Map<String, Object>> getPagedSalesServices(Map<String, Object> params) {
-        return salesServiceDao.selectPagedSalesServices(params);
-    }
-
-
-    /* ===============================
-       [6. 서비스 매출 통계 조회]
-    =============================== */
-
-    @Override
-    public List<Map<String, Object>> getServiceSalesAnalytics(
-            String startDate,
-            String endDate,
-            String serviceNameKeyword,
-            Integer memNum,
-            Integer empNum) {
-
-        Map<String, Object> params = new HashMap<>();
-        params.put("startDate", startDate);
-        params.put("endDate", endDate);
-        params.put("serviceNameKeyword", serviceNameKeyword);
-        params.put("memNum", memNum);
-        params.put("empNum", empNum);
-
-        return salesServiceDao.selectServiceSalesAnalytics(params);
-    }
+  @Override
+  public List<Map<String, Object>> getServiceSalesAnalytics(
+          String startDate,
+          String endDate,
+          String serviceNameKeyword,
+          Integer memNum,
+          Integer empNum
+  ) {
+      Map<String, Object> params = new HashMap<>();
+      params.put("startDate", startDate);
+      params.put("endDate", endDate);
+      params.put("serviceNameKeyword", serviceNameKeyword);
+      params.put("memNum", memNum);
+      params.put("empNum", empNum);
+      return salesServiceDao.selectServiceSalesAnalytics(params);
+  }
 }
+
+    
