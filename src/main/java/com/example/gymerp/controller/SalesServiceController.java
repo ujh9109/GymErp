@@ -60,6 +60,7 @@ public class SalesServiceController {
     public Map<String, Object> updateSalesService(@PathVariable Long id,
                                                   @RequestBody SalesService salesService) {
         salesService.setServiceSalesId(id);
+        salesService.setStatus("ACTIVE");
         int result = salesServiceService.updateSalesService(salesService);
         return Map.of("result", result, "message", "판매 내역이 수정되었습니다.");
     }

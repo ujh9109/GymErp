@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.HashMap; 
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty; // ✅ 추가
 import org.springframework.stereotype.Service;
@@ -61,6 +60,12 @@ public class SalesServiceServiceImpl implements SalesServiceService {
         String memberName = memberDao.selectMemberNameById(salesService.getMemNum().intValue());
         String trainerName = empDao.selectEmployeeNameById(salesService.getEmpNum().intValue());
 
+        //  판매 내역을 먼저 등록 (시퀀스 생성)
+        salesServiceDao.insertSalesService(salesService);
+
+        // 방금 생성된 PK
+        Long newSalesId = salesService.getServiceSalesId();
+        
         if ("VOUCHER".equalsIgnoreCase(salesService.getServiceType())) {
             boolean hasValidVoucher = logService.isVoucherValid(salesService.getMemNum());
             LocalDate start = LocalDate.now();
@@ -84,59 +89,111 @@ public class SalesServiceServiceImpl implements SalesServiceService {
                     .empNum(salesService.getEmpNum())
                     .status("충전")
                     .countChange(Long.valueOf(salesService.getActualCount()))
-                    .salesId(salesService.getServiceSalesId())
+                    .salesId(newSalesId)
                     .createdAt(LocalDateTime.now())
                     .build();
 
             logService.addPtChargeLog(ptLog);
+            
+            // refundId
+            Long refundId = ptLog.getUsageId(); 
+            if (refundId != null) {
+                Map<String, Object> param = new HashMap<>();
+                param.put("serviceSalesId", newSalesId);
+                param.put("refundId", refundId);
+                salesServiceDao.updateRefundIdBySalesId(param);
+            }
         }
 
-        return salesServiceDao.insertSalesService(salesService);
+        return 1;
     }
 
     /* ===============================
-       [3. 수정]
-    =============================== */
+    [3. 수정]
+ =============================== */
 
-    @Override
-    @Transactional
-    public int updateSalesService(SalesService salesService) {
-        SalesService existing = salesServiceDao.selectSalesServiceById(salesService.getServiceSalesId());
-        if (existing == null)
-            throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
+ @Override
+ @Transactional
+ public int updateSalesService(SalesService salesService) {
+     SalesService existing = salesServiceDao.selectSalesServiceById(salesService.getServiceSalesId());
+     if (existing == null)
+         throw new IllegalArgumentException("해당 판매 내역이 존재하지 않습니다.");
+     
+     if (!existing.getServiceType().equalsIgnoreCase(salesService.getServiceType()))
+         throw new IllegalStateException("상품 타입(PT/회원권)은 수정할 수 없습니다.");
+     
+     System.out.println("=== [DEBUG] updateSalesService() 진입 ===");
+     System.out.println("기존 서비스 타입: " + existing.getServiceType());
+     System.out.println("기존 판매ID(serviceSalesId): " + existing.getServiceSalesId());
 
-        if (!existing.getServiceType().equalsIgnoreCase(salesService.getServiceType()))
-            throw new IllegalStateException("상품 타입(PT/회원권)은 수정할 수 없습니다.");
+     /* ===============================
+	        [A] PT 상품 (횟수 변경)
+	     =============================== */
+	     if ("PT".equalsIgnoreCase(existing.getServiceType())) {
+	         int oldCount = existing.getActualCount();
+	         int newCount = salesService.getActualCount();
+	
+	         // [1] 부분환불 (횟수 감소)
+	         if (newCount < oldCount) {
+	             int refundCount = oldCount - newCount;
+	             PtLogDto refundLog = PtLogDto.builder()
+	                     .memNum(existing.getMemNum())
+	                     .empNum(existing.getEmpNum())
+	                     .status("부분환불")
+	                     .countChange(Long.valueOf(-refundCount))
+	                     .salesId(existing.getServiceSalesId())
+	                     .createdAt(LocalDateTime.now())
+	                     .build();
+	
+	             logService.addPtPartialRefundLog(refundLog);
+	         }
+	
+	         // [2] 연장 (횟수 증가)
+	         else if (newCount > oldCount) {
+	             int addCount = newCount - oldCount;
+	
+	             // 기존 충전 로그 조회
+	             PtLogDto existingLog = logService.getPtLogBySalesId(existing.getServiceSalesId());
+	             System.out.println("[DEBUG] existingLog = " + existingLog);
+	             if (existingLog != null && "충전".equals(existingLog.getStatus())) {
+	                 long updatedCount = existingLog.getCountChange() + addCount;
+	                 existingLog.setCountChange(updatedCount);
+	
+	                 logService.updatePtChargeCount(existingLog);
+	             }
+	         }
+	     }
+	
+	     /* ===============================
+	        [B] VOUCHER 상품 (일수 변경)
+	     =============================== */
+	     else if ("VOUCHER".equalsIgnoreCase(existing.getServiceType())) {
+	         VoucherLogDto voucher = logService.getVoucherByMember(existing.getMemNum());
+	         if (voucher != null) {
+	             int oldDays = existing.getBaseCount();
+	             int newDays = salesService.getBaseCount();
+	
+	             // [1] 부분환불 (일수 감소)
+	             if (newDays < oldDays) {
+	                 LocalDate endDate = LocalDate.parse(voucher.getEndDate());
+	                 LocalDate newEndDate = endDate.minusDays(oldDays - newDays);
+	                 voucher.setEndDate(newEndDate.toString());
+	                 logService.partialRefundVoucherLog(voucher);
+	             }
+	
+	             // [2] 연장 (일수 증가)
+	             else if (newDays > oldDays) {
+	                 LocalDate endDate = LocalDate.parse(voucher.getEndDate());
+	                 LocalDate newEndDate = endDate.plusDays(newDays - oldDays);
+	                 voucher.setEndDate(newEndDate.toString());
+	                 logService.extendVoucherLog(voucher);
+	             }
+	         }
+	     }
+	
+	     return salesServiceDao.updateSalesService(salesService);
+	 }
 
-        if ("PT".equalsIgnoreCase(existing.getServiceType())) {
-            int oldCount = existing.getActualCount();
-            int newCount = salesService.getActualCount();
-
-            if (newCount < oldCount) {
-                int refundCount = oldCount - newCount;
-                PtLogDto refundLog = PtLogDto.builder()
-                        .memNum(existing.getMemNum())
-                        .empNum(existing.getEmpNum())
-                        .status("부분환불")
-                        .countChange(Long.valueOf(-refundCount))
-                        .salesId(existing.getServiceSalesId())
-                        .createdAt(LocalDateTime.now())
-                        .build();
-
-                logService.addPtPartialRefundLog(refundLog);
-            }
-        } else if ("VOUCHER".equalsIgnoreCase(existing.getServiceType())) {
-            VoucherLogDto voucher = logService.getVoucherByMember(existing.getMemNum());
-            if (voucher != null) {
-                LocalDate endDate = LocalDate.parse(voucher.getEndDate());
-                LocalDate newEndDate = endDate.minusDays(existing.getBaseCount() - salesService.getBaseCount());
-                voucher.setEndDate(newEndDate.toString());
-                logService.partialRefundVoucherLog(voucher);
-            }
-        }
-
-        return salesServiceDao.updateSalesService(salesService);
-    }
 
     /* ===============================
        [4. 삭제]
