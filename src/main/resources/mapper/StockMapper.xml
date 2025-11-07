@@ -108,9 +108,10 @@
 				<if test="startDate != null and startDate != ''">
 					AND si.createdAt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
 				</if>
-				<if test="endDate != null and endDate != ''">
-					AND si.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
-				</if>
+			<if test="endDate != null and endDate != ''">
+				AND si.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
+			</if>
+                AND si.status = 'ACTIVE'
 	        ) t
 	    )
 	    WHERE rn > #{offset}
@@ -137,6 +138,7 @@
 			<if test="endDate != null and endDate != ''">
 				AND si.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 0.99999
 			</if>
+            AND si.status = 'ACTIVE'
 	    )
 	</select>
 
@@ -172,6 +174,7 @@
 		      LEFT JOIN (
 		          SELECT productId, SUM(quantity) AS total_sales
 		          FROM SALES_ITEM
+                  WHERE status = 'ACTIVE'
 		          GROUP BY productId
 		      ) si ON si.productId = p.productId
 		      <where>

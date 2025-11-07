@@ -2,6 +2,7 @@ package com.example.gymerp.controller;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,8 +12,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -62,9 +63,9 @@ public class MemberController {
     // ✅ (3) 회원 등록
     // 프론트 요청: POST /v1/member
     @PostMapping("/member")
-    public ResponseEntity<Void> create(@RequestBody MemberDto dto) {
+    public ResponseEntity<Map<String, Object>> create(@RequestBody MemberDto dto) {
         memberService.createMember(dto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of("memNum", dto.getMemNum()));
     }
 
     // ✅ (4) 회원 수정 (PUT 요청용)
@@ -116,7 +117,7 @@ public class MemberController {
         }
         try {
             // 1) 저장 경로
-            String uploadDir = "C:/playground/final_project/GymErp/profile/";
+            String uploadDir = "C:/playground/final_project_backend/GymErp/profile/";
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 
