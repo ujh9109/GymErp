@@ -98,12 +98,20 @@ public class LogServiceImpl implements LogService {
     }
 
     /** ✅ 판매내역(salesId) 기준 PT 충전 로그 조회 (수정 시 기준 데이터로 사용) */
+
+    @Override
+    public PtLogDto getPtLogByRefundId(long refundId) {
+        return logDao.selectPtLogByUsageId(refundId);
+    }
+
+    // 판매내역(salesId) 기준 PT 로그 조회
     @Override
     public PtLogDto getPtLogBySalesId(long salesId) {
         return logDao.getPtLogBySalesId(salesId);
     }
 
     /** ✅ 기존 PT 충전 로그의 횟수 수정 (연장 처리 전용) */
+    // 기존 PT 충전 로그의 countChange 수정 (연장 처리)
     @Override
     @Transactional
     public void updatePtChargeCount(PtLogDto dto) {
