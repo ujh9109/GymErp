@@ -1,6 +1,6 @@
 package com.example.gymerp.controller;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
+import com.example.gymerp.config.FileStorageProperties;
 import com.example.gymerp.dto.EmpDto;
 import com.example.gymerp.dto.MemberDto;
 import com.example.gymerp.security.CustomUserDetails;
@@ -50,6 +52,8 @@ public class EmpController {
     
     private final EmpService empService;
     public final AuthenticationManager authManager;
+
+    private final FileStorageProperties fileStorageProperties;
 
     // 전체 직원 목록 조회 api
     @GetMapping("/list")
@@ -190,16 +194,13 @@ public class EmpController {
             @RequestParam("file") MultipartFile file) {
 
         try {
-            // 업로드 폴더 경로 지정 (운영 시 절대경로로 수정)
-            String uploadDir = "C:/playground/final_project/GymErp/profile/";
-            File dir = new File(uploadDir);
-            if (!dir.exists()) dir.mkdirs();
+            Path uploadDir = fileStorageProperties.prepareUploadDir();
+            String original = file.getOriginalFilename();
+            String safeOriginal = StringUtils.hasText(original) ? original : "profile";
+            String fileName = empNum + "_" + System.currentTimeMillis() + "_" + safeOriginal;
 
-            // 저장 파일명 (중복 방지)
-            String fileName = empNum + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            // 파일 저장
-            File dest = new File(uploadDir + fileName);
-            file.transferTo(dest);
+            Path target = uploadDir.resolve(fileName);
+            file.transferTo(target.toFile());
 
             // DB에 파일명 저장
             empService.updateProfileImage(empNum, fileName);
@@ -212,10 +213,12 @@ public class EmpController {
             return ResponseEntity.status(500).body("업로드 실패: " + e.getMessage());
         }
     }
+
     
     // 특정 직원의 회원조회 API
     @GetMapping("/{empNum}/members/pt-users")
     public List<MemberDto> managedMembersWithPt(@PathVariable int empNum) {
       return empService.selectManagedMembersWithPtBySchedule(empNum);
     }
+
 }
