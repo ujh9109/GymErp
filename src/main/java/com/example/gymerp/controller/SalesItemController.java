@@ -56,6 +56,7 @@ public class SalesItemController {
                 ));
             }
             // 그 외는 500
+            logger.error("판매 내역 등록 중 런타임 오류 발생", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "message", "판매 내역 등록 중 서버 오류가 발생했습니다.",
                 "detail", e.getMessage()

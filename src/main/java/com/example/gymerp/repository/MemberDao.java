@@ -30,5 +30,12 @@ public interface MemberDao {
 	// 검색
 	List<MemberDto> search(String keyword);  
 
+	
+    // 담당 트레이너 / 남은 PT 횟수 / 회원권 만료일
+	
+    // 상태: ALL | USING | NOT_USING (null 이면 ALL)
+    List<MemberDto> selectAllWithStats(String status);
+    // 단건 상세 + 통계
+    MemberDto getWithStats(int memNum);
 
 }

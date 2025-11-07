@@ -27,6 +27,10 @@ public interface MemberService {
     //검색
     List<MemberDto> searchMembers(String keyword); 
 
+
+    // 담당 트레이너 / 남은 PT 횟수 / 회원권 만료일
+    List<MemberDto> getAllWithStats(String status);
+    MemberDto getWithStats(int memNum);
   
 	
 }

@@ -82,4 +82,15 @@ public class MemberDaoImpl implements MemberDao {
         return session.selectOne("MemberMapper.checkMemberExists", memNum);
     }
 
+    @Override
+    public List<MemberDto> selectAllWithStats(String status) {
+        Map<String, Object> p = new HashMap<>();
+        p.put("status", status == null ? "ALL" : status.toUpperCase());
+        return session.selectList("MemberMapper.selectAllWithStats", p);
+    }
+
+    @Override
+    public MemberDto getWithStats(int memNum) {
+        return session.selectOne("MemberMapper.getWithStats", memNum);
+    }
 }
