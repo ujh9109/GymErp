@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty; // ✅ 추가
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,12 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(                      // ✅ 서비스판매 모듈 ON/OFF 스위치
-    prefix = "feature",
-    name = "service-sale",
-    havingValue = "true",
-    matchIfMissing = false
-)
+
 public class SalesServiceServiceImpl implements SalesServiceService {
 
     private final SalesServiceDao salesServiceDao;
