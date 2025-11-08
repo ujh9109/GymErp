@@ -255,45 +255,33 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 	         ---------------------------------------- */
 	         else if (newDays < oldDays) {
 	             int refundDays = oldDays - newDays;
+
+	             LocalDate startDate = LocalDateTime.parse(
+	                     voucher.getStartDate(),
+	                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+	             ).toLocalDate();
+
 	             LocalDate newEndDate = endDate.minusDays(refundDays);
-	
-	             // ✅ 1️⃣ 직전 로그 조회
-	             VoucherLogDto prev = logDao.selectPreviousVoucherByMember(existing.getMemNum());
-	             boolean allowFullRefund = false;
-	
-	             if (prev == null) {
-	                 System.out.println("[VOUCHER] 직전 로그 없음 → 부분환불만 가능");
-	             } else {
-	                 LocalDate prevEnd = LocalDateTime.parse(
-	                         prev.getEndDate(),
-	                         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-	                 ).toLocalDate();
-	
-	                 if (prevEnd.isBefore(now)) {
-	                     System.out.println("[VOUCHER] 직전 로그 만료 → 부분환불만 가능");
-	                 } else {
-	                     if (endDate.isAfter(now) || endDate.isEqual(now)) {
-	                         System.out.println("[VOUCHER] 유효 + 미사용 상태 → 전액환불 가능");
-	                         allowFullRefund = true;
-	                     } else {
-	                         System.out.println("[VOUCHER] 유효 + 사용중 상태 → 부분환불만 가능");
-	                     }
-	                 }
-	             }
-	
-	             // ✅ 최소 보장 (최소 1일)
-	             if (newEndDate.isBefore(now.plusDays(1)))
-	                 throw new IllegalStateException("회원권은 최소 1일 이상 유지되어야 합니다.");
-	
-	             if (endDate.isBefore(now))
+
+	             // ✅ 1️⃣ 이미 만료된 회원권 환불 불가
+	             if (endDate.isBefore(now)) {
 	                 throw new IllegalStateException("이미 만료된 회원권은 환불이 불가능합니다.");
-	
-	             // ✅ DB 반영 (전액 or 부분 동일하게 endDate update)
-	             voucher.setEndDate(newEndDate.toString());
+	             }
+
+	             // ✅ 2️⃣ 환불 후 종료일이 오늘보다 이전이면 오류 (보정 없음)
+	             if (newEndDate.isBefore(now)) {
+	                 throw new IllegalStateException("부분 환불 불가: 환불 결과가 과거일자입니다.");
+	             }
+
+	             // ✅ 3️⃣ 최저점 보장 (오늘 포함 최소 1일 이상 유지)
+	             if (!newEndDate.isAfter(now)) {
+	                 throw new IllegalStateException("환불 불가: 회원권은 최소 1일 이상 유지되어야 합니다.");
+	             }
+
+	             DateTimeFormatter oracleFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	             voucher.setEndDate(newEndDate.atStartOfDay().format(oracleFmt));
 	             logDao.partialRefundVoucherLog(voucher);
-	
-	             String refundType = allowFullRefund ? "전액환불" : "부분환불";
-	             System.out.println("[VOUCHER] " + refundType + " 완료 → -" + refundDays + "일");
+	             System.out.println("[VOUCHER] 부분환불 완료 → -" + refundDays + "일");
 	         }
 	     }
 	
@@ -303,10 +291,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 	 
 	    /* ===============================
 	     [4. 삭제]
-	     - PT: 내 차례 및 소비 여부 확인 후 전체환불 가능 시만 삭제
-	     - VOUCHER: 직전 로그 상태 + endDate 기준으로 전체환불 가능 시만 삭제
-	     - 공통: status='DELETED' (논리삭제)
-	     - @Transactional 보장
 	  =============================== */
 	
 	  @Override
@@ -321,32 +305,17 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 		   // [A] PT 상품 삭제 (전체 환불 분기)
 		   // ===============================
 		   if ("PT".equalsIgnoreCase(sale.getServiceType())) {
-		       // 1️⃣ 내 차례 도달 여부 확인
 		       Map<String, Object> params = new HashMap<>();
 		       params.put("memNum", sale.getMemNum());
 		       params.put("salesId", sale.getServiceSalesId());
-		       int turnReached = logDao.checkPtTurnReached(params); // 0: 아직 차례 안 옴 / 1: 내 차례 도달
-	
-		       // 2️⃣ 남은 PT 수량 확인
+		       int turnReached = logDao.checkPtTurnReached(params);
 		       int remaining = logDao.selectRemainingPtCount(sale.getMemNum());
-	
-		       // ✅ 3️⃣ 실제 사용 여부 확인 (새 쿼리)
 		       int usedCount = logDao.getUsedCountBySalesId(sale.getServiceSalesId());
-	
-		       // 4️⃣ 환불 가능성 판별
-		       boolean refundable = false;
-		       if (usedCount == 0) {
-		           // 한 번도 사용되지 않음 → 전체환불 가능
-		           refundable = true;
-		       } else {
-		           // 이미 사용된 경우 → 전체환불 불가
-		           refundable = false;
-		       }
-	
+
+		       boolean refundable = usedCount == 0;
 		       if (!refundable)
 		           throw new IllegalStateException("이미 사용된 PT는 전체 환불(삭제)이 불가능합니다.");
-	
-		       // 5️⃣ 전체환불 로그 생성
+
 		       PtLogDto refundLog = PtLogDto.builder()
 		               .memNum(sale.getMemNum())
 		               .empNum(sale.getEmpNum())
@@ -355,7 +324,7 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 		               .salesId(sale.getServiceSalesId())
 		               .createdAt(LocalDateTime.now())
 		               .build();
-	
+
 		       logDao.insertPtFullRefundLog(refundLog);
 		       System.out.println("[PT] 전체환불 완료 → -" + sale.getActualCount() + "회");
 		   }
@@ -365,56 +334,40 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 	      // ===============================
 	      else if ("VOUCHER".equalsIgnoreCase(sale.getServiceType())) {
 	          VoucherLogDto current = logDao.selectVoucherByMember(sale.getMemNum());
-	          VoucherLogDto prev = logDao.selectPreviousVoucherByMember(sale.getMemNum());
-	          LocalDate now = LocalDate.now();
-	
 	          if (current == null)
 	              throw new IllegalStateException("회원권 정보가 존재하지 않아 환불할 수 없습니다.");
-	
-	          boolean refundable = false;
-	
-	          // 1️⃣ 직전 로그 없음 → 이미 사용 중 (환불 불가)
-	          if (prev == null) {
-	              System.out.println("[VOUCHER] 직전 로그 없음 → 전체환불 불가 (이미 사용 상태)");
+
+	          LocalDate now = LocalDate.now();
+
+	          LocalDate startDate = LocalDateTime.parse(
+	                  current.getStartDate(),
+	                  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+	          ).toLocalDate();
+
+	          LocalDate endDate = LocalDateTime.parse(
+	                  current.getEndDate(),
+	                  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+	          ).toLocalDate();
+
+	          int actualCount = sale.getActualCount();
+	          LocalDate newEndDate = endDate.minusDays(actualCount);
+
+	          long remainingDays = endDate.toEpochDay() - now.toEpochDay();
+	          if (remainingDays < actualCount) {
+	              throw new IllegalStateException("전체 환불 불가: 이미 사용한 내역이 존재합니다.");
 	          }
-	
-	          // 2️⃣ 직전 로그 만료 → 이미 사용 중 (환불 불가)
-	          else {
-	              LocalDate prevEnd = LocalDateTime.parse(
-	                      prev.getEndDate(),
-	                      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-	              ).toLocalDate();
-	
-	              if (prevEnd.isBefore(now)) {
-	                  System.out.println("[VOUCHER] 직전 로그 만료 → 전체환불 불가");
-	              } else {
-	                  // 3️⃣ 유효 상태 → endDate와 삭제일 비교
-	                  LocalDate endDate = LocalDateTime.parse(
-	                          current.getEndDate(),
-	                          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-	                  ).toLocalDate();
-	
-	                  if (endDate.isAfter(now) || endDate.isEqual(now)) {
-	                      refundable = true;
-	                      System.out.println("[VOUCHER] 유효 + 미사용 상태 → 전체환불 가능");
-	                  } else {
-	                      System.out.println("[VOUCHER] 유효 + 사용중 상태 → 전체환불 불가");
-	                  }
-	              }
+
+	          if (!newEndDate.isAfter(now)) {
+	              throw new IllegalStateException("전체 환불 불가: 환불 결과가 과거일자입니다.");
 	          }
-	
-	          if (!refundable)
-	              throw new IllegalStateException("이미 사용된 회원권은 전체 환불(삭제)이 불가능합니다.");
-	
-	          // 4️⃣ 전체환불 처리 (즉시 만료)
-	          current.setEndDate(now.toString());
-	          logDao.rollbackVoucherLog(current);
-	          System.out.println("[VOUCHER] 전체환불 완료 (endDate → 오늘로 조정)");
+
+	          DateTimeFormatter oracleFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	          current.setEndDate(newEndDate.atStartOfDay().format(oracleFmt));
+	          logDao.fullRefundVoucherLog(current);
+
+	          System.out.println("[VOUCHER] 전체환불 완료 → -" + actualCount + "일");
 	      }
 	
-	      // ===============================
-	      // [C] 공통 처리 - 판매내역 논리삭제
-	      // ===============================
 	      salesServiceDao.deleteSalesService(serviceSalesId);
 	      System.out.println("[SALES] 판매내역 논리삭제 완료 (status='DELETED')");
 	      return 1;
@@ -455,5 +408,3 @@ public class SalesServiceServiceImpl implements SalesServiceService {
 	      return salesServiceDao.selectServiceSalesAnalytics(params);
 	  }
 }
-
-    

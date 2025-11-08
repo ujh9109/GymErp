@@ -69,4 +69,16 @@ public interface SalesAnalyticsService {
      * ✅ 작년~내년 월별 매출 조회 (예측 포함)
      */
     List<Map<String, Object>> getSalesWithPrediction();
+    
+    
+    /* =========================================================
+	    [회원권 / PT 유효 회원 통계 추가]
+	    - 신규 2개 메서드
+	 ========================================================= */
+	 
+	 /** ✅ 회원권 유효회원 비율 (유효 vs 만료) */
+	 Map<String, Object> getValidVoucherStats();
+	
+	 /** ✅ PT 잔여횟수 회원 비율 (남음 vs 소진) */
+	 Map<String, Object> getRemainingPtStats();
 }

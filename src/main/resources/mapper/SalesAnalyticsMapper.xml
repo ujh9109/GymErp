@@ -4,31 +4,38 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="SalesAnalyticsDao">
-<!-- =======================================================
-     [1] 전체 매출 그래프 (서비스 + 실물 상품, 5개 중분류)
-     - SERVICE: PT, VOUCHER
-     - ITEM: CLOTHES, DRINK, SUPPLEMENTS
-     - 전체기간 기준
-======================================================== -->
+
+	<!-- =======================================================
+	         [1] 전체 매출 그래프 (최근 30일 기준)
+	         - SERVICE: PT, VOUCHER
+	         - ITEM: CLOTHES, DRINK, SUPPLEMENTS
+	         - 기준일: SYSDATE (오늘)
+	         - 범위: SYSDATE - 30 ~ SYSDATE
+	    ======================================================== -->
 	<select id="selectTotalSalesChart" resultType="map">
+	    
+	
 	    SELECT 'PT' AS label, NVL(SUM(actualamount), 0) AS total_sales
 	    FROM sales_service
 	    WHERE UPPER(status) = 'ACTIVE'
 	      AND UPPER(servicetype) = 'PT'
-	    
+	      AND createdat BETWEEN SYSDATE - 30 AND SYSDATE
+	
 	    UNION ALL
-	    
+	
 	    SELECT 'VOUCHER' AS label, NVL(SUM(actualamount), 0) AS total_sales
 	    FROM sales_service
 	    WHERE UPPER(status) = 'ACTIVE'
 	      AND UPPER(servicetype) = 'VOUCHER'
-	    
+	      AND createdat BETWEEN SYSDATE - 30 AND SYSDATE
+	
 	    UNION ALL
 	
 	    SELECT 'CLOTHES' AS label, NVL(SUM(totalamount), 0) AS total_sales
 	    FROM sales_item
 	    WHERE UPPER(status) = 'ACTIVE'
 	      AND UPPER(producttype) = 'CLOTHES'
+	      AND createdat BETWEEN SYSDATE - 30 AND SYSDATE
 	
 	    UNION ALL
 	
@@ -36,6 +43,7 @@
 	    FROM sales_item
 	    WHERE UPPER(status) = 'ACTIVE'
 	      AND UPPER(producttype) = 'DRINK'
+	      AND createdat BETWEEN SYSDATE - 30 AND SYSDATE
 	
 	    UNION ALL
 	
@@ -43,7 +51,9 @@
 	    FROM sales_item
 	    WHERE UPPER(status) = 'ACTIVE'
 	      AND UPPER(producttype) = 'SUPPLEMENTS'
+	      AND createdat BETWEEN SYSDATE - 30 AND SYSDATE
 	</select>
+
 
 
     <!-- =======================================================
@@ -97,7 +107,7 @@
 	        GROUP BY e.empname
 	        ORDER BY total_sessions DESC
 	    )
-	    WHERE ROWNUM &lt;= 3
+	    WHERE ROWNUM &lt;= 5
 	</select>
 
 
@@ -220,6 +230,39 @@
 	    ORDER BY year, month
 	</select>
 	
-
+	<!-- =======================================================
+	     [회원권 유효 회원 비율 통계]
+	     - 전체 회원권 내역 보유 회원 기준
+	     - endDate >= SYSDATE → 유효
+	     - endDate < SYSDATE → 만료
+	======================================================= -->
+	<select id="selectValidVoucherStats" resultType="map">
+	    SELECT
+	        COUNT(DISTINCT CASE WHEN v.endDate &gt;= SYSDATE THEN v.memNum END) AS valid,
+	        COUNT(DISTINCT CASE WHEN v.endDate &lt; SYSDATE THEN v.memNum END) AS expired
+	    FROM voucher_log v
+	    WHERE v.memNum IS NOT NULL
+	</select>
+	
+	
+	<!-- =========================================================
+	     [PT 잔여횟수 회원 통계 - B안]
+	     - pt_log.countChange 총합으로 잔여 계산
+	     - 기준: 회원(memNum)별 SUM(countChange)
+	========================================================= -->
+	<select id="selectRemainingPtStats" resultType="map">
+	    SELECT
+	        COUNT(CASE WHEN total_remain &gt; 0 THEN 1 END) AS remaining_count,
+	        COUNT(CASE WHEN total_remain &lt;= 0 THEN 1 END) AS exhausted_count
+	    FROM (
+	        SELECT memNum, SUM(countChange) AS total_remain
+	        FROM pt_log
+	        GROUP BY memNum
+	    )
+	</select>
+	
+	
+	
+	
 
 </mapper>

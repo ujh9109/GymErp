@@ -29,8 +29,8 @@ public interface LogService {
     /** ✅ 회원권 부분환불 (일수 감소) */
     void partialRefundVoucherLog(VoucherLogDto dto);
 
-    /** ✅ 회원권 전체환불 (이전 상태로 회귀 처리) */
-    void rollbackVoucherLog(VoucherLogDto dto);
+    /** ✅ 회원권 전체환불 (미사용 상태에서 endDate 단축) */
+    void fullRefundVoucherLog(VoucherLogDto dto);
 
 
 
@@ -58,4 +58,7 @@ public interface LogService {
 
     /** ✅ 기존 PT 충전 로그의 countChange 수정 (연장 시 누적 업데이트) */
     void updatePtChargeCount(PtLogDto dto);
+
+    /** ✅ 환불 ID(refundId)로 PT 로그 조회 */
+    PtLogDto getPtLogByRefundId(long refundId);
 }

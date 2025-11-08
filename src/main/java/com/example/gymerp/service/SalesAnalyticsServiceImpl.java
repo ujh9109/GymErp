@@ -103,4 +103,43 @@ public class SalesAnalyticsServiceImpl implements SalesAnalyticsService {
     public List<Map<String, Object>> getSalesWithPrediction() {
         return salesAnalyticsDao.selectSalesWithPrediction();
     }
+    
+    
+    /* =========================================================
+	    [회원권 유효 회원 통계]
+	    - 전체 회원권 내역 보유자 기준
+	    - endDate >= SYSDATE → 유효
+	    - endDate < SYSDATE → 만료
+	 ========================================================= */
+	 @Override
+	 public Map<String, Object> getValidVoucherStats() {
+	     try {
+	         Map<String, Object> result = salesAnalyticsDao.selectValidVoucherStats();
+	         if (result == null) {
+	             throw new IllegalStateException("회원권 유효 통계 조회 결과가 없습니다.");
+	         }
+	         return result;
+	     } catch (Exception e) {
+	         throw new RuntimeException("회원권 유효 통계 조회 실패: " + e.getMessage(), e);
+	     }
+	 }
+    
+    /* =========================================================
+	    [PT 잔여횟수 회원 통계]
+	    - 회원별 잔여횟수 합계 기준
+	    - SUM(remainCount) > 0 → 남음
+	    - SUM(remainCount) <= 0 → 소진
+	 ========================================================= */
+	 @Override
+	 public Map<String, Object> getRemainingPtStats() {
+	     try {
+	         Map<String, Object> result = salesAnalyticsDao.selectRemainingPtStats();
+	         if (result == null) {
+	             throw new IllegalStateException("PT 잔여횟수 통계 조회 결과가 없습니다.");
+	         }
+	         return result;
+	     } catch (Exception e) {
+	         throw new RuntimeException("PT 잔여횟수 통계 조회 실패: " + e.getMessage(), e);
+	     }
+	 }
 }

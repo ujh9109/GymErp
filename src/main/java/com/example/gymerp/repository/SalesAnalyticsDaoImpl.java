@@ -132,4 +132,27 @@ public class SalesAnalyticsDaoImpl implements SalesAnalyticsDao {
     public List<Map<String, Object>> selectSalesWithPrediction() {
         return sqlSession.selectList("SalesAnalyticsDao.selectSalesWithPrediction");
     }
+    
+    /**
+     * ✅ 회원권 유효 회원 비율 조회
+     * - 전체 회원권 내역 기준
+     * - endDate >= SYSDATE → 유효
+     * - endDate < SYSDATE → 만료
+     */
+    @Override
+    public Map<String, Object> selectValidVoucherStats() {
+        return sqlSession.selectOne("SalesAnalyticsDao.selectValidVoucherStats");
+    }
+
+    /**
+     * ✅ PT 잔여횟수 보유 회원 비율 조회
+     * - 회원 단위 잔여합계 기준
+     * - SUM(remainCount) > 0 → 남음
+     * - SUM(remainCount) <= 0 → 소진
+     */
+    @Override
+    public Map<String, Object> selectRemainingPtStats() {
+        return sqlSession.selectOne("SalesAnalyticsDao.selectRemainingPtStats");
+    }
+
 }

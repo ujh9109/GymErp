@@ -102,4 +102,26 @@ public class SalesAnalyticsController {
     public List<Map<String, Object>> getSalesWithPrediction() {
         return salesAnalyticsService.getSalesWithPrediction();
     }
+    
+    /* =========================================================
+	    [회원권 유효 회원 통계]
+	    - 전체 회원권 내역 보유자 중 endDate >= SYSDATE
+	    - 결과: valid_count, expired_count
+	    - 그래프: 원형(PieChart)
+	 ========================================================= */
+	 @GetMapping("/analytics/members/voucher")
+	 public Map<String, Object> getValidVoucherStats() {
+	     return salesAnalyticsService.getValidVoucherStats();
+	 }
+	
+	 /* =========================================================
+	    [PT 잔여횟수 회원 통계]
+	    - 전체 PT 내역이 있는 회원 중 remainCount > 0
+	    - 결과: remaining_count, exhausted_count
+	    - 그래프: 원형(PieChart)
+	 ========================================================= */
+	 @GetMapping("/analytics/members/pt")
+	 public Map<String, Object> getRemainingPtStats() {
+	     return salesAnalyticsService.getRemainingPtStats();
+	 }
 }

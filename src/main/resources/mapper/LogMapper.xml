@@ -55,15 +55,15 @@
 
     <!-- 회원권 부분환불 (endDate 단축) -->
     <update id="partialRefundVoucherLog" parameterType="VoucherLogDto">
-        UPDATE voucher_log
-        SET endDate = #{endDate}
-        WHERE memNum = #{memNum}
-    </update>
+	    UPDATE voucher_log
+	    SET endDate = TO_DATE(#{endDate}, 'YYYY-MM-DD HH24:MI:SS')
+	    WHERE memNum = #{memNum}
+	</update>
 
-    <!-- 회원권 전체환불 (이전 상태로 복구) -->
-    <update id="rollbackVoucherLog" parameterType="VoucherLogDto">
+     <!-- 회원권 전체환불 (미사용 상태에서 endDate 단축) -->
+    <update id="fullRefundVoucherLog" parameterType="VoucherLogDto">
         UPDATE voucher_log
-        SET endDate = #{endDate}
+        SET endDate = TO_DATE(#{endDate}, 'YYYY-MM-DD HH24:MI:SS')
         WHERE memNum = #{memNum}
     </update>
 
@@ -74,22 +74,7 @@
          WHERE memNum = #{memNum}
     </update>
 
-    <!-- ✅ 직전 회원권(원시 로그) 조회 -->
-    <select id="selectPreviousVoucherByMember" parameterType="long" resultType="VoucherLogDto">
-        SELECT *
-	    FROM (
-	        SELECT *
-	        FROM voucher_log
-	        WHERE memNum = #{memNum}
-	          AND endDate &lt; (
-	              SELECT MAX(endDate)
-	              FROM voucher_log
-	              WHERE memNum = #{memN          )
-	        ORDER BY endDate DESC
-	    )
-	    WHERE ROWNUM = 1
-    </select>
-
+    
 
 
     <!-- ===============================

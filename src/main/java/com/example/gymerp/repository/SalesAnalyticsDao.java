@@ -95,4 +95,15 @@ public interface SalesAnalyticsDao {
      * - 실제 매출 + 예측 매출 결합
      */
     List<Map<String, Object>> selectSalesWithPrediction();
+    
+    
+ // ===============================
+    // [회원권 / PT 잔여현황 통계]
+    // ===============================
+
+    /** ✅ 회원권 유효 회원 비율 */
+    Map<String, Object> selectValidVoucherStats();
+
+    /** ✅ PT 잔여횟수 보유 회원 비율 */
+    Map<String, Object> selectRemainingPtStats();
 }

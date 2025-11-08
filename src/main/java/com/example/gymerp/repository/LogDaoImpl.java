@@ -58,22 +58,16 @@ public class LogDaoImpl implements LogDao {
         return sqlSession.update("LogMapper.partialRefundVoucherLog", dto);
     }
 
-    /** ✅ 회원권 전체환불 (이전 상태로 복구) */
+    /** ✅ 회원권 전체환불 (미사용 상태에서 endDate 단축) */
     @Override
-    public int rollbackVoucherLog(VoucherLogDto dto) {
-        return sqlSession.update("LogMapper.rollbackVoucherLog", dto);
+    public int fullRefundVoucherLog(VoucherLogDto dto) {
+        return sqlSession.update("LogMapper.fullRefundVoucherLog", dto);
     }
 
     /** ✅ 회원권 기간 N일 연장 (기존 endDate + extendDays) */
     @Override
     public int extendVoucherPeriod(Map<String, Object> params) {
         return sqlSession.update("LogMapper.extendVoucherPeriod", params);
-    }
-
-    /** ✅ 직전 회원권 로그 조회 (이전 endDate 기준) */
-    @Override
-    public VoucherLogDto selectPreviousVoucherByMember(long memNum) {
-        return sqlSession.selectOne("LogMapper.selectPreviousVoucherByMember", memNum);
     }
 
 
