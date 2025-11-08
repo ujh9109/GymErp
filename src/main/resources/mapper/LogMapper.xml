@@ -84,8 +84,7 @@
 	          AND endDate &lt; (
 	              SELECT MAX(endDate)
 	              FROM voucher_log
-	              WHERE memNum = #{memNum}
-	          )
+	              WHERE memNum = #{memN          )
 	        ORDER BY endDate DESC
 	    )
 	    WHERE ROWNUM = 1
