@@ -1,6 +1,6 @@
 package com.example.gymerp.controller;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
+import com.example.gymerp.config.FileStorageProperties;
 import com.example.gymerp.dto.MemberDto;
 import com.example.gymerp.service.MemberService;
 
@@ -33,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class MemberController {
 
     private final MemberService memberService;
+    private final FileStorageProperties fileStorageProperties;
 
 //    // ✅ (1) 회원 전체 조회
 //    // 프론트 요청: GET /v1/member
@@ -116,22 +119,18 @@ public class MemberController {
             return ResponseEntity.badRequest().body("파일이 비어있습니다.");
         }
         try {
-            // 1) 저장 경로
-            String uploadDir = "C:/playground/final_project_backend/GymErp/profile/";
-            File dir = new File(uploadDir);
-            if (!dir.exists()) dir.mkdirs();
-
-            // 2) 저장 파일명 생성 (확장자 유지)
+            Path uploadDir = fileStorageProperties.prepareUploadDir();
             String original = file.getOriginalFilename();
+            String safeOriginal = StringUtils.hasText(original) ? original : "profile";
             String ext = "";
-            if (original != null && original.lastIndexOf('.') != -1) {
-                ext = original.substring(original.lastIndexOf('.'));
+            int dotIndex = safeOriginal.lastIndexOf('.');
+            if (dotIndex != -1) {
+                ext = safeOriginal.substring(dotIndex);
             }
             String fileName = memNum + "_" + System.currentTimeMillis() + ext;
 
-            // 3) 파일 저장
-            File dest = new File(uploadDir + fileName);
-            file.transferTo(dest);
+            Path target = uploadDir.resolve(fileName);
+            file.transferTo(target.toFile());
 
             // 4) DB 업데이트
             memberService.updateMemberProfile(memNum, fileName);
@@ -143,4 +142,5 @@ public class MemberController {
             return ResponseEntity.internalServerError().body("업로드 실패: " + e.getMessage());
         }
     }
+
 }

@@ -15,7 +15,7 @@
 	<select id="getPurchaseList" parameterType="map" resultType="PurchaseDto">
 		SELECT
 	        purchaseId,
-	        productId,1
+	        productId,
 	        codeBId,
 	        createdAt,
 	        quantity,
