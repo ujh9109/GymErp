@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.example.gymerp.dto.ProductDto;
+import com.example.gymerp.dto.StockAdjustRequestDto;
 
 @Service
 @RequiredArgsConstructor
@@ -104,19 +105,33 @@ public class SalesItemServiceImpl implements SalesItemService {
 	}
 
 	// 상품 판매 내역 수정
-	@Override
-	public int updateSalesItem(SalesItemDto salesItem) {
-		Long itemSalesId = salesItem.getItemSalesId();
-
-		salesItem.setUpdatedAt(java.time.LocalDateTime.now());
-
-		// 🚨 총액 계산
-		BigDecimal quantityBd = BigDecimal.valueOf(salesItem.getQuantity());
-		salesItem.setTotalAmount(salesItem.getUnitPrice().multiply(quantityBd).setScale(0, RoundingMode.DOWN));
-
-		return salesItemDao.updateSalesItem(salesItem);
-	}
-
+	    @Override
+	    public int updateSalesItem(SalesItemDto updatedSalesItem) {
+	        try {
+	            // 올바른 총액 계산을 위해 기존 상품의 단가를 조회합니다.
+	            SalesItemDto originalSalesItem = salesItemDao.selectSalesItemById(updatedSalesItem.getItemSalesId());
+	            if (originalSalesItem == null) {
+	                logger.warn("수정할 판매 내역을 찾을 수 없습니다. ID: {}", updatedSalesItem.getItemSalesId());
+	                throw new RuntimeException("수정할 판매 내역을 찾을 수 없습니다. ID: " + updatedSalesItem.getItemSalesId());
+	            }
+	
+	            // 판매 내역 업데이트
+	            updatedSalesItem.setUpdatedAt(LocalDateTime.now());
+	
+	            // 총액 계산
+	            BigDecimal quantityBd = BigDecimal.valueOf(updatedSalesItem.getQuantity());
+	            BigDecimal unitPrice = originalSalesItem.getUnitPrice(); // 단가는 기존 판매 내역의 값을 사용
+	            updatedSalesItem.setUnitPrice(unitPrice);
+	            updatedSalesItem.setTotalAmount(unitPrice.multiply(quantityBd).setScale(0, RoundingMode.DOWN));
+	
+	            // DAO를 통해 판매 내역만 업데이트합니다. 재고는 DB 쿼리에서 자동으로 계산됩니다.
+	            logger.debug("Updating SalesItem: {}", updatedSalesItem); // Debug log
+	            return salesItemDao.updateSalesItem(updatedSalesItem);
+	        } catch (Exception e) {
+	            logger.error("SalesItemService.updateSalesItem 중 오류 발생: updatedSalesItem={}", updatedSalesItem, e);
+	            throw e; // 예외를 다시 던져 컨트롤러에서 처리하도록 합니다.
+	        }
+	    }
 	// 상품 판매 내역 삭제 (소프트 삭제 구현)
 	@Override
 	public int deleteSalesItem(Long itemSalesId) {

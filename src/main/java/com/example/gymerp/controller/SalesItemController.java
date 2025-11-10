@@ -113,6 +113,7 @@ public class SalesItemController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("수정할 판매 내역을 찾을 수 없습니다.");
             }
         } catch (Exception e) {
+            logger.error("판매 내역 수정 중 오류 발생: itemSalesId={}", itemSalesId, e); // 상세 로깅 추가
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("판매 내역 수정 중 서버 오류가 발생했습니다.");
         }
     }
