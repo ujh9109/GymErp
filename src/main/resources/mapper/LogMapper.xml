@@ -25,23 +25,22 @@
 
     <!-- 회원권 신규 등록 -->
     <insert id="insertVoucherLog" parameterType="VoucherLogDto">
-        <selectKey keyProperty="voucherId" resultType="long" order="BEFORE">
-            SELECT voucher_log_seq.NEXTVAL FROM DUAL
-        </selectKey>
-        INSERT INTO voucher_log (voucherId, memNum, memberName, startDate, endDate)
+	    INSERT INTO voucher_log (
+	        voucherId, memNum, memberName, startDate, endDate
+	    )
 	    VALUES (
-	        #{voucherId},
+	        voucher_log_seq.NEXTVAL,
 	        #{memNum},
 	        #{memberName},
-	        TO_DATE(SUBSTR(#{startDate}, 1, 19), 'YYYY-MM-DD"T"HH24:MI:SS'),
-	        TO_DATE(SUBSTR(#{endDate}, 1, 19), 'YYYY-MM-DD"T"HH24:MI:SS')
+	        TO_DATE(#{startDate}, 'YYYY-MM-DD HH24:MI:SS'),
+	        TO_DATE(#{endDate}, 'YYYY-MM-DD HH24:MI:SS')
 	    )
-    </insert>
+	</insert>
 
     <!-- 회원권 기간 연장 -->
     <update id="extendVoucherLog" parameterType="VoucherLogDto">
         UPDATE voucher_log
-        SET endDate = #{endDate}
+        SET endDate = TO_DATE(#{endDate}, 'YYYY-MM-DD HH24:MI:SS')
         WHERE memNum = #{memNum}
     </update>
 
@@ -227,19 +226,26 @@
 	<select id="getUsedCountBySalesId" parameterType="map" resultType="int">
 	    SELECT NVL(SUM(
 	        CASE
-	            WHEN status = '소비' THEN -countChange        -- 소비(-1) → +1 사용
-	            WHEN status = '예약취소' THEN countChange      -- 취소(+1) → 복구
+	            WHEN status = '소비' THEN 1                 
+	            WHEN status = '예약취소' THEN -1           
+	            WHEN status = '부분환불' THEN ABS(countChange)   
+	            WHEN status = '전체환불' THEN ABS(countChange) 
 	            ELSE 0
 	        END
 	    ), 0) AS usedCount
 	    FROM pt_log
 	    WHERE memNum = #{memNum}
-	      AND usageId > (
-	          SELECT MIN(usageId)
-	          FROM pt_log
-	          WHERE memNum = #{memNum}
-	            AND salesId = #{salesId}
-	            AND status = '충전'
+	      AND (
+	           salesId = #{salesId}                
+	        OR (
+	              usageId > (
+	                  SELECT MIN(usageId)
+	                  FROM pt_log
+	                  WHERE memNum = #{memNum}
+	                    AND salesId = #{salesId}
+	                    AND status = '충전'
+	              )
+	           )
 	      )
 	</select>
 	
@@ -274,6 +280,19 @@
 	        <if test="endDate != null and endDate.trim() != ''">
 	            AND V.endDate &lt; TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
 	        </if>
+	
+	        <!-- ✅ 만료 여부 필터 추가 -->
+	        <if test="validityFilter != null and validityFilter != '' and validityFilter != '전체'">
+	            <choose>
+	                <when test="validityFilter == '유효'">
+	                    AND V.endDate &gt;= TRUNC(SYSDATE)
+	                </when>
+	                <when test="validityFilter == '만료'">
+	                    AND V.endDate &lt; TRUNC(SYSDATE)
+	                </when>
+	            </choose>
+	        </if>
+	
 	        ORDER BY V.memberName ASC
 	    )
 	    WHERE rn BETWEEN #{offset} + 1 AND #{offset} + #{limit}
@@ -292,6 +311,18 @@
 	    </if>
 	    <if test="memNum != null">
 	        AND V.memNum = #{memNum}
+	    </if>
+	
+	    <!-- ✅ 만료 여부 필터 추가 -->
+	    <if test="validityFilter != null and validityFilter != '' and validityFilter != '전체'">
+	        <choose>
+	            <when test="validityFilter == '유효'">
+	                AND V.endDate &gt;= TRUNC(SYSDATE)
+	            </when>
+	            <when test="validityFilter == '만료'">
+	                AND V.endDate &lt; TRUNC(SYSDATE)
+	            </when>
+	        </choose>
 	    </if>
 	</select>
 	
