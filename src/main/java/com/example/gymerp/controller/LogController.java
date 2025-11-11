@@ -64,6 +64,7 @@ public class LogController {
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) Long memNum,
+            @RequestParam(required = false) String validityFilter,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit
     ) {
@@ -75,6 +76,7 @@ public class LogController {
         if (startDate != null && !startDate.isBlank()) params.put("startDate", startDate);
         if (endDate != null && !endDate.isBlank()) params.put("endDate", endDate);
         if (memNum != null) params.put("memNum", memNum);
+        if (validityFilter != null && !validityFilter.isBlank()) params.put("validityFilter", validityFilter);
 
         List<Map<String, Object>> list = logService.getPagedVoucherLogs(params);
         int totalCount = logService.getVoucherTotalCount(params);

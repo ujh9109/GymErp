@@ -280,6 +280,19 @@
 	        <if test="endDate != null and endDate.trim() != ''">
 	            AND V.endDate &lt; TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
 	        </if>
+	
+	        <!-- ✅ 만료 여부 필터 추가 -->
+	        <if test="validityFilter != null and validityFilter != '' and validityFilter != '전체'">
+	            <choose>
+	                <when test="validityFilter == '유효'">
+	                    AND V.endDate &gt;= TRUNC(SYSDATE)
+	                </when>
+	                <when test="validityFilter == '만료'">
+	                    AND V.endDate &lt; TRUNC(SYSDATE)
+	                </when>
+	            </choose>
+	        </if>
+	
 	        ORDER BY V.memberName ASC
 	    )
 	    WHERE rn BETWEEN #{offset} + 1 AND #{offset} + #{limit}
@@ -298,6 +311,18 @@
 	    </if>
 	    <if test="memNum != null">
 	        AND V.memNum = #{memNum}
+	    </if>
+	
+	    <!-- ✅ 만료 여부 필터 추가 -->
+	    <if test="validityFilter != null and validityFilter != '' and validityFilter != '전체'">
+	        <choose>
+	            <when test="validityFilter == '유효'">
+	                AND V.endDate &gt;= TRUNC(SYSDATE)
+	            </when>
+	            <when test="validityFilter == '만료'">
+	                AND V.endDate &lt; TRUNC(SYSDATE)
+	            </when>
+	        </choose>
 	    </if>
 	</select>
 	
