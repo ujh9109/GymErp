@@ -115,23 +115,35 @@ public class SalesItemServiceImpl implements SalesItemService {
 	                throw new RuntimeException("수정할 판매 내역을 찾을 수 없습니다. ID: " + updatedSalesItem.getItemSalesId());
 	            }
 	
-	            // 판매 내역 업데이트
-	            updatedSalesItem.setUpdatedAt(LocalDateTime.now());
-	
-	            // 총액 계산
-	            BigDecimal quantityBd = BigDecimal.valueOf(updatedSalesItem.getQuantity());
-	            BigDecimal unitPrice = originalSalesItem.getUnitPrice(); // 단가는 기존 판매 내역의 값을 사용
-	            updatedSalesItem.setUnitPrice(unitPrice);
-	            updatedSalesItem.setTotalAmount(unitPrice.multiply(quantityBd).setScale(0, RoundingMode.DOWN));
-	
+	                        // --- 재고 수량 확인 로직 추가 시작 ---
+	                        int oldQuantity = originalSalesItem.getQuantity();
+	                        int newQuantity = updatedSalesItem.getQuantity();
+	                        int productId = updatedSalesItem.getProductId();
+	            
+	                        if (newQuantity > oldQuantity) { // 수량이 증가하는 경우 (재고 감소)
+	                            int quantityToDecrease = newQuantity - oldQuantity;
+	                            if (!stockService.isStockSufficient(productId, quantityToDecrease)) {
+	                                int available = stockService.getStockOne(productId);
+	                                throw new RuntimeException(String.format("판매 수량에 비해 상품 재고가 부족합니다. (상품 ID: %d, 입력 가능한 최대 수량: %d)", productId, available));
+	                            }
+	                        }
+	                        // --- 재고 수량 확인 로직 추가 끝 ---
+	            
+	                        // 판매 내역 업데이트
+	                        updatedSalesItem.setUpdatedAt(LocalDateTime.now());
+	            
+	                        // 총액 계산
+	                        BigDecimal quantityBd = BigDecimal.valueOf(newQuantity); // Use newQuantity for total amount calculation
+	                        BigDecimal unitPrice = originalSalesItem.getUnitPrice(); // 단가는 기존 판매 내역의 값을 사용
+	                        updatedSalesItem.setUnitPrice(unitPrice);
+	                        updatedSalesItem.setTotalAmount(unitPrice.multiply(quantityBd).setScale(0, RoundingMode.DOWN));	
 	            // DAO를 통해 판매 내역만 업데이트합니다. 재고는 DB 쿼리에서 자동으로 계산됩니다.
 	            logger.debug("Updating SalesItem: {}", updatedSalesItem); // Debug log
 	            return salesItemDao.updateSalesItem(updatedSalesItem);
-	        } catch (Exception e) {
-	            logger.error("SalesItemService.updateSalesItem 중 오류 발생: updatedSalesItem={}", updatedSalesItem, e);
-	            throw e; // 예외를 다시 던져 컨트롤러에서 처리하도록 합니다.
-	        }
-	    }
+	                                } catch (Exception e) {
+	                                    logger.error("SalesItemService.updateSalesItem 중 오류 발생: updatedSalesItem={}", updatedSalesItem, e);
+	                                    throw e; // 예외를 다시 던져 컨트롤러에서 처리하도록 합니다.
+	                                }	    }
 	// 상품 판매 내역 삭제 (소프트 삭제 구현)
 	@Override
 	public int deleteSalesItem(Long itemSalesId) {
