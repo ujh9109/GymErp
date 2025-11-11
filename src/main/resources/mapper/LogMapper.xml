@@ -148,15 +148,28 @@
 
     <!-- 내 차례 도달 여부 판별 -->
     <select id="checkPtTurnReached" parameterType="map" resultType="int">
-        SELECT CASE
-                 WHEN NVL(SUM(CASE WHEN status = '소비' THEN -countChange ELSE 0 END), 0)
-                      >= NVL(SUM(CASE WHEN status = '충전' AND salesId &lt; #{salesId} THEN countChange ELSE 0 END), 0)
-                 THEN 1
-                 ELSE 0
-               END AS turnReached
-        FROM pt_log
-        WHERE memNum = #{memNum}
-    </select>
+	    SELECT CASE
+	             WHEN NVL(SUM(
+	                 CASE 
+	                     WHEN status = '소비' THEN -countChange
+	                     WHEN status = '예약취소' THEN countChange
+	                     ELSE 0
+	                 END
+	             ), 0)
+	             >= NVL(SUM(
+	                 CASE 
+	                     WHEN status = '충전' AND salesId &lt; #{salesId} THEN countChange
+	                     WHEN status IN ('부분환불','전체환불') AND salesId &lt;= #{salesId} THEN countChange
+	                     ELSE 0
+	                 END
+	             ), 0)
+	             THEN 1
+	             ELSE 0
+	           END AS turnReached
+	    FROM pt_log
+	    WHERE memNum = #{memNum}
+	</select>
+    
 
 
 
@@ -214,37 +227,22 @@
 	<select id="getUsedCountBySalesId" parameterType="map" resultType="int">
 	    SELECT NVL(SUM(
 	        CASE
-	            WHEN status = '소비' THEN -countChange
-	            WHEN status = '예약취소' THEN countChange
+	            WHEN status = '소비' THEN -countChange        -- 소비(-1) → +1 사용
+	            WHEN status = '예약취소' THEN countChange      -- 취소(+1) → 복구
 	            ELSE 0
 	        END
-	    ), 0)
+	    ), 0) AS usedCount
 	    FROM pt_log
 	    WHERE memNum = #{memNum}
-	      AND salesId = #{salesId}
-	      AND (
-	          SELECT CASE
-	              WHEN 
-	                  
-	                  NVL(SUM(
-	                      CASE 
-	                          WHEN status = '충전' AND salesId &lt;= #{salesId} THEN countChange 
-	                          WHEN status IN ('부분환불','전체환불') AND salesId = #{salesId} THEN countChange * -1
-	                          ELSE 0 
-	                      END
-	                  ), 0)
-	                 
-	                  > NVL(SUM(
-	                      CASE 
-	                          WHEN status = '소비' AND salesId &lt; #{salesId} THEN -countChange
-	                          ELSE 0 
-	                      END
-	                  ), 0)
-	              THEN 1 ELSE 0 END
+	      AND usageId > (
+	          SELECT MIN(usageId)
 	          FROM pt_log
 	          WHERE memNum = #{memNum}
-	      ) = 1
+	            AND salesId = #{salesId}
+	            AND status = '충전'
+	      )
 	</select>
+	
 	
 		
     
@@ -304,36 +302,40 @@
 	<select id="selectPagedPtLogs" parameterType="map" resultType="map">
 	    SELECT *
 	    FROM (
-	        SELECT 
-	            P.usageId,
-	            P.memNum,
-	            M.memName AS memberName,
-	            P.empNum,
-	            E.empName AS empName,
-	            P.status,
-	            P.countChange,
-	            TO_CHAR(P.createdAt, 'YYYY-MM-DD') AS createdAt,
-	            ROWNUM AS rn
-	        FROM pt_log P
-	        LEFT JOIN member M ON P.memNum = M.memNum
-	        LEFT JOIN employee E ON P.empNum = E.empNum
-	        WHERE 1=1
-	            <if test="startDate != null and startDate != ''">
-	                AND P.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
-	            </if>
-	            <if test="endDate != null and endDate != ''">
-	                AND P.createdAt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
-	            </if>
-	            <if test="memNum != null and memNum != ''">
-	                AND P.memNum = #{memNum}
-	            </if>
-	            <if test="empNum != null and empNum != ''">
-	                AND P.empNum = #{empNum}
-	            </if>
-	        ORDER BY P.createdAt DESC
+	        SELECT inner_query.*, ROWNUM AS rn
+	        FROM (
+	            SELECT 
+	                P.usageId,
+	                P.memNum,
+	                M.memName AS memberName,
+	                P.empNum,
+	                E.empName AS empName,
+	                P.status,
+	                P.countChange,
+	                TO_CHAR(P.createdAt, 'YYYY-MM-DD HH24:MI:SS') AS createdAt
+	            FROM pt_log P
+	            LEFT JOIN member M ON P.memNum = M.memNum
+	            LEFT JOIN employee E ON P.empNum = E.empNum
+	            WHERE 1=1
+	                <if test="startDate != null and startDate != ''">
+	                    AND P.createdAt &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	                </if>
+	                <if test="endDate != null and endDate != ''">
+	                    AND P.createdAt &lt; TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+	                </if>
+	                <if test="memNum != null and memNum != ''">
+	                    AND P.memNum = #{memNum}
+	                </if>
+	                <if test="empNum != null and empNum != ''">
+	                    AND P.empNum = #{empNum}
+	                </if>
+	            ORDER BY P.usageId DESC  <!-- ✅ PK 기준 최신순 정렬 -->
+	        ) inner_query
 	    )
 	    WHERE rn BETWEEN #{offset} + 1 AND #{offset} + #{limit}
 	</select>
+	
+	
 		
 		
 	<!-- PT 전체 카운트 -->
