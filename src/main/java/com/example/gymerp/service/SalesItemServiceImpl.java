@@ -75,7 +75,10 @@ public class SalesItemServiceImpl implements SalesItemService {
 
 		// 1. 판매 가능 여부 확인 (StockService를 통해 재고 체크)
 		if (!stockService.isStockSufficient(salesItem.getProductId(), salesItem.getQuantity())) {
-			throw new RuntimeException("판매 수량에 비해 상품 재고가 부족합니다. (상품 ID: " + salesItem.getProductId() + ")");
+			// 현재 유효한 재고 수량을 가져옵니다.
+			int availableStock = stockService.getStockOne(salesItem.getProductId());
+			// 수정 기능과 동일하게, 최대 수량을 포함한 상세한 오류 메시지를 생성합니다.
+			throw new RuntimeException(String.format("재고가 부족합니다. 최대 입력 가능 수량은 %d개입니다.", availableStock));
 		}
 
 		// 2. 상품 정보 조회 및 DTO 필드 설정
