@@ -56,10 +56,7 @@ public interface LogService {
     // 기존 PT 충전 로그의 countChange 수정 (연장 시 누적 업데이트)
     void updatePtChargeCount(PtLogDto dto);
 
-<<<<<<< HEAD
     /** ✅ 환불 ID(refundId)로 PT 로그 조회 */
-=======
     // 환불 ID(refundId)로 PT 로그 조회
->>>>>>> be0411f43ffe9ed651b00e9e4d06d2cbded9ee97
     PtLogDto getPtLogByRefundId(long refundId);
 }
