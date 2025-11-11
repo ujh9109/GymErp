@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.gymerp.dto.SalesItemDto;
 import com.example.gymerp.service.SalesItemService;
-import com.example.gymerp.service.StockService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
