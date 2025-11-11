@@ -50,7 +50,12 @@ public class SalesServiceServiceImpl implements SalesServiceService {
     @Override
     @Transactional
     public int createSalesService(SalesService salesService) {
-        String memberName = memberDao.selectMemberNameById(salesService.getMemNum().intValue());
+    	//  0일권 / 0회권 방지 검증
+    	if (salesService.getActualCount() == null || salesService.getActualCount() <= 0) {
+            throw new IllegalArgumentException("회원권 또는 PT 상품은 1 이상이어야 합니다. (0은 등록 불가)");
+        }
+    	
+    	String memberName = memberDao.selectMemberNameById(salesService.getMemNum().intValue());
         String trainerName = empDao.selectEmployeeNameById(salesService.getEmpNum().intValue());
 
         // 판매 내역을 먼저 등록 (시퀀스 생성)
