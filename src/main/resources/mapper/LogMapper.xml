@@ -227,19 +227,26 @@
 	<select id="getUsedCountBySalesId" parameterType="map" resultType="int">
 	    SELECT NVL(SUM(
 	        CASE
-	            WHEN status = '소비' THEN -countChange        -- 소비(-1) → +1 사용
-	            WHEN status = '예약취소' THEN countChange      -- 취소(+1) → 복구
+	            WHEN status = '소비' THEN 1                 
+	            WHEN status = '예약취소' THEN -1           
+	            WHEN status = '부분환불' THEN ABS(countChange)   
+	            WHEN status = '전체환불' THEN ABS(countChange) 
 	            ELSE 0
 	        END
 	    ), 0) AS usedCount
 	    FROM pt_log
 	    WHERE memNum = #{memNum}
-	      AND usageId > (
-	          SELECT MIN(usageId)
-	          FROM pt_log
-	          WHERE memNum = #{memNum}
-	            AND salesId = #{salesId}
-	            AND status = '충전'
+	      AND (
+	           salesId = #{salesId}                
+	        OR (
+	              usageId > (
+	                  SELECT MIN(usageId)
+	                  FROM pt_log
+	                  WHERE memNum = #{memNum}
+	                    AND salesId = #{salesId}
+	                    AND status = '충전'
+	              )
+	           )
 	      )
 	</select>
 	
