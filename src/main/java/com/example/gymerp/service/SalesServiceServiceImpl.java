@@ -184,9 +184,9 @@ public class SalesServiceServiceImpl implements SalesServiceService {
                 Map<String, Object> params = new HashMap<>();
                 params.put("memNum", existing.getMemNum());
                 params.put("salesId", existing.getServiceSalesId());
-                int turnReached = logDao.checkPtTurnReached(params);
 
-                int usedCount = logDao.getUsedCountBySalesId(existing.getServiceSalesId());
+                int turnReached = logDao.checkPtTurnReached(params);
+                int usedCount = logDao.getUsedCountBySalesId(params); // ✅ 수정됨
 
                 int refundableCount = oldCount - usedCount;
                 if (refundCount > refundableCount)
@@ -204,7 +204,6 @@ public class SalesServiceServiceImpl implements SalesServiceService {
                 logDao.insertPtPartialRefundLog(refundLog);
                 System.out.println("[PT] 부분환불 완료 → -" + refundCount + "회");
             }
-
         }
 
         // B. VOUCHER 상품 (일수 변경)
@@ -285,9 +284,9 @@ public class SalesServiceServiceImpl implements SalesServiceService {
             Map<String, Object> params = new HashMap<>();
             params.put("memNum", sale.getMemNum());
             params.put("salesId", sale.getServiceSalesId());
+            
             int turnReached = logDao.checkPtTurnReached(params);
-            int remaining = logDao.selectRemainingPtCount(sale.getMemNum());
-            int usedCount = logDao.getUsedCountBySalesId(sale.getServiceSalesId());
+            int usedCount = logDao.getUsedCountBySalesId(params); // ✅ 수정됨
 
             boolean refundable = usedCount == 0;
             if (!refundable)
